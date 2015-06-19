@@ -1,0 +1,500 @@
+ls
+vim WebZone/settings.py
+vim WebZone/settings.py
+vim WebZone/conf.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim /var/log/uwsgi/app/3qdou.log
+vim WebZone/settings.py
+vim WebZone/settings.py
+python manage.py shell
+vim WebZone/settings.py
+python manage.py shell
+vim WebZone/settings.py
+invoke-rc.d uwsgi re
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim /var/log/uwsgi/app/3qdou.log
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+ls
+vim WebZone/settings.py
+rm c\:\\font1.png 
+ls
+vim WebZone/settings.py
+vim WebZone/settings.py
+python manage.py shell
+cat /etc/uwsgi/apps-enabled/3qdou.ini 
+cd /usr/local/lib/python2.7/site-packages/django/middleware/
+ls
+vim common.py
+cd /www/wwwroot/
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim /var/log/uwsgi/app/3qdou.log
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+top
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim /var/log/uwsgi/app/3qdou.log
+vim /etc/uwsgi/apps-enabled/
+vim WebZone/settings.py
+top
+exim -bp
+exim -bpc
+top
+exit
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/nginx/access_webzone.log 
+top
+lscpu
+lshw
+apt-get install lshw
+lshw
+lshw -short
+lspic
+lspci
+lsusb
+lsblk
+lsscsi
+lsscsi
+apt-get install lsscsi
+lsscsi
+cd /www/wwwroot/
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+ls
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/nginx/access_webzone.log 
+top
+exit
+cd /var/log/uwsgi
+ls
+cd app
+ls
+vim 3qdou.log
+pwd
+cd /var/log/uwsgi/app/
+vim 3qdou.log
+vim 3qdou.log
+vim /var/log/nginx/access_webzone.log 
+top
+w
+top
+ls
+clear
+cd /www/wwwroot/WebZone/
+ls
+vim conf.py
+mysql -u root -p
+ls
+exit
+cd zen/gosh
+ls -a
+chmod +x *
+ls -a
+./go.sh 188
+cd zen/gosh
+./go.sh 188
+cd zen/gosh
+./go.sh 188
+cd zen/gosh
+./go.sh 188
+pwd
+cd /www/wwwroot/
+top
+mysql -u root -p
+service mysql restart
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%'  IDENTIFIED BY 'root'  WITH GRANT OPTION;
+mysql -u root -p
+service mysql restart
+mysql -u root -p
+whereis mysql
+vim /etc/mysql/my.cnf 
+service mysql restart
+vim /etc/mysql/my.cnf 
+mysql -u root -p
+mysql -u root -p
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION 
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+mysql -u root -p
+service mysql restart
+mysql -u root -p
+ls
+top
+invoke-rc.d uwsgi restart 
+python manage.py syncdb
+invoke-rc.d uwsgi restart 
+top
+vim WebZone/settings.py
+top
+invoke-rc.d uwsgi restart 
+top
+invoke-rc.d uwsgi restart 
+vim static/AjaxFileUploaderV2.1/ajaxfileupload.js 
+vim static/AjaxFileUploaderV2.1/ajaxfileupload.js
+rm static/AjaxFileUploaderV2.1/ajaxfileupload.js
+vim static/AjaxFileUploaderV2.1/ajaxfileupload.js
+vim static/AjaxFileUploaderV2.1/ajaxfileupload.js
+vim /var/log/nginx/access_webzone.log
+vim /var/log/uwsgi/app/3qdou.log
+cd media/temp/
+ls
+ls -ls
+vim ../../WebZone/conf.py
+invoke-rc.d uwsgi restart 
+ls -ls
+vim /var/log/uwsgi/app/3qdou.log
+ls -ls
+vim /var/log/uwsgi/app/3qdou.log
+invoke-rc.d uwsgi restart 
+invoke-rc.d uwsgi restart 
+invoke-rc.d uwsgi restart 
+invoke-rc.d uwsgi restart 
+invoke-rc.d uwsgi restart 
+ls
+ls -ls
+ls
+cd ..
+cd ..
+vim WebZone/conf.py
+vim WebZone/settings.py
+invoke-rc.d uwsgi restart 
+top
+invoke-rc.d uwsgi restart \
+invoke-rc.d uwsgi restart \
+invoke-rc.d uwsgi restart
+invoke-rc.d uwsgi restart 
+invoke-rc.d uwsgi restart 
+ls
+cd media/
+ls
+cd assets/
+ls
+cd 4
+ls
+cd 49
+ls
+vim /var/log/uwsgi/app/3qdou.log
+top
+invoke-rc.d uwsgi restart 
+vim /var/log/uwsgi/app/3qdou.log
+top
+vim /var/log/uwsgi/app/3qdou.log
+top
+vim /var/log/uwsgi/app/3qdou.log
+invoke-rc.d uwsgi restart 
+invoke-rc.d uwsgi restart 
+top
+invoke-rc.d uwsgi restart 
+invoke-rc.d uwsgi restart 
+exit
+cd zen/gosh
+./go.sh 177
+ls
+cd /www/wwwroot/WebZone/
+ls
+vim conf.py
+invoke-rc.d uwsgi restart \
+invoke-rc.d uwsgi restart
+invoke-rc.d uwsgi restart
+invoke-rc.d uwsgi restart
+top
+cd ..
+ls
+cd media/
+ls
+cd lib/
+ls
+ls
+cd 2
+ls
+cd ..
+cd 3
+ls
+cd ..
+ls
+cp -p 3 1
+ls
+cp -r 3 1
+ls
+cd 1
+ls
+ls -ls
+cd ..
+ls
+rm -r 3
+ls
+cd 1
+ls
+cd ..
+ls
+cd ..
+ls
+cd user
+ls
+cd 2014/
+ls
+cd 13
+ls
+cd ..
+cd ..
+cd ..
+ls
+cd lib
+ls
+cd 1
+ls
+ls
+cd ..
+cd ..
+ls
+cd user/
+ls
+cd 1
+ls
+cd ..
+cd 2
+ls
+cd 2014/
+ls
+cd 4
+ls
+cd ..
+cd ..
+cd ..
+ls
+cd 1
+ls
+cd 2014/
+ls
+cd 15/
+ls
+cd opus/
+ls
+cd 158/
+ls
+cd ..
+cd ..
+ls
+exit
+top
+ls
+top
+vim /var/log/uwsgi/app/3qdou.log
+top
+top
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+cd /www/wwwroot/media/user/1/2014/16
+ls
+cd image/
+ls
+cd 0
+ls
+cd ..
+ls
+cd ..
+ls
+cd opus/
+ls
+cd 166/
+ls
+ls -ls
+ls -ls
+invoke-rc.d uwsgi restart 
+ls
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+invoke-rc.d uwsgi restart 
+invoke-rc.d uwsgi restart 
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+top
+vim /var/log/uwsgi/app/3qdou.log
+vim /etc/uwsgi/apps-enabled/3qdou.ini 
+invoke-rc.d uwsgi restart 
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+top
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+vim /var/log/uwsgi/app/3qdou.log
+top
+vim /var/log/uwsgi/app/3qdou.log
+tp
+top
+ls
+cd ..
+ls
+ls
+ls
+cd ..
+ls
+cd opus/
+ls
+cd ..
+ls
+cd ..
+cd ..
+cd ..
+ls
+cd 2014/
+ls
+cd 2
+ls
+cd opus/
+ls
+ls -ls
+rm -rm
+rm -rm *.*
+ls
+rm -r *.*
+rm -rp *.*
+ls
+rm -r
+rm -r 1*
+ls
+rm -r 62
+rm -r 89
+ls
+cd ..
+ls
+cd sound/
+ls
+cd ..
+ls
+cd asset/
+ls
+cd image/
+ls
+cd ..
+cd ..
+ls
+cd ..
+ls
+cd 4
+ls
+cd opus/
+ls
+ls
+rm -r 7*
+ls
+rm -r 80
+ls
+cd ..
+cd ..
+cd 2
+ls
+cd opus/
+ls
+vim /var/log/uwsgi/app/3qdou.log
+invoke-rc.d uwsgi restart 
+top
+invoke-rc.d uwsgi restart 
+vim /var/log/uwsgi/app/3qdou.log
+top
+vim /var/log/uwsgi/app/3qdou.log
+cd ..
+cd ..
+cd ..
+cd ..
+cd user/1/
+ls
+cd 2014/
+ls
+cd 16/
+invoke-rc.d uwsgi restart 
+invoke-rc.d uwsgi restart 
+ls
+cd opus/
+ls
+ls
+ls -ls /www/wwwroot/media/
+ls
+top
+vim /var/log/uwsgi/app/3qdou.log
+invoke-rc.d uwsgi restart 
+vim /var/log/uwsgi/app/3qdou.log
+ls
+ls
+invoke-rc.d uwsgi restart 
+vim /var/log/uwsgi/app/3qdou.log
+ls
+ls
+cd 192/
+ls
+cd ..
+ls
+cd 193
+ls
+ls -ls
+ls -ls
+cd ..
+ls
+ls
+invoke-rc.d uwsgi 
+invoke-rc.d uwsgi restart 
+exit
+w
+ls
+perl
+cat /proc/cpuinfo
+passwd
+w
+w
+passwd root
+cd /
+ls
+cd /boot
+cd grub
+ls
+vim grub.cfg 
+reboot
+oke-rc.d uwsgi restart 
+exit
+w
+ls
+perl
+cat /proc/cpuinfo
+passwd
+w
+w
+passwd root

@@ -1,0 +1,504 @@
+host:http://10.0.0.177:8000/gateway/
+
+返回值都为json格式:{"code":1,"data":""}
+code:1:正确	-1:错误
+
+
+一：账户相关
+1.AccountService.register
+参数：register(request, account)
+account.username
+account.password
+account.nickname
+account.sex	#0:女,1:男
+account.email	#
+account.library_id	#图书馆ID
+
+2.AccountService.reg_checkusername
+参数：username
+
+3.AccountService.reg_checknickname
+参数：nickname
+
+4.AccountService.login
+username
+password
+
+
+5.AccountService.logout
+
+
+6.AccountService.get_account
+返回自己的个人信息
+
+
+
+7.AccountService.update_account
+传入account对象，结构如下
+account.id
+account.hobby
+account.sign    #个人签名
+account.birthday
+account.realname
+    
+account.qq
+account.email
+account.telephone
+account.parent_qq
+account.home_address
+account.school
+
+
+7.AccountService.change_pass
+oldpass
+newpass
+
+
+
+8.AccountService.question 密保问题
+password
+question
+answer
+
+
+
+
+二：ＤＩＹ相关
+1.DiyService.get_font_list
+返回：id,url,label
+
+
+2.DiyService.get_font_img
+font.id
+font.size    #数字
+font.color   #flex的数字格式
+font.width		width,height数字格式，其中一个为0时，程序自动计算宽、高
+font.height
+font.content	文字内容，需要换行的，以 \r 作为分隔符
+font.align	取值：left,center,right	分别左，中，右对齐
+
+
+3:DiyService.update_avatar
+image
+上传个人头像，返回:
+large,medium,small	三种格式头像的url地址
+
+
+4.DiyService.upload_personal_res
+res_data
+res_title
+res_name  文件名
+res_type  默认:image，取值：image, sound, video
+album_id:	相册ID，转为为0，可以不传
+上传image类型时，返回：medium，small图片文件url
+
+
+4-1:网页版上传个人图片、声音、视频 资源：
+/api/upload_personal_res/
+参数:
+res_title	资源标题
+res_type（取值：image,sound,video)　默认image，分别对应上传资源的类型
+album_id:	相册ID，默认为0，可以不传
+上传image类型时，返回：medium，small图片文件url
+上传sound类型时，返回：url	声音资源的ＵＲＬ地址
+上传video类型时，返回：url	视频资源的ＵＲＬ地址
+
+
+
+5:AMF接口创建相册
+DiyService.create_album
+参数：album_title	相册标题
+
+
+
+6:AMF接口相册列表
+DiyService.get_album_list
+
+
+
+7.DiyService.get_personal_res
+res_type	默认：all，取所有资源　取值：'all', 'image','sound','video'
+album_id	默认：0（默认机册）　-1表示取回所有相册
+page_index:	默认：１	取第一页的数据
+page_count: 默认：20	每页20页
+
+返回值有三项：
+page_index
+page_count
+data，data的值为如下的json数组
+res_type（取值：image, sound, video）
+album_id: 相册ＩＤ，０是默认
+album_title：相册标题
+title(标题)
+当res_type == image时：还有：medium，small图片文件url
+其他时，还有：url：资源的URL
+
+
+
+6.DiyService.get_res_url	得到资源的ＵＲＬ（暂停用）
+
+
+7.1DiyService.get_public_url	得到公共资源的ＵＲＬ（暂停用）
+传入参数：id
+返回：
+id
+origin
+large
+medium
+small
+mask	#只有当资源类型为3时有
+
+
+8.2:DiyService.get_personal_url	得到私有资源的ＵＲＬ（暂停用）
+传入参数：id
+返回：
+id
+origin
+large
+medium
+small
+
+
+
+9.DiyService.get_zone_type_list	资源类型列表
+
+
+10.DiyService.get_zone_style_list	资源风格列表
+
+
+11.DiyService.get_zone_list	系统资源列表（暂停用）
+def get_zone_list(request, type_id=0, style_id=0, page_index=1, page_size=20):
+
+返回值有三项：
+page_index
+page_count
+data，data的值为如下的json数组：
+id,title,type_id,type_name,style_id,style_name,medium,small,url,create_time
+备注：当为图片资源时，返回:mdium,small,当为其他资源时，返回：url
+
+
+
+
+12.DiyService.get_bg_list	公共资源列表－－背景
+传入参数：
+style_id=0     0表示所有风格
+page_index=1
+page_size=20
+返回值：
+page_index,page_count,data
+data是个json数组，内容为：
+id
+title
+style_id
+style_name
+width
+height
+url
+small
+
+
+13.DiyService.get_decorator_list	公共资源列表－－装饰
+传入参数：
+style_id=0     0表示所有风格
+page_index=1
+page_size=20
+返回值：
+page_index,page_count,data
+data是个json数组，内容为：
+id
+title
+style_id
+style_name
+width
+height
+url
+small
+
+
+14.DiyService.get_frame_list	公共资源列表－－画框
+传入参数：
+style_id=0     0表示所有风格
+page_index=1
+page_size=20
+返回值：
+page_index,page_count,data
+data是个json数组，内容为：
+id
+title
+style_id
+style_name
+width
+height
+url
+mask	遮罩
+
+
+15.DiyService.get_template_list	公共资源列表－－模板
+传入参数：
+style_id=0     0表示所有风格
+page_index=1
+page_size=20
+返回值：
+page_index,page_count,data
+data是个json数组，内容为：
+id
+title
+style_id
+style_name
+small
+page_count	模板总页数
+
+
+16.DiyService.get_audio_list	公共资源列表－－声音资源
+传入参数：
+page_index=1
+page_size=20
+返回值：
+page_index,page_count,data
+data是个json数组，内容为：
+id
+title
+url
+
+
+17.DiyService.get_video_list	公共资源列表－－视频资源
+传入参数：
+page_index=1
+page_size=20
+返回值：
+page_index,page_count,data
+data是个json数组，内容为：
+id
+title
+url
+
+
+
+18.DiyService.get_template_info	得到模板详细列表
+传入参数：
+zont_asset_id	模板ID
+成功返回信息：
+id,title,brief,page_count,origin,large,medium,small,width,height,pages
+page是个数组对象，返回查询的页列表：
+page_index	是模板的第几页
+media     当前页是否有多媒体
+json	json文件路径
+origin		当前页原图
+small    当前页缩略图
+
+
+
+
+19.DiyService.get_opus_type_list	个人作品的大类型列表
+#个人作品分类
+OPUS_TYPE = {1:u"写作",
+             2:u"才艺",
+             3:u"微生活",
+             4:u"即时创作",
+             }
+             
+
+20.DiyService.get_opus_class_list	个人作品的小类型列表
+传入参数：opus_type	大类型的ID
+
+
+
+
+21.DiyService.get_opus_list	作品列表
+传入参数及默认值：type_id=0, class_id=0, page_index=1, page_size=20
+
+返回值有三项：
+page_index
+page_count
+data，data的值为如下的json数组：
+id,	主键
+title,	标题，如果还未保存，则为“未命名作品”
+
+type_id,	大类ＩＤ
+((1,u"写作"),(2,u"才艺"),(3,u"微生活"),(4,u"即时创作"))
+class_id,	 子类ＩＤ
+((101,u"记叙文"),(102,u"议论文"),(103,u"说明文"),(104,u"读后感"),(105,u"观后感"),(106,u"诗歌"),(107,u"书信"),(108,u"日记"),(109,u"游记"),(110,u"小说"),
+(201,u"描绘"),(202,u"舞蹈"),(203,u"绘画"),(204,u"乐器"),(205,u"声乐"),(206,u"歌曲"),(207,u"书法"),(208,u"朗诵"),(209,u"演讲"),(210,u"手工摄影"),(211,u"表演"),
+(301,u"童趣诙谐"),(302,u"励志成长"),(303,u"校园点滴"),(304,u"温馨家庭"),(305,u"科普知识"),(306,u"社会公益"),(307,u"幻想世界"),
+(401,u"说说"),(402,u"奇葩"))
+
+update_time,	
+status	(-2,u"已删除"),(-1,u"审核未通过"),(0,u"草稿"),(1,u"待审核"),(2,u"已表中")
+
+
+
+22.DiyService.get_opus_info
+传入参数：opus_id
+如果成功返回数据：
+id
+title
+brief
+tags
+type_id
+class_id
+page_count	总页数
+pages   是一个json对象，包含：
+	page_index	是模板的第几页
+	media     当前页是否有多媒体
+	json	json文件路径
+	origin		当前页原图
+	small    当前页缩略图
+
+
+is_top
+grade	 评分，0表示没有人评价
+preview_times	预览次数
+comment_times	评论次数
+update_time
+create_time
+status
+
+width,height
+cover
+thumbnail
+
+
+23.DiyService.get_opus_page_image	得到作品图片URL	（暂停用）
+传入参数：
+opus_id
+page_index=1
+成功的返回值：
+page_index	页码
+origin:原始大图的URL
+small:小缩略图的URL
+
+
+
+24.DiyService.get_opus_page_json	得到作品页的配置文件	（暂停用）
+传入参数：
+opus_id
+page_index=1d:
+成功的返回值：
+page_index	页码
+json:配置文件的URL
+
+
+25.DiyService.create_opus
+传入一个opus对象，包含如下成员：
+#opus: title, brief, tags, type_id, class_id, width, height, template_id
+如果template_id有值，width,height自动从模板里更新
+如果template_id为空，则是新建空白作品，width,height必须有值
+这个不是失败，反回信息跟:get_opus_info一样
+有作品的详细信息
+
+
+26.DiyService.update_opus_page
+传入一个opus_page对象参数，对象的成员如下：
+opus_page.opus_id	作品ID，必传
+opus_page.page_index	更新，或者新建页的页码
+opus_page.json_data
+opus_page.image_data
+opus_page.is_multimedia=False	是否为多如期而媒体页
+opus_page.auth_asset_list=""	引用的个人资源的ID列表，如：1,3,20,12
+opus_page.zone_asset_list=""	引用的公共资源的ID列表，如：1,3,20,12
+
+返回：id:作品id
+page_index:页码
+url:作品上传的图片的路径
+thumbnail:作品缩略图的路径，现在尺寸为(130*90)
+
+
+
+27:Diyservice.update_opus_info
+传入一个opus象参数，对象的成员如下：
+opus.opus_id
+opus.title
+opus.brief
+opus.tags
+opus.type_id
+opus.class_id
+
+
+
+28:DiyService.apply_for_press	申请发表作品
+传入参数：
+opus_id
+
+
+
+29:DiyService.delete_personal_res
+删除个人资源
+传入参数：id 	资源ID
+成功返回删除的资源ID
+失败返回错误信息
+
+
+30:DiyService.delete_album
+删除相册
+传入相册ID
+
+
+
+31：DiyService.delete_opus
+删除作品
+传入作品ID
+
+
+32：DiyService.delete_opus_page
+删除作品某一页
+传入作品ID
+要删除的页码
+
+
+33:DiyService.change_opus_page	交换作品页
+传入参数
+opus_id
+page_index
+new_page_index
+
+
+34:DiyService.new_opus_page	新建/插入作品页
+传入参数
+opus_id
+page_index    当为已经存在的页码是，是插入，当是作品总页+1时，是新建
+template_id    必传
+template_page_index   必传
+
+
+35:DiyService.copy_opus	复制作品
+传入是一个对象，和create_opus类似，没在width,height,template_id,增加:id
+结构为：
+id:	copy作品的id
+title, brief, tags, type_id, class_id
+
+
+
+33：DiyService.grade_opus	作品评分
+传入参数：
+opus_id
+grade   分数为:1-5
+
+
+34：DiyService.comment_opus	作品评论
+传入参数：
+opus_id
+comment   评论的内容
+
+
+35:DiyService.get_comment_list	得到某个作品的评论列表
+传入参数：
+opus_id
+page_index=1
+page_size=20
+返回值：
+"data":comm_list, "page_index":page_index, "page_count":page_count
+data:是个json数组，成员为：
+id,评论的ID
+user_id,评论人的UID
+nickname,评论人的呢称
+`comment`,评论内容
+create_time	评论时间
+
+
+
+
+
+
+
+
+
