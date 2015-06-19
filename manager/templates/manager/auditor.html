@@ -1,0 +1,105 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% load staticfiles %}
+<script src="{% static 'bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js' %}"></script>
+<script src="{% static 'bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js' %}"></script>
+<link href="{% static 'bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block footer %}
+<script>
+	$(document).ready(function(){
+		var date = new Date();
+		var startMonth = date.getMonth()+1;
+		$(".form_datetime").datetimepicker({
+			language : "zh-CN",
+			format : "yyyy-mm-dd",
+			startDate : date.getFullYear() + "-" + startMonth + "-" + date.getDate(),
+			autoclose : true,
+			todayBtn : true,
+			minView : "month",
+			pickerPosition : "bottom-left"
+		}).on('changeDate', function(ev){
+			$("#form_expire").removeClass("has-error").addClass("has-success");
+			$("#form_expire").find("p").html("");
+			update_status();
+		});
+	});
+	
+	function check_content(obj){
+		var content = obj.value;
+		if (content.length > 0){
+			$("#form_content").removeClass("has-error").addClass("has-success");
+			$("#form_content").find("p").html("");
+			update_status();
+		}
+	}
+	
+	function update_status(){
+		if ($("#expire_time").val().length > 0 && $("#content").val().length > 0){
+			$("#btn_submit").removeClass("disabled");
+		}
+	}
+</script>
+{% endblock %}
+
+
+{% block content %}
+{% if result == "ok" %}
+<div style="text-align: center">
+	<span class="inline"><img src="{% static 'images/success.gif' %}"><h3>信息提交成功</h3></span>
+		<hr />
+		<a href="/manager/notice_list/" class="btn btn-large btn-success">查看</a>
+		<a href="/manager/notice/" class="btn btn-large btn-primary col-md-offset-1">再次录入>></a>
+</div>
+{% else %}
+	<form class="form-horizontal" role="form" method="post" enctype="multipart/form-data">
+		<div class="form-group" id="form_expire">
+			<label class="col-md-2 control-label">截止日期</label>
+			<div class="col-md-3">
+				<div class="input-group date form_datetime">
+					<input class="form-control" type="text" id="expire_time" name="expire_time" value="{% if notice %}{{ notice.expire_time|date:'Y-m-d' }}{% endif %}" readonly>
+					<span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+				</div>
+			</div>
+			<p class="help-block">请选择截止日期</p>
+		</div>
+		<div class="form-group" id="form_content">
+			<label class="col-md-2 control-label">通知内容</label>
+			<div class="col-md-6">
+				<textarea class="form-control" id="content" name="content" onkeyup="check_content(this)" rows="5">{% if notice %}{{ notice.content }}{% endif %}</textarea>
+			</div>
+			<p class="help-block">请输入通知内容</p>
+		</div>
+		<div class="form-group">
+			<label class="col-md-2 control-label">状态</label>
+			<div class="col-md-8">
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_status" id="rdo1" value="1" {% if notice and notice.status == 0 %}checked{% endif %}>
+						待审核</label>
+				</div>
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_status" id="rdo2" value="2" {% if notice and notice.status == 1 %}checked{% else %}checked{% endif %}>
+						可用</label>
+				</div>
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_status" id="rdo3" value="3" {% if notice and notice.status == -1 %}checked{% endif %}>
+						已删除</label>
+				</div>
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="col-md-offset-2 col-md-6">
+				<button type="submit" class="btn btn-primary{% if not notice %} disabled{% endif %}" id="btn_submit">
+					添加通知消息
+				</button>
+			</div>
+		</div>
+	</form>
+{% endif %}
+{% endblock %}
+

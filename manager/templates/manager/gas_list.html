@@ -1,0 +1,181 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+
+<script>
+	$(document).ready(function(){
+		$('.selectpicker').selectpicker();
+		on_page(1);
+	});
+
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">上一页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index - 1) + ")\">上一页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">下一页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index + 1) + ")\">下一页</a></li>";
+		}
+		for (var i = 1; i <= page_count; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		var search_text = $("#search_text").val();
+		$.post("/manager/get_gas_list/", {"page_index":page_index, "search_text":search_text}, function(data){
+			var json_data = JSON.parse(data);
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td><a href='#' onclick='update_gas(" + array_list[i]["id"] + ")'>" + array_list[i]["id"] + "</a></td><td>";
+				newRow += array_list[i]["content"] + "</td><td>";
+				newRow += array_list[i]["type_id"] + "</td><td>";
+				newRow += array_list[i]["update_time"] + "</td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+
+	function new_gas(){
+		$("#hid_id").val("0");
+		$("#content").val("");
+		$("#myModal").modal("show");
+	}
+
+	function update_gas(gas_id){
+		$("#hid_id").val(gas_id);
+		var td_list = $("#tr"+gas_id).find('td');
+		var content = td_list[1].innerHTML;
+		$("#content").val(content);
+		$("#myModal").modal("show");
+	}
+	
+	function submit_gas(){
+		var hid_id = $("#hid_id").val();
+		var content = $("#content").val();
+		
+		$("#btn_submit").attr("disabled",true);
+		$.post("/manager/gas_list/", {"hid_id":hid_id,"content":content}, function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				window.location.reload();
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function update_status(){
+		var content = $("#content").val();
+		if (content.length > 0){
+			$("#btn_submit").attr("disabled",false);
+		} else {
+			$("#btn_submit").attr("disabled",true);
+		}
+	}
+
+
+    $('#btn_search').click(
+        function(){
+            on_page(1);
+        }
+    );
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-2 pull-left">
+		<button class="btn btn-danger" onclick="new_gas()">点击新增加油站短文</button>
+	</div>
+
+  <div class="input-group col-md-5 pull-left">
+  <input type="text" id="search_text" name="search_text" placeholder="请输入关键字搜索" class="form-control">
+  <span class="input-group-btn">
+    <button class="btn btn-primary" id="btn_search" type="button" >
+    <span class="glyphicon glyphicon-search"></span> 点击搜索</button>
+  </span>
+  </div>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>分类</th>
+              <th style="width:600px">内容</th>
+              <th>发送次数</th>
+              <th>写入时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">加油站短文详情</h4>
+      </div>
+      <div class="modal-body">
+      	<form class="form-horizontal">
+      		<input type="hidden" value="0" id="hid_id" name="hid_id" />
+			<div class="form-group" id="form_type">
+				<label class="col-md-2 control-label">分类：</label>
+				<div class="col-md-9 pull-left">
+					<div class="input-group col-md-2 pull-left">
+						<select class="selectpicker" id="sel_type" name="sel_type">
+							<option>请选择分类</option>
+						</select>
+					</div>
+				</div>
+				<p class="col-md-2 help-block"></p>
+			</div>
+			<div class="form-group" id="form_contact">
+				<label class="col-md-2 control-label">内容</label>
+				<div class="col-md-10 pull-left">
+					<textarea class="form-control" id="content" name="content" onkeyup="update_status(this.value)" rows="10"></textarea>
+				</div>
+			</div>
+		</form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal">关闭</button>
+        <button class="btn btn-primary" id="btn_submit" onclick="submit_gas()" disabled="disabled">确认提交</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+{% endblock %}

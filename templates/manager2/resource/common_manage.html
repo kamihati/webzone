@@ -1,0 +1,391 @@
+﻿{% extends 'manager2/base.html' %}
+
+{% block header %}
+{% load staticfiles %}
+<!--导入ajax文件上传的资源-->
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<script type="text/javascript">
+$(document).ready(function($){
+    //设置搜索关键字文本框默认字
+    set_input_default('txtSearchText', '请输入素材名称');
+
+	//设置导航栏选中状态
+	$("#li_nav_resource").addClass("active");
+	$("#li_nav_resource_common_manage").addClass("active");	
+
+    //设置分页代码
+    $(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+	
+	$("#fileAsset").change(function(){
+		check_upload_file(document.getElementById('fileAsset'), 'hdAsset', 'ajax_img_asset', 'loadingAsset');
+	});
+	
+	$("#fileAsset2").change(function(){
+		check_upload_file(document.getElementById('fileAsset2'), 'hdAsset2', 'ajax_img_asset2', 'loadingAsset2');
+	});
+	
+
+	//切换机构
+	$("#slcLibrary").change(function(){
+		$("#txtSearchText").val('');
+		$("#hdLibrary").val(this.value);
+		search(1);
+	});
+	
+	//更换类型
+	$("#slcType").change(function(){
+		$("#txtSearchText").val('');
+	    $("#hdType").val(this.value);
+		search(1);
+	});
+	
+	//更换风格
+	$("#slcStyle").change(function(){
+		$("#txtSearchText").val('');
+		$("#hdStyle").val(this.value);
+		search(1);
+	});
+	
+	//切换资源类型
+	$("input[name=res_type]").change(function(){
+		if(this.value == "1"){
+			//背景需要填写尺寸
+			$("#trSize").show();
+			$("#trFile2").hide();
+		}else if(this.value == "3" || this.value == "8"){
+			//边框。特效需要第二资源上传
+			$("#trFile2").show();
+			$("#trSize").hide();
+		}else{
+			$("#trFile2").hide();
+			$("#trSize").hide();
+		}
+	});
+});
+
+function search(page_index){
+    var search_text = $.trim($("#txtSearchText").val());
+	if(search_text == "请输入素材名称")
+        $("#txtSearchText").val("");
+    $("#hdPageIndex").val(page_index);
+    $("#submit").click();
+}
+
+function del_asset(id){
+    if(!confirm('您确定要删除这个素材吗？'))
+        return;
+    $.post("/resource/del_common_resource/", {"id": id}, function(data){
+        if(data == "ok"){
+            alert("删除成功！");
+            location.reload();
+        }
+    });
+}
+
+//设置素材推荐状态
+//id: 素材id
+//status: 推荐状态。0为不推荐。1为推荐
+function update_status(id, status){
+	if($("#rdo_" + id + "_" + status).attr("checked") == "checked")
+		return false;
+	$.post('/resource/ajax_update_common_status/', {'id': id, 'status': status}, function(data){
+		if(data == 'fail'){
+			alert('操作失败。请与管理员联系。');
+		}else if(data == 'ok'){
+			$("#rdo_" + id + "_" + status).attr("checked", true);
+		}
+	});
+}
+
+
+//编辑素材信息
+function edit_data(){
+	var id = $("#hdDataId").val();
+	var res_type = $("input[name=res_type]:checked").val();
+	if(res_type == null){
+		alert("请选择素材类型");
+		return;
+	}
+	var res_style = $("input[name=res_style]:checked").val();
+	if(res_style == null){
+		alert("请选择素材风格！");
+		return;
+	}
+
+	var title = $.trim($("#txtTitle").val());
+	if(title == ""){
+		alert("请先填写素材名称！");
+		return;
+	}
+	var res_path = $.trim($("#hdAsset").val());
+	var res_path2 = $.trim($("#hdAsset2").val());
+	var param = {};
+	if(id == ""){
+		if(res_path == ""){
+			alert("请先选择要上传的素材文件！");
+			return;
+		}
+		//画框。特效类型的资源需要上传第二资源
+		if((res_type == '3' || res_type == '8') && res_path2 == ""){
+			alert("此类型的资源需要上传第二资源文件！");
+			return;
+		}
+	}else{
+		param['id'] = id;
+	}
+	param['title'] = title;
+	if(res_path != ""){
+	    param['temp'] = res_path;
+	}
+	if(res_path2 != ""){
+		param['temp2'] = res_path2;
+	}
+	param['res_type'] = res_type;
+	param['res_style'] = res_style;
+	
+	//背景类型的资源需要尺寸与创建类型（单页或双页）
+	var size = $("#slcSizeList").val();
+	var create_type = 1;
+	if($("#rdoPageType2").attr("checked")){
+		create_type = 2;
+	}
+	//背景
+	if(res_type == '1'){
+		if(size == ''){
+			alert("此类型资源需要选择尺寸信息！");
+			return;
+		}
+		param['size'] = size;
+		param['create_type'] = create_type;
+	}
+
+	$.post("/resource/edit/", param, function(data){
+		if(data == "ok"){
+			alert("操作成功！");
+			location.href = '/manager2/resource/?page_index=1';
+		}else if(data == "-1"){
+			alert("此类素材需要选择正确的尺寸！");
+			
+		}else if(data == '-2'){
+			alert("此类素材需要上传第二资源！");
+		}else{
+			alert(data);
+		}
+	});
+}
+
+
+//打开编辑素材的窗口
+function open_edit(id, res_type, res_style, title, res_path, origin_path, create_type, size_id, mask_path){
+	if(id != null){
+  	    $("#hdDataId").val(id);
+		$("input[name=res_type][value='" + res_type + "']").attr("checked", "checked");
+		$("input[name=res_style][value='" + res_style + "']").attr("checked", "checked");
+		
+		$("#txtTitle").val(title);
+		$("#ajax_img_asset").attr("href", "/media/" + res_path);
+		$("#ajax_img_asset").show();
+		
+		
+		if(res_type == "1"){
+			//背景设定尺寸和单双页
+			$("#trSize").show();
+			$("#trFile2").hide();
+			if(create_type == "2"){
+				$("#rdoPageType2").attr("checked", "checked");
+			}
+			$("#slcSizeList").val(size_id);
+		}else if(res_type == "3"){
+			
+			//边框。需要第二资源上传
+			$("#trFile2").show();
+			$("#trSize").hide();
+			$("#ajax_img_asset2").attr("href", "/media/" + mask_path);
+			$("#ajax_img_asset2").show();
+		}else if(res_type == "8"){
+			//特效需要第二资源上传
+			$("#trFile2").show();
+			$("#trSize").hide();
+			$("#ajax_img_asset2").attr("href", "/media/" + origin_path);
+			$("#ajax_img_asset2").show();
+			
+		}else{
+			$("#trFile2").hide();
+			$("#trSize").hide();
+		}
+	}
+	
+	$('.theme-popover-mask2').show();
+	$('.theme-popover-mask2').height($(document).height());
+	$('.theme-popover2').slideDown(200);	
+}
+
+//隐藏编辑素材的窗口
+function hide_edit(){
+	$("input[name='reset']").click();
+	$("input[name=res_type]:checked").attr("checked", false);
+	$("input[name=res_style]:checked").attr("checked", false);
+	$("#hdDataId").val("");
+	$("#hdAsset").val("");
+	$('.theme-popover-mask2').hide();
+	$('.theme-popover2').slideUp(200);
+}
+</script>
+
+{% endblock %}
+
+{% block content %}
+<!--新建素材开始-->
+<div class="theme-popover-mask2"></div>
+<div class="theme-popover2">
+	<div class="theme-poptit2">
+		<a href="javascript:hide_edit();" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod2 dform">
+		<form class="theme-signin2 " name="loginform" action="#" method="post">
+        	<table cellpadding="0" cellspacing="10" class="xinxi1">
+        		<tr>
+        			<td>
+						<h3>素材类型</h3>
+            			<div class="fengge">
+                            {%  for obj in resource_type %}
+            				<input type="radio" name="res_type" value="{{ obj.id }}"/>{{ obj.name }}
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td width="30"></td>
+                    <td>
+                        <h3>风格</h3>
+                        <div class="fengge">
+                            {% for obj in resource_style %}
+                            <input type="radio" name="res_style" value="{{ obj.id }}"/>{{ obj.name }}
+                            {% endfor %}
+                        </div>
+			        </td>
+                </tr>
+                <!--
+                <tr>
+                	<td colspan="3" style=" text-align:left;">批量导入:<button class="jg">批量导入EXCEL</button> <button class="jg">批量导入素材</button></td>
+                
+                </tr>
+                -->
+                <tr>
+                	<td colspan="3" style=" text-align:left;">
+                    	单个导入:标题<input type="text" id="txtTitle" />
+                        图片文件：
+                        <input type="file"   id="fileAsset" name="origin" style="display: none;" />
+                        <button class="jg" type="button" onclick="javascript:$('#fileAsset').click()">上传+</button>
+                        <a id="ajax_img_asset" style="display:none;" class="shan" target="_blank">查看</a>
+                        <img id="loadingAsset" src="{% static 'images/loading.gif' %}" style="display:none;">
+                        <input id="hdAsset" type="hidden" value="" />
+                    </td>
+                </tr>
+                <tr id="trFile2"  style="display:none;">
+                	<td colspan="3" style="text-align:left;">
+                    	资源文件：
+                        <input type="file"   id="fileAsset2" name="origin2" style="display: none;" />
+                        <button class="jg" type="button" onclick="javascript:$('#fileAsset2').click()">上传+</button>
+                        <a id="ajax_img_asset2" style="display:none;" class="shan" target="_blank">查看</a>
+                        <img id="loadingAsset2" src="{% static 'images/loading.gif' %}" style="display:none;">
+                        <input id="hdAsset2" type="hidden" value="" />
+                    </td>
+                </tr>
+                <tr id="trSize" style="display:none;">
+                	<td colspan="3" style="text-align:left;">
+                    	尺寸：<select id="slcSizeList">
+                        	<option value=""></option>
+                            {% for obj in size_list %}
+                            <option value="{{ obj.id }}">{{ obj.width }} x {{ obj.height }}</option>
+                            {% endfor %}
+                        </select>
+                         
+                        类型：<input type="radio" value="1" checked="checked" name="page_type" id="rdoPageType1" /><label for="rodPageType1">单页</label><input type="radio" name="page_type" value="2" id="rdoPageType2" /><label for="rodPageType2">双页</label>
+                    </td>
+                </tr>
+        	</table>
+            <input type="hidden" id="hdDataId" />
+            <input class="btn btn-primary que" type="button" onclick="edit_data()" value=" 确定 " />  
+            <input type="reset" name="reset" style="display:none;" />
+            <input class="btn btn-primary qux" type="button" onclick="hide_edit()" value=" 取消 " />
+		</form>
+	</div>
+</div>
+<!--新建素材结束-->
+
+<!--素材列表开始-->
+<div class="right_hua">
+	<div class="cont_right_lc">
+        <form action="#" method="get">
+    	<div class="fl" style="display:none;">
+        	<a class="jg" href="/manager2/resource/template_manage/">模板管理</a>
+            <a class="jg" href="/manager2/resource/size_manage/">作品尺寸管理</a>
+            <a class="jg jg_hover" href="#">素材管理</a>&nbsp;
+        </div>
+		<div class="cont_right_lcl">
+            <a class="jg theme-login2" href="javascript:open_edit();">新建素材</a>&nbsp;&nbsp;
+            <input type="text" id="txtSearchText" class="icx" name="key" value="{{ key|default:'请输入素材名称' }}" />
+			<button class="cx" onclick="search(1)" type="button">查&nbsp;询</button>
+            <input type="hidden" id="hdPageIndex" value="1" name="page_index">
+            <input type="submit" id="submit" style="display: none;" />
+            <input type="hidden" id="hdLibrary" name="library_id" value="{{ library_id }}" />
+          <input type="hidden" id="hdType" name="type_id" value="{{ type_id }}" />
+          <input type="hidden" id="hdStyle" name="style_id" value="{{ style_id }}" />
+
+		</div>
+        </form>
+		<table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+        	<tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+            	<td width="200">标题</td>
+                <td>
+                	<select id="slcLibrary" class="xz">
+                        <option value="" selected="selected">全部机构</option>
+                        {% for obj in library_list %}
+                            <option value="{{ obj.id }}" {% if library_id == obj.id %} selected="selected" {% endif %}>{{ obj.lib_name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td width="150">
+                	<select id="slcType" class="xz">
+                        <option value="" selected="selected">类型</option>
+                        {% for obj in resource_type %}
+                            <option value="{{ obj.id }}" {% if obj.id == type_id %} selected="selected"{% endif %}>{{ obj.name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td width="100">
+                	<select id="slcStyle" class="xz">
+                        <option value="" selected="selected">风格</option>
+                        {% for obj in resource_style %}
+                            <option value="{{ obj.id }}" {% if style_id == obj.id %} selected="selected"{% endif %}>{{ obj.name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td width="100">引用次数</td>
+                <td width="150">创建时间</td>
+                <td width="150">查看</td>
+                <td width="150">推荐</td>
+                <td width="150">操作</td>
+			</tr>
+            {% for obj in data_list %}
+            <tr>
+            	<td>{{ obj.title }}</td>
+                <td>{{ obj.lib_name }}</td>
+                <td>{{ obj.type_name }}</td>
+                <td>{{ obj.style_name }}</td>
+                <td>{{ obj.ref_times }}</td>
+                <td>{{ obj.create_time }}</td>
+                <td><a target="_blank" href="/resource/view/?is_person=0&id={{ obj.id }}" class="shan">查看</a></td>
+                <td>
+                    <input type="radio" onmousedown="update_status({{ obj.id }}, 1)" id="rdo_{{ obj.id }}_1" name="rdo_{{ obj.id }}" value="1" {% if obj.is_recommend == 1 %}checked="checked" {% endif %} />是
+                    <input type="radio" onmousedown="update_status({{ obj.id }}, 0)" id="rdo_{{ obj.id }}_0" name="rdo_{{ obj.id }}" value="0" {% if obj.is_recommend == 0 %}checked="checked" {% endif %} />否
+                </td>
+                <td><a class="shan theme-login2" href="javascript:open_edit({{ obj.id }}, {{ obj.res_type }}, {{ obj.res_style }}, '{{ obj.title }}', '{{ obj.res_path }}', '{{ obj.origin_path }}', '{{ obj.create_type }}' , '{{ obj.size_id }}', '{{ obj.mask_path }}');">修改</a>/<a class="shan" href="javascript:del_asset({{ obj.id }})">删除</a></td>
+            </tr>
+            {% endfor %}
+
+        </table>
+		<div class="yema"> </div>
+	</div>
+</div>
+{% endblock %}

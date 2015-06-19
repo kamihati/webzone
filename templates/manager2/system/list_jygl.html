@@ -1,0 +1,150 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %}
+<!--省市地址选择-->
+<!--
+//级联地区选择控件的js。暂用不到全国地区列表。先注释着以后备用-->
+<script type="text/javascript" src="js/dian/GlobalProvinces_main.js"></script>
+<script type="text/javascript" src="js/dian/GlobalProvinces_extend.js"></script>
+<script type="text/javascript" src="js/dian/initLocation.js"></script>
+<script type="text/javascript" src="My97DatePicker/WdatePicker.js"></script>
+
+<script type="text/javascript">
+	$(function(){
+		
+		//设置导航栏选中状态
+		$("#li_nav_topic").addClass("active");
+		$("#li_nav_item_topic_list").addClass("active");
+
+		<!--修改话题开始-->
+		$('.theme-login10').click(function(){
+			$('.theme-popover-mask10').show();
+			$('.theme-popover-mask10').height($(document).height());
+			$('.theme-popover10').slideDown(200);
+
+		});
+		$('.theme-poptit10 .close').click(function(){
+			$('.theme-popover-mask10').hide();
+			$('.theme-popover10').slideUp(200);
+		});
+		<!--修改话题结束-->        
+		{% if topic_list %}
+		var data_count = {{ data_count }};
+		var page_size = {{ page_size }};
+		var page_index = {{ page_index }};
+        var html = '<span>共<b>{{ data_count }}</b>条记录</span>';
+        html += '<span>每页<b>{{ page_size }}</b>个</span>';
+        if(page_index > 1){
+        	html += '<a href="javascript:search(1)">首页</a>';
+        	html += '<a href="javascript:search(' + (page_index - 1) + ')" class="s1">上一页</a>';
+        }
+        var page_count = parseInt(data_count / page_size);
+		if(data_count % page_size > 0)
+			page_count += 1;
+		 
+        if(page_count > page_index){
+        	html += '<a href="javascript:search(' + (page_index + 1) + ')" class="s1">下一页</a>';
+        	html += '<a href="javascript:search(' + page_count + ')">末页</a>'
+        }
+		html += '<span>第<b>' + page_index + '</b>页</span>';
+		html += '<span>总共<b>' + page_count + '</b>页</span>';
+		$("#yema").html(html);
+		{% endif %}
+		
+		
+
+       set_input_default('txtSearchText', '请输入关键词');
+	});
+
+    //查询话题
+	function search(page_index){
+		var search_text = $.trim($("#txtSearchText").val());
+		if(search_text == "请输入关键词")
+			$("#txtSearchText").val("");
+		$("#hdPageIndex").val(page_index);
+		return $("#submit_search").click();
+	}
+	
+	//设置话题置顶状态
+	//id: 话题id
+	//status: 置顶状态。0为不置顶。1为置顶 
+	function set_top(id, status){
+		if($("#zd" + id + "_" + status).attr("checked") == "checked")
+			return false;
+		$.post('/topic/update_topic_top/', {'id': id, 'status': status}, function(data){
+				if(data == 'fail'){
+					alert('操作失败。请与管理员联系。');
+				}else if(data == 'ok'){
+					$("#zd" + id + "_" + status).attr("checked", true);
+				}
+			});
+	}
+	
+	function del_topic(id){
+		if(!confirm("您确定要删除这个话题？"))
+			return;
+		$.post("/topic/update_topic_status/", {"id": id, "status": 1}, function(data){
+				if(data == "ok"){
+					alert("删除成功！")
+					  search(1);
+					}else{
+						alert("删除失败,请与管理员练习！");
+						}
+			});
+	}
+</script>
+{% endblock %}
+
+{% block footer %}
+ 
+
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+         <div class="cont_right_lc">
+         <div class="cont_right_lcl">
+        <button class="jg theme-login13" href="javascript:;">新增加油站短文</button>
+         <input type="text" value="请输入关键词" class=" yl"><button class="cx">查询</button>
+         </div>
+         <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;" class="liuyan">
+<tbody><tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+<td width="120">分类</td><td width="660">内容</td><td width="150">写入时间</td><td width="200">操作</td>
+</tr>
+<tr>
+<td>河南少儿图书馆员</td><td>#衣服褶皱绘制的方法#在整理教案，就偷偷发一个出来。这个是我画衣服褶皱的时候的一些知识点，包&lt;</td><td>2012-12-12 13:13:13</td><td><a class="shan">修改</a>/<a class="shan">删除</a></td>
+</tr>
+</tbody></table>
+<div class="yema">
+<span>共<b>100</b>条记录</span>
+<span>每页<b>20</b>个</span>
+<a href="">首页</a>
+<a href="" class="s1">上一页</a>
+<a href="" class="s1">下一页</a>
+<a href="">末页</a>
+<span>总共<b>15</b>页</span>
+</div>
+</div>
+</div>
+
+
+<!--修改话题开始-->
+<!-- <div class="theme-popover-mask10"></div>
+<div class="theme-popover10">
+	<div class="theme-poptit10">
+		<a href="javascript:;" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod10 dform">
+		<form class="theme-signin10" name="loginform" action="" method="post">
+         <table cellpadding="0" cellspacing="0" >
+	       <tr><td width="100" align="right">名称：</td><td><input class="ipt" type="text" name="log"  size="20" /></td></tr>
+	        <tr><td height="10" align="right"></td><td></td></tr>
+	       <tr><td width="100" align="right">话题内容：</td><td><textarea  rows="10" cols="80" ></textarea></td></tr>
+	       <tr><td colspan="2" style="padding-left:200px;"><input class="btn btn-primary que" type="submit" name="submit" value=" 确定 " /> <input class="btn btn-primary qux" type="submit" name="submit" value=" 取消 " /> </td></tr>
+	       </table>
+		</form>
+	</div>
+</div> -->
+<!--修改话题结束-->
+{% endblock %}

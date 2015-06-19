@@ -1,0 +1,203 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %}
+<style type="text/css">
+.res_list{  }
+.res_list a{ color:black;}
+.res_list img{ border:0; height:50px; }
+
+</style>
+<script type="text/javascript">
+$(function(){
+	//设置导航栏选中状态
+	$("#li_nav_topic").addClass("active");
+	$("#li_nav_item_topic_list").addClass("active");
+	
+	//关闭修改框
+ 
+	$('.theme-poptit11 .close').click(function(){
+		$('.theme-popover-mask11').hide();
+		$('.theme-popover11').slideUp(200);
+	})
+	//生成分页代码
+    $("#yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+	
+	$("#btnOk").click(function(){
+		var content = $.trim($("#txtContent").val());
+		if(content == ""){
+			alert("话题内容不能为空！");
+			return;
+		}
+		var id = $("#hdRemarkId").val();
+		if(id == ""){
+			alert("找不到id");
+			return;
+		}
+	
+		$.post("/topic/edit_remark/", {"id": id, "content": content}, function(data){
+			if(data == "ok"){
+				alert("修改成功！");
+				location.reload();
+			}else {
+				alert(data);
+			}
+		});
+	});
+	
+	//关闭编辑窗口
+	$("#btnCancel").click(function(){
+		$('.theme-poptit11 .close').click();
+	});	
+	
+});
+
+//页面跳转
+function gopage(index){
+	location.href = "/manager2/comment_list/?tid={{ topic_id }}&page_index" + index;
+}
+
+//删除评论
+function del_remark(id){
+	if(!confirm("您确认要删除这条评论？"))
+		return false;
+	$.post("/topic/delete_remark/", {"id": id}, function(data){
+		if(data == "ok"){
+			alert("删除成功！");
+			gopage(1);
+		}
+	});
+}
+
+//显示修改评论文本框
+function show_edit(id, content){
+	$("#hdRemarkId").val(id);
+	$("#txtContent").val(content);
+	//获取资源列表
+	$.get("/topic/remark_resource_detail/", {"id": id}, function(data){
+		var html = "";
+		data = JSON.parse(data);
+		for(var i =0; i< data.length; i++){
+
+			html += '<td id="tdRes' + data[i]['id'] + '">';
+			html += '<a href="' + data[i]['origin_path'] + '" target="_blank">';
+			if(data[i]['thumbnail'] != ""){
+				
+				html += '<img src="' + data[i]['thumbnail'] + '" />';
+			}else{
+				html += '查看';
+				html += '<br clear="both" />';
+			}
+
+			html += '</a>';
+
+			html += '<a href="javascript:del_topic_resource(' + data[i]['id'] + ')">删除</a>';
+			html += '</td>';
+
+		}
+		$("#trResList").html(html);
+		$('.theme-popover-mask11').show();
+		$('.theme-popover-mask11').height($(document).height());
+		$('.theme-popover11').slideDown(200);
+	});
+}
+
+//删除资源成功！
+function del_topic_resource(id){
+	if(!confirm("确定要删除这个资源嘛？"))
+		return;
+	$.post("/topic/remove_remark_resource/", {"id": id}, function(data){
+		if(data == "ok"){
+			$("#tdRes" + id).remove();
+
+
+		}else {
+			alert(data);
+			}
+	});
+}
+ 
+</script>
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+ 
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+    <div class="cont_right_lczcc">
+    	<table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px; " class="liuyan" >
+	    	<tr><td colspan="5" class="tit">话题评论信息</td></tr>
+	    	<tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff;">
+	    		<td width="100px">用户名</td>
+	    		<td width="100px" >昵称</td>
+	    		<td width="150px">时间</td>
+	    		<td >评论内容</td>
+	    		<td width="200px"> 操作</td>
+	    	</tr>
+	    	{% for obj in comment_list %}
+			<tr>
+			    <td>{{ obj.username }}</td>
+			    <td>{{ obj.nickname }}</td>
+			    <td >{{ obj.create_time }}</td>
+			    <td>{{ obj.content|safe }}</td>
+			    <td>
+			    	<a class="btn btn-primary theme-login11" href="javascript:show_edit({{ obj.id }}, '{{ obj.content }}');"> 修改</a>/
+			    	<a href="javascript:del_remark({{ obj.id }})">删除</a>
+			    </td>
+			</tr>
+			<tr>	    	
+	     
+	    	{% endfor %}
+ 
+
+</table>
+<div class="yema" id="yema">
+ 
+</div>
+</div>
+
+         </div>
+
+
+<!--修改评论开始-->
+
+<div class="theme-popover-mask11"></div>
+
+<div class="theme-popover11">
+	<div class="theme-poptit11">
+		<a href="javascript:;" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod11 dform">
+		 
+        <table cellpadding="0" cellspacing="0" >
+       		<tr>
+            	<td width="100" align="right">评论内容：</td>
+                <td><textarea  rows="10" id="txtContent" cols="80" ></textarea></td>
+            </tr>
+            <tr id="trTopicResource" class="res_list">
+            	<td height="10" align="right">引用资源：</td>
+                <td align="left" >
+                	<table>
+                    	<tr id="trResList">
+                        	
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+            	<td colspan="2" style="padding-left:60px;">
+                    <input type="hidden" id="hdRemarkId" value="" />
+                    <input class="btn btn-primary que" type="button" id="btnOk" value=" 确定 " />
+                    <input class="btn btn-primary qux" type="button" id="btnCancel" value=" 取消 " />
+                </td>
+            </tr>
+       </table>
+   
+	 
+	</div>
+</div>
+<!--修改评论结束-->
+{% endblock %}

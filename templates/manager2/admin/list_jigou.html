@@ -1,0 +1,284 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %}
+{% load staticfiles %}
+<!--导入ajax文件上传的资源-->
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<script type="text/javascript">
+$(function(){
+	//设置导航栏选中状态
+	$("#li_nav_admin").addClass("active");
+  	//$("#li_nav_admin_library").addClass("active");
+	
+	{% if library %}
+	$("#hdLibraryId").val("{{ library.id }}");
+	$("#txtLibraryName").val("{{ library.lib_name }}");
+	$("#txtProvince").val("{{ library.province }}");
+	$("#txtCity").val("{{ library.city }}");
+	$("#txtRegion").val("{{ library.region }}");
+	$("#txtAddress").val("{{ library.lib_address }}");
+	
+    $("#ajax_img_logo").attr("href", '/media/{{ library.logo_path }}');
+	$("#ajax_img_logo").show();
+	//loadAsset.swf文件
+	$("#ajax_img_swf").attr("href", '/media/{{ library.swf_path }}');
+	$("#ajax_img_swf").show();
+	//附件。客户端exe文件
+	$("#ajax_img_annex").attr("href", '/media/{{ library.annex }}');
+	$("#ajax_img_annex").show();
+	
+	$("#txtDomain").val("{{ library.domain }}");
+
+	$("#txtExpire").val("{{ expire_time }}");
+	$("#txtBuyCode").val("{{ library.buy_code }}");
+	
+	{% endif %}
+	
+	{% if manager %}
+	$("#txtUsername").val("{{ manager.username }}");
+	$("#txtUsername").attr("disabled", "disabled");
+	$("#txtEmail").val("{{ manager.email }}");
+	$("#txtNickname").val("{{ manager.nickname }}");
+	$("#txtQq").val("{{ manager.qq }}");
+	$("#txtRealname").val("{{ manager.realname }}");
+	$("#txtTelphone").val("{{ manager.telephone }}");
+	{% endif %}
+	
+	
+	//上传logo图片
+	$("#fileLogo").change(function(){
+		check_img(document.getElementById('fileLogo'), ['JPG', 'JPEG', 'PNG', 'BMP'], 'hdLogo', 'ajax_img_logo', 'loadingLogo');
+	});
+	
+	//上传swf资源
+	$("#fileSwf").change(function(){
+		check_upload_file(document.getElementById('fileSwf'), 'hdSwf', 'ajax_img_swf', 'loadingSwf');
+	});
+	
+	//上传客户端资源
+	$("#fileAnnex").change(function(){
+		check_upload_file(document.getElementById('fileAnnex'), 'hdAnnex', 'ajax_img_annex', 'loadingAnnex');
+	});
+});
+
+//编辑机构信息
+function edit_library(){
+	var param = {};
+	var lib_name = $.trim($("#txtLibraryName").val());
+	if(lib_name == ""){
+		alert("机构名称不能为空！");
+		return;
+	}
+	param['lib_name'] = lib_name;
+	var email = $.trim($("#txtEmail").val());
+	param['email'] = email;
+	var province = $.trim($("#txtProvince").val());
+	param['province'] = province;
+	
+	var city = $.trim($("#txtCity").val());
+	param['city'] = city;
+	var region = $.trim($("#txtRegion").val());
+	param['region'] = region;
+	var realname = $.trim($("#txtRealname").val());
+	param['realname'] = realname;
+
+	var phone = $.trim($("#txtTelphone").val());
+	param['phone'] = phone;
+
+	var address = $.trim($("#txtAddress").val());
+	param['address'] = address;
+	var qq = $.trim($("#txtQq").val());
+	param['qq'] = qq;
+	var username = $.trim($("#txtUsername").val());
+	if(username == ""){
+		alert("用户名不能为空！");
+		return;
+	}
+	param['username'] = username;
+	var password = $.trim($("#txtPassword").val());
+	param['password'] = password;
+	var nickname = $.trim($("#txtNickname").val());
+	param['nickname'] = nickname;
+	var buy_code = $.trim($("#txtBuyCode").val());
+	param['buy_code'] = buy_code;
+	
+	//域名
+	param['domain'] = $.trim($("#txtDomain").val());
+	if(param['domain'] == ''){
+		alert("自定义域名不能为空！");
+		return;
+	}
+	//过期时间
+	param['expire'] = $("#txtExpire").val();
+	if(param['expire'] == ''){
+		alert("过期时间不能为空！");
+		return;
+	}
+	//logo图片
+	param['logo'] = $("#hdLogo").val();
+	//loadAsset.swf文件
+	param['swf'] = $("#hdSwf").val();
+	//附件。客户端exe文件
+	param['annex'] = $("#hdAnnex").val();
+	
+	var library_id = $("#hdLibraryId").val();
+	if(library_id == ""){
+		//新建
+		if(password == ""){
+			alert("密码不能为空！");
+			return;
+		}
+		
+		if(param['logo'] == ""){
+			alert("logo不能为空！");
+			return;
+		
+		}
+		if(param['swf'] == ''){
+			alert("swf不能为空！");
+			return;
+		}
+		if(param['annex'] == ""){
+			alert("客户端不能为空！");
+			return;
+		}
+	}else{
+		param['id'] = library_id;
+	}
+
+	$.post("/library/edit/", param, function(data){
+		if(data == "ok"){
+			alert("编辑成功！");
+			location.reload();
+		}else if(data == "-1"){
+			alert("此用户名已被注册！");
+		}else if(data == "-2"){
+			alert("机构名称重复！");
+		}else if(data == "-3"){
+			alert("自定义域名已存在！");
+		}
+		else{
+			alert(data);
+		}
+	});
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+	<form method="post" action="#" >
+    <table cellpadding="0" cellspacing="5" class="xinxi" >
+        <tr>
+        	<td width="100"></td>
+            <td width="100" class="ziliao">机构名称：</td>
+            <td width="200"><input type="text" id="txtLibraryName" /></td>
+      
+            <td class="ziliao">所属省级：</td>
+            <td><input type="text" id="txtProvince" /></td>
+         
+        </tr>
+        <tr>
+        	<td></td>
+           
+      
+            <td class="ziliao">所属市级：</td>
+            <td><input type="text" id="txtCity" /></td>
+ 
+            <td class="ziliao"> 所属县级： </td>
+            <td><input type="text" id="txtRegion" /></td>
+
+        </tr>
+        <tr>
+        	<td></td>
+            <td class="ziliao">业务负责人：</td>
+            <td><input type="text" id="txtRealname" /></td>
+           
+             <td class="ziliao">负责人笔名：</td>
+            <td><input type="text" id="txtNickname" /></td>
+        </tr>
+        <tr>
+        	
+            <td></td>
+            <td class="ziliao">负责人电话：</td>
+            <td><input type="text" id="txtTelphone" /></td>
+            <td class="ziliao"> 负责人email： </td>
+            <td ><input type="text" id="txtEmail" /></td>
+        </tr>
+        <tr>
+        	
+            <td></td>
+            <td class="ziliao">自定义域名：</td>
+            <td><input type="text" id="txtDomain" /></td>
+            <td class="ziliao">过期时间： </td>
+            <td ><input type="date" id="txtExpire" /></td>
+        </tr>
+        
+        <tr>
+        	<td></td>
+            <td class="ziliao"> 机构地址：</td>
+            <td><input type="text" id="txtAddress" /></td>
+            <td  class="ziliao">合同编号：</td>
+            <td><input type="text" id="txtBuyCode" /></td>
+        </tr>
+        <tr>
+        	<td></td>
+            <td class="ziliao"> 管理员账号：</td>
+            <td ><input type="text" id="txtUsername" /></td>
+            <td class="ziliao"> 密码：</td>
+            <td><input type="text" id="txtPassword" /></td>
+        </tr>
+        <tr>
+        	
+            <td></td>
+            <td class="ziliao">logo：</td>
+            <td>
+            	<input type="file" accept="image/*" id="fileLogo" name="logo" style="display: none;" />
+                <button class="jg" type="button" onclick="javascript:$('#fileLogo').click()">上传+</button>
+                <a id="ajax_img_logo" style="display:none;" class="shan" target="_blank">查看</a>
+                <img id="loadingLogo" src="{% static 'images/loading.gif' %}" style="display:none;">
+                <input id="hdLogo" type="hidden" value="" />
+
+            </td>
+            <td class="ziliao">swf： </td>
+            <td>
+                <input type="file" accept="video/swf" id="fileSwf" name="swf" style="display: none;" />
+                <button class="jg" type="button" onclick="javascript:$('#fileSwf').click()">上传+</button>
+                <a id="ajax_img_swf" style="display:none;" class="shan" target="_blank">查看</a>
+                <img id="loadingSwf" src="{% static 'images/loading.gif' %}" style="display:none;">
+                <input id="hdSwf" type="hidden" value="" />
+            </td>
+        </tr>
+ 
+        <tr>
+        	<td></td>
+            <td class="ziliao">客户端：</td>
+         
+            <td>
+                <input type="file" id="fileAnnex"  name="logo" style="display: none;" />
+                <button class="jg" type="button" onclick="javascript:$('#fileAnnex').click()">上传+</button>
+                <a id="ajax_img_annex" style="display:none;" class="shan" target="_blank">下载</a>
+                <img id="loadingAnnex" src="{% static 'images/loading.gif' %}" style="display:none;">
+                <input id="hdAnnex" type="hidden" value="" />
+            </td>
+        </tr>
+
+        <tr>
+        	<td colspan="7" height="30"></td>
+        </tr>
+        <tr>
+        	<td colspan="2"></td>
+            <td colspan="3">
+<!--            	<a class="tj" href="/manager2/admin/library_edit2/">下一步</a>-->
+                <input type="hidden" id="hdLibraryId" value="{{ library.lib_name }}" />
+                <input type="button" class="tj" onclick="edit_library()" value="确定" />
+                <button class=" qx" onClick="javascript:location.href='/manager2/admin/library/'">取消</button>
+            </td>
+            <td colspan="2"></td>
+        </tr>
+    </table>
+    </form>
+</div>
+{% endblock %}
+ 
+         

@@ -1,0 +1,501 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+{% load staticfiles %}
+<!--导入ajax文件上传的资源-->
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<!--修改密码开始--> 
+<script type="text/javascript">
+$(document).ready(function($){
+    //设置导航栏选中状态
+	$("#li_nav_activity").addClass("active");
+	$("#li_nav_activity_opus").addClass("active");
+
+	//生成分页代码
+    $(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+
+	//设置搜索关键字文本框默认字
+    set_input_default('txtSearchText', '请输入活动名称');
+	
+	$("#slcPlaceType").val('{{ place_type }}');
+	
+	//上传客户端资源
+	$("#fileOpus").live("change", function(){
+		check_upload_file(document.getElementById('fileOpus'), 'hdOpus', 'ajax_img_opus', 'loadingOpus');
+	});
+	
+	//新增作品选择活动则读取活动分组
+	$("#slcActivityList").change(function(){
+		if(this.value == ""){
+			$("#tdGroup").empty();
+			return;
+		}
+		$.get("/activity/api_get_activity_group/", {"activity_id": this.value}, function(data){
+			var data_list = JSON.parse(data).data;
+			var html = "";
+			for(var i=0; i<data_list.length; i++){
+				html += '<input type="radio" name="group_new" value="' + data_list[i].id + '" id="group_new_' + data_list[i].id + '" />';
+				html += '<label for="group_new_' + data_list[i].id + '">' + data_list[i].group_name + '</label>';
+			}
+			$("#tdGroup").empty().html(html);
+		});
+	});
+});
+
+//关闭查看活动作品明细窗口
+function close_activity_fruit(){
+	$('.theme-popover-mask6').hide();
+	$('.theme-popover6').slideUp(200);
+	$("#btnUpdateReset").click();
+}
+
+//查看指定的活动作品
+function view_activity_fruit(id){
+	$.get("/activity/api_get_fruit_info/", {'id': id}, function(data){
+		var data = JSON.parse(data);
+		$("#hdFruitId").val(data.id);
+		$("#txtActivityName").val(data.activity_name);
+		$("#txtLibraryName").val(data.lib_name);
+		$("#txtFruitName").val(data.fruit_name);
+		$("#linkFruitView").attr("href", "/manager2/activity/view_activity_fruit/?id=" + data.id);
+		$("#txtUsername").val(data.username);
+        $("#txtAuthorName").val(data.author_name);
+		var html = ""
+		for(var i=0; i<data.group_list.length; i++){
+			var id = data.group_list[i]['id'];
+			var group_name = data.group_list[i]['group_name'];
+			var is_check = "";
+			if(data.group_list[i]['is_check'] == "1"){
+				is_check = "checked='checked'";
+			}
+			
+			html += "<input type='radio' name='rdoGroup' class='xz' value='" + id + "' id='rdoGroup" + id + "'" + is_check + " />";
+			html += "<label for='rdoGroup" + id + "'>" + group_name + "</label>";
+		}
+		
+		$("#tdGroupList").html(html);
+		if(data.author_sex == "0"){
+			$("#rdoSex0").attr("checked", "checked");
+		}else{
+			$("#rdoSex1").attr("checked", "checked");
+		}
+
+		$("#txtAuthorAge").val(data.author_age);
+		$("#txtAuthorEmail").val(data.author_email);
+		$("#txtAuthorTel").val(data.author_tel);
+		$("#txtAuthorAddress").val(data.author_address);
+		$("#txtSchoolName").val(data.school_name);
+		$("#txtTeacher").val(data.teacher);
+		$("#txtAuthorBrief").val(data.author_brief);
+		$("#txtFruitBrief").val(data.fruit_brief);
+	});
+	
+	$('.theme-popover-mask6').show();
+	$('.theme-popover-mask6').height($(document).height());
+	$('.theme-popover6').slideDown(200);
+}
+
+//打开新增作品的弹出框
+function open_fruit_edit(){
+	$("#btnAddReset").click();
+	$('.theme-popover-mask').show();
+	$('.theme-popover-mask').height($(document).height());
+	$('.theme-popover17').slideDown(200);	
+}
+
+//关闭新增活动作品窗口
+function hide_add_window(){
+	$('.theme-popover-mask').hide();
+	$('.theme-popover17').slideUp(200);
+	$("#btnAddReset").click();
+}
+
+//触发搜索翻页事件
+function search(page_index){
+    $("#hdPageIndex").val(page_index);
+	$("#txtSearchText").val($("#txtSearchText").val().replace("请输入活动名称", ""));
+	$("#submit").click();	
+}
+
+//设置活动作品的状态
+function set_activity_status(id, status){
+	if(!confirm("您确定要执行这个操作吗？")){
+		return;
+	}
+	$.post("/activity/api_set_fruit_status/", {"id": id, "status": status}, function(data){
+		if(data == "ok"){
+			alert("操作成功！");
+			location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+
+//更新作品信息
+function update_fruit_data(){
+	var param = {};
+	param['id'] = $("#hdFruitId").val();
+	param['fruit_name'] = $.trim($("#txtFruitName").val());
+	if(param['fruit_name'] == ""){
+		alert("作品名称不能为空！");
+		return;
+	}
+	param['author_name'] = $.trim($('#txtAuthorName').val());
+	if(param['author_name'] == ''){
+		alert("作者姓名不能为空！");
+		return;
+	}
+    
+	param['group_id'] = $("input[name=rdoGroup]:checked").val();
+	param['author_sex'] = $("input[name=sex]:checked").val();
+	param['author_age'] = $("#txtAuthorAge").val();
+	if(isNaN(param['author_age'])){
+		alert("作者年龄必须为数字！");
+		return;
+	}
+	param['author_email'] = $.trim($("#txtAuthorEmail").val());
+	param['author_telephone'] = $.trim($("#txtAuthorTel").val());
+	param['author_address'] = $("#txtAuthorAddress").val();
+	param['school_name'] = $("#txtSchoolName").val();
+	param['teacher'] = $("#txtTeacher").val();
+	param['author_brief'] = $("#txtAuthorBrief").val();
+	param['fruit_brief'] = $("#txtFruitBrief").val();
+	
+	$.post("/activity/api_edit_activity_fruit/", param, function(data){
+		if(data == "ok"){
+			alert("编辑成功！");
+			location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+
+//新增活动作品
+function add_activity_fruit(){
+	var param = {};
+	var activity_id = $("#slcActivityList").val();
+	if(activity_id == ''){
+		alert("请选择活动！");
+		return;
+	}
+	param['activity_id'] = activity_id;
+	var unit_name = $.trim($("#txtUnitName").val());
+	if(unit_name == ''){
+		alert("报送单位名称不能为空！");
+		return;
+	}
+	param['unit_name'] = unit_name;
+	
+	var fruit_name = $.trim($("#txtFruitNameNew").val());
+	if(fruit_name == ''){
+		alert("作品名称不能为空！");
+		return;
+	}
+	param['fruit_name'] = fruit_name;
+	
+	var author_name = $.trim($("#txtAuthorNameNew").val());
+	if(author_name == ''){
+		alert("作者姓名不能为空！");
+		return;
+	}
+	param['author_name'] = author_name;
+	if($("input[name=group_new]").length > 0){
+		var group_id = $("input[name=group_new]:checked").val();
+		if(group_id == null){
+			alert("请选择作品分组！");
+			return;
+		}
+		param['group_id'] = group_id;
+	}
+	var fruit_path = $("#hdOpus").val();
+	if(fruit_path == ''){
+		alert("请上传作品！");
+		return;
+	}
+	param['fruit_path'] = fruit_path;
+	var sex = $("input[name=sex_new]:checked").val();
+	param['author_sex'] = sex;
+	var age = $.trim($("#txtAgeNew").val());
+	if(isNaN(age) || age == ''){
+		alert("请输入正确的年龄！");
+		return;
+	}
+	param['author_age'] = age;
+	var email = $("#txtEmailNew").val();
+	param['author_email'] = email;
+	
+	var phone = $("#txtPhoneNew").val();
+	param['author_telephone'] = phone;
+	
+	var address = $("#txtAddressNew").val();
+	param['author_address'] = address;
+	
+	var school = $("#txtSchoolNew").val();
+	param['school_name'] = school;
+	
+	var teacher = $("#txtTeacherNew").val();
+	param['teacher'] = teacher;
+	
+	var author_brief = $("#txtAuthorBriefNew").val();
+	param['author_brief'] = author_brief;
+	var fruit_brief = $("#txtFruitBriefNew").val();
+	param['fruit_brief'] = fruit_brief;
+	
+	$.post("/activity/api_edit_activity_fruit/", param, function(data){
+		if(data == "ok"){
+			alert("编辑成功！");
+			location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+</script> 
+{% endblock %}
+
+
+{% block content %}
+<div class="right_hua">
+    <div class="cont_right_lc">
+        <div class="cont_right_lcl">
+        	<form method="get" action="#">
+            <input type="button" class="jg theme-login17"  onclick="open_fruit_edit()" value="新增作品" />
+
+            机构名称：
+            <select name="library" id="slcLibrary" class="xz">
+            	<option value=""></option>
+                {% for obj in library_list %}
+                <option value="{{ obj.id }}" {% if library_id == obj.id %} selected="selected"{% endif %}>{{ obj.lib_name }}</option>
+                {% endfor %}
+            </select>
+            活动方式：
+            <select name="place_type" class="xz" id="slcPlaceType">
+                <option value=""></option>
+                <option value="net">网络活动</option>
+                <option value="place">现场活动</option>
+            </select>
+            <input type="text" value="{{ search_text|default:'请输入活动名称' }}" name="search_text" id="txtSearchText" class=" yl"/>
+            <input class="cx" type="button" value="搜索" onclick="search(1)" />
+            <input class="cx" type="submit" id="submit" style="display:none" />
+            <input type="hidden" name="page_index" value="1" id="hdPageIndex" />
+            <input type="hidden" name="series_id" value="" id="hdSeriesId" />
+            </form>
+            
+        </div>
+        <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+            <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+                <td width="300">机构名称</td>
+                <td width="300">活动名称</td>
+                <td width="100">编号</td>
+                <td width="120">作品名</td>
+                <td width="120">用户名</td>
+                <td width="100">姓名</td>
+                <td width="100">年龄</td>
+                <td width="100">类型</td>
+                <td width="100">小组</td>
+                <td width="100">状态</td>
+                <td width="250">用户所属机构</td>
+                <td width="250">操作</td>
+            </tr>
+            {% for obj in data_list %}
+            <tr>
+                <td>{{ obj.lib_name }}</td>
+                <td>{{ obj.activity_name }}</td>
+                <td>{{ obj.number }}</td>
+                <td><a href="/manager/opus/?id={{ obj.opus_id }}" target="_blank">{{ obj.fruit_name }}</a></td>
+                <td>{{ obj.username }}</td>
+                <td>{{ obj.author_name }}</td>
+                <td>{{ obj.author_age }}</td>
+                <td>{% if obj.fruit_type == 2 %}个人创作{% endif %}{% if obj.fruit_type == 3 %}图片{% endif %}{% if obj.fruit_type == 4 %}视频{% endif %}{% if obj.fruit_type == 1 %}新闻播报{% endif %}</td>
+                <td>{% if not obj.group_name %}无{% else %}{{ obj.group_name }}{% endif %}</td>
+                <td>{% if obj.status == 1 %}待审核{% endif %}{% if obj.status == 2 %}审核通过{% endif %}</td>
+                <td>{{ obj.user_lib_name }}</td>
+                    </td>
+                <td>
+                    <a class="shan theme-login6"  href="javascript:view_activity_fruit({{ obj.id }});">查看</a>{% if obj.status == 1 %}/<a class="shan" onclick="javascript:set_activity_status({{ obj.id }}, 2)">通过</a>/<a class="shan" href="javascript:set_activity_status({{ obj.id }}, 0)">退回草稿</a>{% endif %}/<a class="shan" href="javascript:set_activity_status({{ obj.id }}, -1)">删除</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+        <div class="yema"></div>
+    </div>
+</div>
+
+<!--添加作品开始-->
+<div class="theme-popover-mask17"></div>
+<div class="theme-popover17">
+    <div class="theme-poptit17"> <a href="javascript:hide_add_window();" title="关闭" class="close">×</a>
+        <h3></h3>
+    </div>
+    <div class="theme-popbod17 dform">
+        <form class="theme-signin17 xinxi2" name="loginform" action="#" method="post">
+            <!--
+            目前批量导入逻辑有问题暂时不使用批量导入
+            <div class="zhu">
+                <p><a href="" class="jg">批量导入作者信息表</a><span class="zy">*注意：需要先下载表格，表格中包含了作者需要填写的信息字段表。</span><a href="" class="jg">下载报名信息表</a></p>
+                <p><a href="" class="jg">批量导入作品</a><span class="zy">*注意：作品的名字同意为作者编号，编号是唯一的。</span></p>
+            </div>
+            -->
+            <table cellpadding="0" cellspacing="10">
+ 
+                <tr>
+                	<td style=" text-align:right;"> 选择活动：</td>
+                    <td style=" text-align:left;">
+                    	<select id="slcActivityList" style="width:210px;">
+                        	<option value=""></option>
+                            {% for obj in activity_list %}
+                            <option value="{{ obj.id }}">{{ obj.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;"> 报送单位：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtUnitName" class="icx" /></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 作品名称：</td>
+                    <td colspan="3" style=" text-align:left;"><input type="text" id="txtFruitNameNew" class="icx" /></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 姓名：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtAuthorNameNew" class="icx" /></td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;"> 作品上传：</td>
+                    <td style=" text-align:left;">
+                    	<input type="file"  id="fileOpus" name="origin" style="display: none;" />
+                        <button class="jg" type="button" onclick="javascript:$('#fileOpus').click()">上传+</button>
+                        <a id="ajax_img_opus" style="display:none;" class="shan" target="_blank">查看</a>
+                        <img id="loadingOpus" src="{% static 'images/loading.gif' %}" style="display:none;">
+                        <input id="hdOpus" type="hidden" value="" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 分组：</td>
+                    <td style=" text-align:left;" id="tdGroup"></td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;"> 性别：</td>
+                    <td style=" text-align:left;">
+                        <input type="radio" value="1" name="sex_new" checked="checked"  />
+                        男&nbsp;&nbsp;
+                        <input type="radio" value="0" name="sex_new"  />
+                        女
+                    </td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 年龄：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtAgeNew" class="icx"  /></td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;"> E-mail：</td>
+                    <td style=" text-align:left;"><input type="text" class="icx" id="txtEmailNew"  /></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 联系电话：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtPhoneNew" class="icx"  /></td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;"> 地址：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtAddressNew" class="icx"  /></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 学校：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtSchoolNew" class="icx"  /></td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;">指导老师：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtTeacherNew" class="icx"  /></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 作者简介：</td>
+                    <td colspan="4" style="text-align:left;"><textarea id="txtAuthorBriefNew" cols="80" rows="3"></textarea></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 作品简介：</td>
+                    <td colspan="4" style="text-align:left;"><textarea cols="80" id="txtFruitBriefNew" rows="3"></textarea></td>
+                </tr>
+            </table>
+            <a class="btn btn-primary que" href="javascript:add_activity_fruit()">确定</a>
+            <input class="btn btn-primary qux " type="button" onclick="hide_add_window()" value=" 取消 " />
+            <input type="reset" style="display:none" id="btnAddReset" />
+        </form>
+    </div>
+</div>
+<!--添加作品结束--> 
+<!--作品信息查看开始-->
+<div class="theme-popover-mask6"></div>
+<div class="theme-popover6">
+    <div class="theme-poptit6"> <a href="javascript:close_activity_fruit();" title="关闭" class="close">×</a>
+        <h3></h3>
+    </div>
+    <div class="theme-popbod6 dform">
+        <form class="theme-signin6 xinxi2" name="loginform" action="" method="post">
+            <table cellpadding="0" cellspacing="10">
+                <tr>
+                    <td style=" text-align:right;"> 活动名称：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtActivityName" disabled="disabled" class="icx" /></td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;"> 用户所属机构：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtLibraryName" disabled="disabled" class="icx"  /></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 作品名称：</td>
+                    <td style=" text-align:left;"><input id="txtFruitName" type="text" class="icx" />
+                        <a class="shan" href="" id="linkFruitView" target="_blank">查看</a></td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;"> 用户名:</td>
+                    <td style=" text-align:left;"><input type="text" id="txtUsername" disabled="disabled" class="icx"  /></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 姓名：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtAuthorName" class="icx" /></td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;"> 小组：</td>
+                    <td style=" text-align:left;" id="tdGroupList"></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 性别：</td>
+                    <td style=" text-align:left;">
+                    	<input type="radio" name="sex" value="1" id="rdoSex1"/>
+                        男&nbsp;&nbsp;
+                        <input type="radio" name="sex" value="0" id="rdoSex0"  />
+                        女 </td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;"> 作者年龄：</td>
+                    <td style=" text-align:left;"><input type="number" class="icx" id="txtAuthorAge"  /></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> E-mail：</td>
+                    <td style=" text-align:left;"><input id="txtAuthorEmail" class="icx" type="text"  /></td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;"> 电话：</td>
+                    <td style=" text-align:left;"><input type="text" class="icx" id="txtAuthorTel"  /></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 地址：</td>
+                    <td style=" text-align:left;"><input type="text" class="icx" id="txtAuthorAddress"  /></td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;"> 作者学校：</td>
+                    <td style=" text-align:left;"><input type="text" class="icx" id="txtSchoolName"  /></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 指导老师：</td>
+                    <td style=" text-align:left;"><input type="text" class="icx" id="txtTeacher"  /></td>
+                    <td width="10"></td>
+                    <td style=" text-align:right;"></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 作者简介：</td>
+                    <td colspan="4" style="text-align:left;"><textarea cols="80" rows="3" id="txtAuthorBrief"></textarea></td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 作品简介：</td>
+                    <td colspan="4" style="text-align:left;"><textarea cols="80" rows="3" id="txtFruitBrief"></textarea></td>
+                </tr>
+            </table>
+            <input type="hidden" id="hdFruitId" value=""  />
+            <a class="btn btn-primary que" href="javascript:update_fruit_data()" >确定</a>
+            <input type="reset" style="display:none" id="btnUpdateReset" />
+            <input class="btn btn-primary qux " type="button" onclick="close_activity_fruit()" value=" 取消 " />
+        </form>
+    </div>
+</div>
+<!--短信留言结束--> 
+{% endblock %} 

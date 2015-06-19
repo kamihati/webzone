@@ -1,0 +1,67 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>河南省少年儿童图书馆-云汇网络出版平台</title>
+<meta http-equiv="X-UA-Compatible" content="ie=7">
+<link rel="shortcut icon" href="http://yh.3qdou.com/media/favicon.ico" type="image/x-icon">
+<script src="/media/swf/rightclick-2.0.js" language="javascript"></script>
+<script src="/media/swf/swfobject-2.0.js" language="javascript"></script>
+<script src="/media/swf/jquery.js" language="javascript"></script>
+<script id="scriptVertion" src="/media/swf/version.js" language="JavaScript"></script>
+<script language="javascript">
+<!--
+function isResize()
+{
+	var width = window.innerWidth;
+	var height = window.innerHeight;
+	if(width==undefined){
+		width=document.documentElement.clientWidth;
+		height=document.documentElement.clientHeight;
+	}
+	var isIE= /msie/i.test(navigator.userAgent);
+	if(isIE&&(width==0)){
+		width=document.body.clientWidth;
+		height=document.body.clientHeight;
+	}
+	var id2 = document.getElementById('RightClickContainer');
+	var sw=width/1920;
+	var sh=height/1050;
+	
+	var scale=(sw>sh?sh:sw);
+	var _w=1920*scale;
+	var _h=1050*scale;
+	id2.style.width =_w+'px';
+	id2.style.height =_h+'px';
+}
+
+// -->
+</script>
+<style type="text/css" media="screen">
+#FlashObjectContainer {
+	visibility: hidden
+}
+</style>
+<script id="b5mmain" type="text/javascript" charset="utf-8" src="/media/swf/b5m.main.js"></script>
+</head>
+<body style="margin:0px auto; width:100%; height=100%; border:0px; overflow:auto; background-repeat:repeat-x; background-color:#000;" onLoad="RightClick.init();" onResize="isResize();">
+<center>
+  <div id="RightClickContainer" algin="center" style="margin: 0px auto; width: 1440px; height: 1050px;">
+    <object type="application/x-shockwave-flash" id="WebGameFlashObject" name="WebGameFlashObject" data="/media/WebLook.swf" width="100%" height="100%">
+      <param name="quality" value="high">
+      <param name="wmode" value="transparent">
+      <param name="menu" value="false">
+      <param name="allowFullScreen" value="true">
+      <param name="allowScriptAccess" value="always">
+      <param name="flashvars" value="opusID={{opus.id}}&serverURL=http://{{host}}/">
+    </object>
+  </div>
+</center>
+<script language="javascript">
+<!--
+isResize();
+// -->
+</script>
+<object id="b5tplugin" type="application/x-bang5taoplugin" style="position:absolute;left:-9000px;top:-9000px;" width="0" height="0">
+</object>
+</body>
+</html>

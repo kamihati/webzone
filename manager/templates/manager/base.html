@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		<meta charset="UTF-8">
+		<title>{{ site_name }}－－后台管理系统</title>
+		{% load staticfiles %}
+		<!-- JavaScript -->
+		<script src="{% static 'js/jquery-1.10.2.min.js' %}"></script>
+		
+		<script src="{% static 'bootstrap-3.0.3/js/bootstrap.min.js' %}"></script>
+
+		<link rel="stylesheet" href="{% static 'bootstrap-3.0.3/css/bootstrap.min.css' %}">
+		<link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+		
+		<!--[if IE 7]>
+		<link rel="stylesheet" href="{% static 'css/font-awesome-ie7.min.css' %}">
+		<![endif]-->
+		<style>
+			body {
+				padding-top: 50px;
+			}
+		</style>
+		{% block header %}{% endblock %}
+	</head>
+
+	<body>
+		<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				        <span class="sr-only">Toggle navigation</span>
+				        <span class="icon-bar"></span>
+				        <span class="icon-bar"></span>
+				        <span class="icon-bar"></span>
+				      </button>
+					<a class="navbar-brand" href="/manager/"><img src="{% static 'manager/img/logo.png' %}">{{ site_name }}<img src="{% static 'manager/img/line.png' %}">后台管理</a>
+				</div>
+				<div class="collapse navbar-collapse">
+					<ul class="nav navbar-nav" style="color: #fff; padding-left: 15px">
+						{% for perms in request.session.tperms %}
+						{% if perms.group == group_name %}
+						<li class="active"><a href="{{ perms.url }}">{{ perms.group }}</a></li>
+						{% else %}
+						<li><a href="{{ perms.url }}">{{ perms.group }}</a></li>
+						{% endif %}
+						{% endfor %}
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						<li>
+							<button class="btn btn-success" onclick="change_pass()" style="margin-top: 10px">修改密码</button>
+						</li>
+						<li>
+							<a href="/manager/logout/">退出登录</a>
+						</li>
+					</ul>
+				</div><!--/.nav-collapse -->
+			</div>
+		</div>
+
+		<div class="container" style="padding-top: 10px">
+			<div class="row">
+				<div class="col-md-3">
+					{% for perms in request.session.gperms %}
+					{% if perms.group == group_name %}
+						{% for perm in perms.items %}
+						{% if perm.group == None %}
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h4 class="panel-title">
+									<i class="glyphicon glyphicon-th-list"></i>
+									{{ perms.group }}
+								</h4>
+							</div>
+							<div class="list-group">
+							{% for item in perm.items %}
+								<a class="list-group-item {% if perm_code == item.code %}active{% endif%}" href="{{ item.url }}">
+									{{ item.name }}
+									<i class="glyphicon glyphicon-chevron-right" style="float: right; opacity: .25"></i></a>
+							{% endfor %}
+							</div>
+						</div>
+						{% else %}
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h4 class="panel-title">
+									<i class="glyphicon glyphicon-th"></i>
+									{{ perm.group }}
+								</h4>
+							</div>
+							<div class="list-group">
+							{% for item in perm.items %}
+								<a class="list-group-item {% if perm_code == item.code %}active{% endif%}" href="{{ item.url }}">{{ item.name }}
+									<i class="glyphicon glyphicon-chevron-right" style="float: right; opacity: .25"></i></a>
+							{% endfor %}
+							</div>
+						</div>
+						{% endif %}
+						{% endfor %}
+					{% endif %}
+					{% endfor %}
+				</div>
+				<div class="col-md-9">
+					<!--div class="container"-->
+						<!--div class="row">
+							<ol class="breadcrumb">
+								<li>
+									<a href="#">Home</a>
+								</li>
+								<li>
+									<a href="#">Library</a>
+								</li>
+								<li class="active">
+									Data
+								</li>
+							</ol>
+						</div-->
+						<div class="row">
+							{% block content %}{% endblock %}
+						</div>
+					<!--/div-->
+				</div>
+			</div>
+		</div>
+	</body>
+	{% block footer %}{% endblock %}
+	
+<script>
+	function change_pass(){
+		$("#passModal").modal("show");
+	}
+	
+	function update_pass_status(){
+		if ($("#oldpass").val().length>0 && $("#password").val().length>=6 && $("#password").val().length<=20 && $("#password").val()==$("#password2").val()){
+			$("#btn_pass").attr("disabled",false);
+		} else {
+			$("#btn_pass").attr("disabled",true);
+		}
+	}
+	
+	function update_pass(){
+		var oldpass = $("#oldpass").val();
+		var pass = $("#password").val();
+		if (pass == $("#password2").val() && pass.length>=6 && pass.length<=20){
+			$.post("/manager/change_self_pass/", {"oldpass":oldpass, "password":pass}, function(data){
+				if (data == "ok"){
+					alert("您的账号密码修改成功！");
+					$("#oldpass").val("");
+					$("#password").val("");
+					$("#password2").val("");
+					$("#passModal").modal("hide");
+				} else {
+					alert(data);
+				}
+			});
+		}
+	}
+</script>
+<!-- Modal -->
+<div class="modal fade" id="passModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="width:460px">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">修改当前管理员密码</h4>
+      </div>
+      <div class="modal-body">
+      	<form class="form-horizontal" >
+      		<input type="hidden" value="0" id="hid_id" />
+			<div class="form-group" id="form_district">
+				<label class="col-md-4 control-label">当前账号：</label>
+				<div class="col-md-8 pull-left">
+					<span class="label label-default">{{ request.user.username }}</span>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_password">
+				<label class="col-md-4 control-label">当前密码：</label>
+				<div class="col-md-8 pull-left">
+					<input type="password" class="form-control" id="oldpass" onblur="update_pass_status()"/>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_password">
+				<label class="col-md-4 control-label">新密码：</label>
+				<div class="col-md-8 pull-left">
+					<input type="password" class="form-control" id="password" onblur="update_pass_status()"/>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_password2">
+				<label class="col-md-4 control-label">确认密码：</label>
+				<div class="col-md-8 pull-left">
+					<input type="password" class="form-control" id="password2" onblur="update_pass_status()"/>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+		</form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal">关闭</button>
+        <button class="btn btn-primary" id="btn_pass" onclick="update_pass()" disabled="disabled">修改密码</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+</html>

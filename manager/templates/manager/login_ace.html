@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		<meta charset="UTF-8">
+		<title>{{ site_title }}</title>
+		{% load staticfiles %}
+		<!--[if IE 7]>
+		<link rel="stylesheet" href="{% static 'css/font-awesome-ie7.min.css' %}">
+		<![endif]-->
+		<link href="{% static 'manager/ace.bootstrap/css/global.css' %}" rel="stylesheet" />
+		<link href="{% static 'manager/ace.bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" />
+		<link rel="stylesheet" href="{% static 'manager/ace.bootstrap/css/ace.min.css' %}" />
+		<link rel="stylesheet" href="{% static 'manager/ace.bootstrap/css/font-awesome.min.css' %}" />
+		<!--[if IE 7]>
+		<link rel="stylesheet" href="{% static 'manager/ace.bootstrap/css/font-awesome-ie7.min.css' %}" />
+		<![endif]-->
+		<!--[if lt IE 9]>
+		<link rel="stylesheet" href="{% static 'manager/ace.bootstrap/css/ace-ie.min.css"' %} />
+		<![endif]-->
+	</head>
+	
+	<body class="login-layout">
+		<div id="main-container">
+			<div class="row-fluid">
+				<div class="span12">
+					<div class="login-container">
+						<!-- title -->
+						<div class="row-fluid">
+							<div class="center">
+								<h3><img src="{% static 'manager/img/logo.png' %}"/><span class="red">河南省少年儿童图书馆</span><span class="white">后台管理</span></h3>
+								<h6 class="blue">&copy; 识为科技</h6>
+							</div>
+						</div>
+						<!-- title end -->
+						<!-- main -->
+						<div class="row-fluid">
+							<div class="pr">
+								<!-- login -->
+								<div id="login-box" class="visible widget-box no-border">
+									<div class="widget-body">
+										<div class="widget-main">
+
+											<h6 class="header lighter bigger f16"><i class="icon-coffee green f20"></i> 欢迎进入后台管理操作系统</h6>
+											<form>
+												<fieldset>
+													<label> <span class="block input-icon input-icon-right">
+															<input type="text" class="span12 line150" placeholder="请输入用户名" />
+															<i class="icon-user"></i> </span> </label>
+													<label> <span class="block input-icon input-icon-right">
+															<input type="password" class="span12 line150" placeholder="请输入密码" />
+															<i class="icon-lock"></i> </span> </label>
+													<div class="space"></div>
+													<div class="row-fluid">
+														<label class="span7">
+															<input type="checkbox">
+															<span class="lbl"> 记住密码</span> </label>
+														<button onclick="return false;" class="span5 btn btn-small btn-primary">
+															<i class="icon-key"></i> 登录
+														</button>
+													</div>
+												</fieldset>
+											</form>
+										</div>
+										<div class="toolbar clearfix">
+											<div>
+												<a href="javascript:void(0);" onclick="show_box('forgot-box'); return false;" class="forgot-password-link"><i class="icon-arrow-left"></i> 忘记密码？</a>
+											</div>
+										</div>
+									</div>
+								</div>
+								<!-- login end -->
+								<!-- forgot -->
+								<div id="forgot-box" class="widget-box no-border">
+									<div class="widget-body">
+										<div class="widget-main">
+											<h4 class="header red lighter bigger"><i class="icon-key"></i> 取回密码</h4>
+											<div class="space-6"></div>
+											<p>
+												请输入您注册的邮箱
+											</p>
+											<form>
+												<fieldset>
+													<label> <span class="block input-icon input-icon-right">
+															<input type="email" class="span12 line150" placeholder="Email" />
+															<i class="icon-envelope"></i> </span> </label>
+													<div class="row-fluid">
+														<button onclick="return false;" class="span5 offset7 btn btn-small btn-danger">
+															<i class="icon-lightbulb"></i> 发送
+														</button>
+													</div>
+												</fieldset>
+											</form>
+										</div>
+										<div class="toolbar center">
+											<a href="javascript:void(0);" onclick="show_box('login-box'); return false;" class="back-to-login-link">返回登录 <i class="icon-arrow-right"></i></a>
+										</div>
+									</div><!--/widget-body-->
+								</div>
+								<!-- forgot end -->
+							</div>
+						</div>
+						<!-- main end -->
+					</div><!-- login-container end -->
+				</div><!-- span12 end -->
+			</div><!-- row-fluid end -->
+		</div><!-- main-container end -->
+		<script src="{% static 'manager/ace.bootstrap/js/jquery-1.9.1.min.js' %}"></script>
+		<script type="text/javascript">
+			function show_box(id) {
+				$('.widget-box.visible').removeClass('visible');
+				$('#' + id).addClass('visible');
+			}
+		</script>
+	</body>
+	
+	</html>

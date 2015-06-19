@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <tutorials font="微软雅黑" size="32" color="0xFFFFFF" scale="1" space="5" delay="3" scale2="2" video="http://yh.3qdou.com/media/course.flv">
+			<module name="topic">
+				<step name="createBtn" text="点击创建话题" align="RB" auto="false" x="45" y="30" frame="1"/>
+				<step name="selectTemplate" text="请选择一个模版" align="RB" auto="false" x="-85" y="135" frame="2"/>
+				<step name="interTitle" text="请输入话题信息，点击确定" align="RB" auto="false" x="-125" y="-35" frame="3"/>
+				<step name="selectBG" text="请选择一张背景图片" align="RB" auto="true" x="0.12" y="0.3" frame="4"/>
+				<step name="publicTopic" text="请点击保存按钮" align="RB" auto="false" x="50" y="50" frame="5"/>
+				<step name="openTopic" text="点击进入话题页面" align="RB" auto="false" x="0.75" y="0.08" frame="6"/>
+				<step name="clickTopic" text="请点击选择一个话题" align="RT" auto="false" x="90" y="6" frame="7"/>
+				<step name="joinTopic" text="请点击参与话题" align="LB" auto="true" x="5" y="45"  frame="8"/>
+				<step name="selectNote" text="请点击选择便签" align="RT" auto="false" x="0.26" y="0.07" frame="9"/>
+				<step name="selectSmile" text="请点击选择表情" align="RB" auto="false" x="28" y="50" frame="10"/>
+				<step name="clickComplete" text="输入文字并点击发表" align="LB" auto="false" x="55" y="55" frame="11"/>
+			</module>
+			<module name="userCenter">
+				<step name="openAvater" text="点击查看个人信息哦" align="RB" auto="false" x="165" y="150" frame="12"/>
+				<step name="changeAvater" text="更换头像息哦" align="RB" auto="false" x="45" y="30" frame="13"/>
+				<step name="changePassword" text="重设密码哦" align="RB" auto="false" x="45" y="40" frame="14"/>
+				<step name="imageBtn" text="点我查看管理图片" align="RB" auto="false" x="75" y="60" frame="15"/>
+				<step name="catchBtn" text="拍照哦" align="RB" auto="false" x="45" y="40" frame="16"/>
+				<step name="editProduct" text="创作的作品在这里哦" align="RB" auto="false" x="45" y="30" frame="17"/>
+				</module>
+			<module name="activity">
+				<step name="openActivity" text="查看大赛详情哦" align="RB" auto="false" x="800" y="0" frame="18"/>
+				<step name="groupBtn" text="点我查看学前组哦" align="RB" auto="false" x="155" y="30" frame="19"/>
+				<step name="districtBtn" text="点我按地区查看哦" align="RB" auto="false" x="45" y="40" frame="20"/>
+				<step name="hotBtn" text="看看谁是人气王呀" align="RB" auto="false" x="75" y="60" frame="21"/>
+				<step name="search" text="输入关键字可以搜索哦" align="RB" auto="false" x="45" y="40" frame="22"/>
+				<step name="voteBtn" text="点我投票哦" align="RB" auto="false" x="45" y="30" frame="23"/>
+				<step name="viewProduct" text="点击缩略图查看作品哦" align="RB" auto="false" x="45" y="30" frame="24"/>
+				<step name="pinglun" text="这里可以发表评论哦" align="RB" auto="false" x="45" y="30" frame="25"/>
+				<step name="jionBtn" text="点我上传作品哦" align="RB" auto="false" x="45" y="30" frame="26"/>
+			</module>
+    </tutorials>
+    
+    <face>
+			<smile id="/01" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1662/s.png</smile>
+			<smile id="/02" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1660/s.png</smile>
+			<smile id="/03" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1641/s.png</smile>
+			<smile id="/04" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1640/s.png</smile>
+			<smile id="/05" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1638/s.png</smile>
+			<smile id="/06" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1637/s.png</smile>
+			<smile id="/07" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1636/s.png</smile>
+			<smile id="/08" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1635/s.png</smile>
+			<smile id="/09" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1634/s.png</smile>
+			<smile id="/10" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1633/s.png</smile>
+			<smile id="/11" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1632/s.png</smile>
+			<smile id="/12" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1631/s.png</smile>
+			<smile id="/13" width="32" height="34" >http://yh.3qdou.com/media/assets/12/1630/s.png</smile>
+			<smile id="/14" width="41" height="45" >http://yh.3qdou.com/media/assets/12/1671/s.png</smile>
+			<smile id="/15" width="41" height="45" >http://yh.3qdou.com/media/assets/12/1670/s.png</smile>
+			<smile id="/16" width="41" height="45" >http://yh.3qdou.com/media/assets/12/1669/s.png</smile>
+			<smile id="/17" width="41" height="45" >http://yh.3qdou.com/media/assets/12/1668/s.png</smile>
+			<smile id="/18" width="41" height="45" >http://yh.3qdou.com/media/assets/12/1667/s.png</smile>
+			<smile id="/19" width="41" height="45" >http://yh.3qdou.com/media/assets/12/1666/s.png</smile>
+			<smile id="/20" width="41" height="45" >http://yh.3qdou.com/media/assets/12/1665/s.png</smile>
+			<smile id="/21" width="41" height="45" >http://yh.3qdou.com/media/assets/12/1664/s.png</smile>
+			<smile id="/22" width="41" height="45" >http://yh.3qdou.com/media/assets/12/1663/s.png</smile>
+	</face>
+</root>

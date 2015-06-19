@@ -1,0 +1,369 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+<style>
+	.bootstrap-select { width:272px; }
+</style>
+
+<script>
+	var old_classify_id = "";
+	
+	$(document).ready(function(){
+		init_opus_type();
+		init_size_list();
+		on_page(1);
+	});
+	
+	function init_opus_type(){
+		$.post("/manager/get_opus_type_list/", function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				$("#sel_1st").append("<option value='0'>请选择作品分类</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_1st").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				$('.selectpicker').selectpicker();
+				$('.selectpicker').selectpicker('refresh');
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	function update_2nd(){
+		document.getElementById("sel_2nd").options.length = 0;
+		$('.selectpicker').selectpicker('refresh');
+		var parent_id = $("#sel_1st").val();
+		if (parent_id == "0"){
+			return;
+		}
+		$.post("/manager/get_opus_type_list/", {"id":parent_id}, function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				$("#sel_2nd").append("<option value='0'>请选择作品分类</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_2nd").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				$("#sel_2nd").val(old_classify_id);
+				$('.selectpicker').selectpicker('refresh');
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function init_size_list(){
+		$.post("/manager/page_size_list/", {"page_index":1, "page_size": 100}, function(data){
+			var json_data = JSON.parse(data).data;
+			$("#sel_size").append("<option value='0'>请选择作品版面类型</option>");
+			for (var i=0; i<json_data.length; i++){
+				$("#sel_size").append("<option value='" + json_data[i]["id"] + "'>" + json_data[i]["nickname"] + "</option>");
+			}
+			$('.selectpicker').selectpicker();
+			$('.selectpicker').selectpicker('refresh');
+		});
+	}
+	
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">上一页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index - 1) + ")\">上一页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">下一页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index + 1) + ")\">下一页</a></li>";
+		}
+		for (var i = 1; i <= page_count; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		var search_text = $("#search_text").val();
+		$.post("/manager/opus_size_list/", {"page_index":page_index, "search_text":search_text}, function(data){
+			var json_data = JSON.parse(data);
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td><a href='#' onclick='update_opus_size(" + array_list[i]["id"] + "," + array_list[i]["size_id"] + "," + array_list[i]["classify_id"] + ")'>[" + array_list[i]["classify_name"] + "]作品版面</a></td><td>";
+				newRow += array_list[i]["create_type"] + "</td><td>";
+				newRow += array_list[i]["read_type"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["create_type_id"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["read_type_id"] + "</td><td>";
+				newRow += array_list[i]["screen_width"] + "</td><td>";
+				newRow += array_list[i]["screen_height"] + "</td><td>";
+				newRow += array_list[i]["print_width"] + "</td><td>";
+				newRow += array_list[i]["print_height"] + "</td><td>";
+				newRow += array_list[i]["origin_width"] + "</td><td>";
+				newRow += array_list[i]["origin_height"] + "</td><td>";
+				newRow += "<button class='btn btn-warning btn-xs' onclick='delete_opus_size(" + array_list[i]["id"] + ")'>点击删除</button></td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+	
+	
+	function submit_size(){
+		var size_id = $("#sel_size").val();
+		var opus_type_id = $("#sel_2nd").val();
+		var hid_id = $("#hid_id").val();
+		var rdo_create = $("input[name=rdo_create]:checked").val();
+		var rdo_read = $("input[name=rdo_read]:checked").val();
+		
+		$.post("/manager/opus_size/", {"size_id":size_id, "opus_type_id":opus_type_id, "hid_id":hid_id,"rdo_create":rdo_create,"rdo_read":rdo_read}, function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				alert(json_data.data);
+				window.location.reload();
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function update_size(){
+		/*
+		 *选择作品版本后，更新版本尺寸信息
+		 */
+		var text = $("#sel_size option:selected").html();
+		var screen = text.substring(0, text.indexOf('：'));
+		var print = text.substring(text.indexOf('：')+1, text.indexOf('（'));
+		var origin = text.substring(text.indexOf('（')+1, text.indexOf('）'));
+		
+		$("#screen_w").html(screen.split('*')[0]);
+		$("#screen_h").html(screen.split('*')[1]);
+		$("#print_w").html(print.split('x')[0]);
+		$("#print_h").html(print.split('x')[1]);
+		$("#origin_w").html(origin.split('x')[0]);
+		$("#origin_h").html(origin.split('x')[1]);
+		update_status();
+	}
+	
+	function update_status(){
+		var size_id = $("#sel_size").val();
+		var opus_type_id = $("#sel_2nd").val();
+		if (size_id != "0" && opus_type_id != "0"){
+			$("#btn_submit").attr("disabled",false)
+		} else {
+			$("#btn_submit").attr("disabled",true)
+		}
+	}
+
+	function new_opus_size(){
+		$("#sel_size").val("0");
+		$("#hid_id").val("0");
+		$('.selectpicker').selectpicker('refresh');
+		
+		$("#myModal").modal("show");
+	}
+	
+	function update_opus_size(id, size_id, classify_id){
+		$("#sel_size").val(size_id);
+		$("#sel_size").change();
+		$("#hid_id").val(id);
+		
+		$("#sel_1st").val(classify_id.toString().substring(0,1));
+		$("#sel_1st").change();
+		old_classify_id = classify_id;
+		$('.selectpicker').selectpicker('refresh');
+		$("#btn_submit").attr("disabled",false)
+		
+		var td_list = $("#tr"+id).find('td');
+		if (td_list[3].innerHTML == "1"){
+			document.getElementById("rdo1").checked = true;
+			document.getElementById("rdo2").checked = false;
+		} else {
+			document.getElementById("rdo1").checked = false;
+			document.getElementById("rdo2").checked = true;
+		}
+		if (td_list[4].innerHTML == "1"){
+			document.getElementById("rdo11").checked = true;
+			document.getElementById("rdo22").checked = false;
+		} else {
+			document.getElementById("rdo11").checked = false;
+			document.getElementById("rdo22").checked = true;
+		}
+		
+		$("#myModal").modal("show");
+	}
+	
+	function delete_opus_size(id){
+		if (confirm("你真的确定要删除吗?") == true){
+			$.post("/manager/delete_opus_size/", {"id":id}, function(data){
+				var json_data = JSON.parse(data);
+				if (json_data.code == 1){
+					alert(json_data.data);
+					window.location.reload();
+				} else {
+					alert(json_data.data);
+				}
+			});
+		}
+	}
+		
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-2 pull-left">
+		<button class="btn btn-danger" onclick="new_opus_size()">点击添加作品版面/画布</button>
+	</div>
+
+  <div class="input-group col-md-5 pull-left">
+  <input type="text" id="search_text" name="search_text" placeholder="请输入搜索项" class="form-control">
+  <span class="input-group-btn">
+    <button class="btn btn-primary" id="btn_search" type="button" onclick="search()">
+    <span class="glyphicon glyphicon-search"></span> 点击搜索</button>
+  </span>
+  </div>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>分类名称</th>
+              <th>创作</th>
+              <th>阅读</th>
+              <th>屏幕宽px</th>
+              <th>屏幕高px</th>
+              <th>印刷宽cm</th>
+              <th>印刷高cm</th>
+              <th>原图宽px</th>
+              <th>原图高px</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">作品分类版面/画布资料</h4>
+      </div>
+      <div class="modal-body">
+      	<form class="form-horizontal" >
+      		<input type="hidden" value="0" id="hid_id" />
+	        <div class="form-group" id="form_name">
+				<label class="col-md-3 control-label">选择作品分类：</label>
+				<div class="col-md-9 pull-left">
+					<div class="input-group col-md-3 pull-left">
+						<select class="selectpicker" id="sel_1st" onchange="update_2nd()"></select>
+					</div>
+					<div class="input-group col-md-3 pull-left">
+						<select class="selectpicker" id="sel_2nd" onchange="update_status()">
+							<option value='0'>请选择作品分类</option>
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="form-group" id="form_district">
+				<label class="col-md-3 control-label">作品版面列表：</label>
+				<div class="col-md-9 pull-left">
+					<select class="selectpicker" id="sel_size" onchange="update_size()"></select>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_contact">
+				<label class="col-md-3 control-label">屏幕宽：</label>
+				<div class="col-md-3 pull-left">
+					<span class="badge" id="screen_w">0</span>px
+				</div>
+				<div class="col-md-6 form-inline">
+					<label class="control-label">屏幕高：</label><span class="badge" id="screen_h">0</span>px
+				</div>
+			</div>
+			<div class="form-group" id="form_contact">
+				<label class="col-md-3 control-label">印刷宽：</label>
+				<div class="col-md-3 pull-left">
+					<span class="badge" id="print_w">0</span>cm
+				</div>
+				<div class="col-md-6 form-inline">
+					<label class="control-label">印刷高：</label><span class="badge" id="print_h">0</span>cm
+				</div>
+			</div>
+			<div class="form-group" id="form_contact">
+				<label class="col-md-3 control-label">原图宽：</label>
+				<div class="col-md-3 pull-left">
+					<span class="badge" id="origin_w">0</span>px
+				</div>
+				<div class="col-md-6 form-inline">
+					<label class="control-label">原图高：</label><span class="badge" id="origin_h">0</span>px
+				</div>
+			</div>
+			<div class="form-group" id="form_create">
+				<label class="col-md-3 control-label">创作显示：</label>
+					<div class="col-md-3 form-inline">
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="rdo_create" id="rdo1" value="1" checked="checked">
+							单页</label>
+					</div>
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="rdo_create" id="rdo2" value="2">
+							双页</label>
+					</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_read">
+				<label class="col-md-3 control-label">阅读显示：</label>
+				<div class="col-md-3 form-inline">
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="rdo_read" id="rdo11" value="1" checked="checked">
+							单页</label>
+					</div>
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="rdo_read" id="rdo22" value="2">
+							双页</label>
+					</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+		</form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal">关闭</button>
+        <button class="btn btn-primary" id="btn_submit" onclick="submit_size()" disabled="disabled">确认提交</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+{% endblock %}

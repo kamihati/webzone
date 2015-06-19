@@ -1,0 +1,112 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %}
+<script type="text/javascript" src="js/dian/initLocation.js"></script>
+<script type="text/javascript" src="My97DatePicker/WdatePicker.js"></script>
+ 
+<!--修改密码开始-->
+<script type="text/javascript">
+$(document).ready(function($){
+	//设置导航栏选中状态
+	$("#li_nav_expert_score").addClass("active");
+	$("#li_nav_expert_score_manage").addClass("active");
+	
+	$('.theme-login13').click(function(){
+		$('.theme-popover-mask').show();
+		$('.theme-popover-mask').height($(document).height());
+		$('.theme-popover13').slideDown(200);
+	})
+	$('.theme-poptit13 .close').click(function(){
+		$('.theme-popover-mask').hide();
+		$('.theme-popover13').slideUp(200);
+	})
+
+});
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="right_hua">
+    <div class="cont_right_lc">
+        <div class="cont_right_lcl">
+            <button class="jg theme-login13"  href="javascript:;" style="float:left;">分配专家评选作品</button>
+            <form action="info/type/add" method="post" id='info' style="margin:0px 10px 0px 0px; float:left; font-size:14px; color:#333333;" target="submitObj"> 
+                省<select id="sheng" name="province" ></select> 
+                市<select id="shi" name="city"></select> 
+                区<select id="xian" name="country" ></select> 
+                机构<select id="xiang" name="street" ></select> 
+                <button class="cx">查询</button>
+            </form>
+            <input type="text" value="请输入专家名称、用户名称" class=" yl"/><button class="cx">查询</button>
+        </div>
+        <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+            <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+            <td width="300">所属机构</td><td width="200">用户名</td><td width="200">所属活动</td><td width="200">专家姓名</td><td width="200">查看作品</td>
+            </tr>
+            <tr>
+            <td>河南少儿图书馆员</td><td>向日葵</td><td>绘画大赛</td><td>唐笑笑</td><td><a class="shan" href="list_pfgl.html" target="_blank">查看</a></td>
+            </tr>
+            <tr>
+            <td>河南少儿图书馆员</td><td>向日葵</td><td>绘画大赛</td><td>唐笑笑</td><td><a class="shan" href="list_pfgl.html" target="_blank">查看</a></td>
+            </tr>
+            <tr>
+            <td>河南少儿图书馆员</td><td>向日葵</td><td>绘画大赛</td><td>唐笑笑</td><td><a class="shan" href="list_pfgl.html" target="_blank">查看</a></td>
+            </tr>
+            <tr>
+            <td>河南少儿图书馆员</td><td>向日葵</td><td>绘画大赛</td><td>唐笑笑</td><td><a class="shan" href="list_pfgl.html" target="_blank">查看</a></td>
+            </tr>
+            <tr>
+            <td>河南少儿图书馆员</td><td>向日葵</td><td>绘画大赛</td><td>唐笑笑</td><td><a class="shan" href="list_pfgl.html" target="_blank">查看</a></td>
+            </tr>
+            <tr>
+            <td>河南少儿图书馆员</td><td>向日葵</td><td>绘画大赛</td><td>唐笑笑</td><td><a class="shan" href="list_pfgl.html" target="_blank">查看</a></td>
+            </tr>
+            <tr>
+            <td>河南少儿图书馆员</td><td>向日葵</td><td>绘画大赛</td><td>唐笑笑</td><td><a class="shan" href="list_pfgl.html" target="_blank">查看</a></td>
+            </tr>
+        </table>
+        <div class="yema">
+            <span>共<b>100</b>条记录</span>
+            <span>每页<b>20</b>个</span>
+            <a href="">首页</a>
+            <a href="" class="s1">上一页</a>
+            <a href="" class="s1">下一页</a>
+            <a href="">末页</a>
+            <span>总共<b>15</b>页</span>
+        </div>
+    </div>
+</div>
+
+
+<!--专家评分上限设置开始-->
+<div class="theme-popover-mask13"></div>
+<div class="theme-popover13">
+	<div class="theme-poptit13">
+		<a href="javascript:;" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod13 dform">
+		<form class="theme-signin13 xinxi2" name="loginform" action="" method="post">
+        <table cellpadding="0" cellspacing="10" class="xinxi1">
+        <tr>
+        <td  style=" text-align:right;">
+			选择专家：</td><td style=" text-align:left;"><select name="请选择表情分类" class="xz">
+            <option value="请选择表情分类">请选择表情分类</option>
+            <option value="表情1">表情1</option>
+            <option value="画框">画框</option>
+            </select>
+       </td></tr>
+         <tr>
+        <td style=" text-align:right;">
+			分配作品数量：</td><td style=" text-align:left;"><input type="text"  />
+       </td></tr>
+       </table>
+
+            <input class="btn btn-primary que" type="submit" name="submit" value=" 确定 " />  <input class="btn btn-primary qux" type="submit" name="submit" value=" 取消 " />
+		</form>
+	</div>
+</div>
+<!--短信留言结束-->
+
+{% endblock %}

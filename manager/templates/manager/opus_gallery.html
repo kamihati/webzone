@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		<meta charset="UTF-8">
+		{% load staticfiles %}
+		<!-- JavaScript -->
+		<script src="{% static 'js/jquery-1.10.2.min.js' %}"></script>
+		<script src="{% static 'bootstrap-3.0.3/js/bootstrap.min.js' %}"></script>
+
+		<link rel="stylesheet" href="{% static 'bootstrap-3.0.3/css/bootstrap.min.css' %}">
+		<link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+		<link rel="stylesheet" href="{% static 'css/animate.css' %}">
+		<!--[if IE 7]>
+		<link rel="stylesheet" href="{% static 'css/font-awesome-ie7.min.css' %}">
+		<![endif]-->
+	</head>
+	
+{% block header %}
+<style>
+	.list-inline li {float:left; display:inline; }
+	.img-selected { background-color: #73B4E0; border: 1px solid #73B4E0}
+	
+	.box {
+	    width: 600px;
+	    height: 477px;
+	    margin-left: auto;
+	    margin-right: auto;
+	    position: relative;
+	    overflow: hidden;
+	}
+	.box img {
+		width:600px;
+	}
+	.list, .index {
+	    position: absolute;
+	}
+</style>
+<script>
+	function getArgs(){
+	    var args = {};
+	    var match = null;
+	    var search = decodeURIComponent(location.search.substring(1));
+	    var reg = /(?:([^&]+)=([^&]+))/g;
+	    while((match = reg.exec(search))!==null){
+	        args[match[1]] = match[2];
+	    }
+	    return args;
+	}
+	
+	var opus_id = getArgs()["id"];
+	var cur_page_index = 0;
+	var eleList = null;
+	var eleSlideIn = null;
+	
+	var page_count = 0;
+	var thumbnail_width = 170;
+	if(opus_id.length > 0){
+		$.post("/manager/get_opus_info/", {"id": opus_id}, function(data){
+			var json_data = JSON.parse(data);
+			var array_list = json_data.pages;
+			page_count = json_data.page_count;
+			var box_html = "";
+			var thumbnail_html = "";
+			for (var i=0; i<array_list.length; i++){
+				if (i == 0){
+					var page_index = i+1;
+					var h3_title = '《' + json_data.title + '》<span class="label label-primary" id="page_index">' + page_index + '/' + page_count + '</span>';
+					$("#h3_title").html(h3_title);
+				}
+				
+				box_html += '<a href="/" class="list slide out"><img class="img-rounded" src="' + array_list[i]["orign"] + '" /></a>';
+				if (i==0){
+					thumbnail_html += '<li><img class="img-thumbnail img-selected" id="img' + i + '" src="';
+				} else {
+					thumbnail_html += '<li><img class="img-thumbnail" id="img' + i + '" src="';
+				}
+				thumbnail_html += array_list[i]["small"] + '" onclick="preview_page(';
+				thumbnail_html += i + ',\'' + array_list[i]["orign"] + '\')" style="width:160px; cursor:pointer" /></li>';
+			}
+			$("#ul_thumbnail").css("width", thumbnail_width*(page_count+1) + "px")
+			$("#ul_thumbnail").html(thumbnail_html);
+			$("#box").html(box_html);
+			
+			eleList = $("#box .list");
+			$("#box").bind("click", function() {
+			    eleSlideIn && eleSlideIn.removeClass("in").addClass("out");
+			    eleSlideIn = $(eleList.get(cur_page_index)).removeClass("out").addClass("in");
+			    return false;
+			}).trigger("click");
+
+		});
+	}
+	
+	function preview_page(page_index, img_url){
+		if (page_index == cur_page_index){
+			return;
+		}
+		for(var i=0; i<page_count; i++){
+			$("#img"+i).removeClass("img-selected");
+		}
+		$("#img"+page_index).addClass("img-selected");
+		$("#page_index").html((page_index+1) + '/' + page_count);
+		var margin_left = -thumbnail_width*(page_index-2);
+		if (margin_left > 0) { margin_left = 0; }
+		$("#ul_thumbnail").animate({marginLeft:margin_left + "px"}, 200);
+		
+		if (page_index > cur_page_index){
+			$("#box .list").removeClass("reverse");
+		} else {
+			$("#box .list").addClass("reverse");
+		}
+		cur_page_index = page_index;
+		$("#box").trigger("click");
+	}
+	
+</script>
+	
+{% endblock %}
+
+<body style="background-color: black">
+	<div class="container">
+		<div class="row">
+			<button class="btn btn-primary" onclick="window.parent.hidediv()" style="float: right">关闭</button>
+		</div>
+		
+		<div class="row">
+			<div id="box" class="box">
+			</div>
+		</div>
+		<div class="row" style="text-align: center">
+			<h3 style="color: white" id="h3_title"></h3>
+		</div>
+		<div class="row" style="width:1000px; overflow: hidden">
+			<ul class="list-inline" id="ul_thumbnail" style="margin-left:0px;">
+			</ul>
+		</div>
+	</div>
+
+</body>

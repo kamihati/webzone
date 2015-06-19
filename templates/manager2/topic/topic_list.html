@@ -1,0 +1,305 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %}
+<style type="text/css">
+.res_list{  }
+.res_list a{ color:black;}
+.res_list img{ border:0; height:50px; }
+
+</style>
+<script type="text/javascript">
+	$(function(){
+		//设置导航栏选中状态
+		$("#li_nav_topic").addClass("active");
+		$("#li_nav_item_topic_list").addClass("active");
+
+        //设置搜索关键字文本框默认字
+        set_input_default('txtSearchText', '请输入关键词');
+
+		//关闭话题修改框
+		$('.theme-poptit10 .close').click(function(){
+			$('.theme-popover-mask10').hide();
+			$('.theme-popover10').slideUp(200);
+		});
+
+        //生成分页代码
+        $("#yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+
+		$("#btnOk").click(function(){
+			var title = $.trim($("#txtTitle").val());
+			if(title == ""){
+				alert("话题标题不能为空！");
+				return;
+		    }
+			var content = $.trim($("#txtContent").val());
+			if(content == ""){
+				alert("话题内容不能为空！");
+				return;
+				}
+			var id = $("#hdTopicId").val();
+			if(id == ""){
+				alert("找不到话题id");
+				return;
+			}
+			
+			$.post("/topic/edit_topic/", {"id": id, "title": title, "content": content}, function(data){
+				if(data == "ok"){
+					alert("修改成功！");
+				    location.reload();
+				}else {
+					alert(data);
+				}
+			});
+			
+			
+		});
+		
+		//关闭编辑窗口
+		$("#btnCancel").click(function(){
+			$('.theme-poptit10 .close').click();
+		});
+		
+		$("#slcLibrary").change(function(){
+			$("#txtSearchText").val("");
+			$("#hdLibrary").val(this.value);
+			search(1);
+		});
+		
+	});
+	
+	//设置地区选择框的数据
+	function set_region(parent_id, level){
+
+		var id = 'shi';
+		var now_id = '{{ city_id }}';
+		if(level == 3){
+			id = 'xian';
+			now_id = '{{ region_id }}';
+		}
+		
+		if(parent_id == ''){
+			if(level == 2){
+				$("#shi").empty();
+				$("#xian").empty();
+			}else if(level == 3){
+    			$("#xian").empty();
+			}
+		}
+		$.get("/library/api_get_region/", {"parent_id": parent_id}, function(data){
+			var data_list = JSON.parse(data);
+			var html = "<option value=''></option>";
+			for(var i =0; i<data_list.length; i++){
+				html += '<option value="' + data_list[i].id + '"';
+				if(data_list[i].id.toString() == now_id){
+					html += ' selected="selected" '
+				}
+				html += '>' + data_list[i].name + '</option>';
+			}
+			$("#" + id).html(html);
+			
+			{% if region_id %}
+			if(level == 2){
+		    	set_region($("#shi").val(), 3);
+			}
+		
+			{% endif %}
+		});
+	}
+
+	//删除资源成功！
+	function del_topic_resource(id){
+		if(!confirm("确定要删除这个资源嘛？"))
+			return;
+		$.post("/topic/remove_topic_resource/", {"id": id}, function(data){
+			if(data == "ok"){
+				$("#tdRes" + id).remove();
+				alert("删除成功！");
+				return
+			}else {
+				alert(data);
+			}
+		});
+	}
+    
+	//显示修改话题的窗口
+	function show_topic_edit(id, title, content){
+		$("#hdTopicId").val(id);
+		$("#txtTitle").val(title);
+		$("#txtContent").val(content);
+		
+		//获取资源列表
+		$.get("/topic/topic_resource_detail/", {"id": id}, function(data){
+			var html = "";
+	      	data = JSON.parse(data);
+		    for(var i =0; i< data.length; i++){
+				
+				html += '<td id="tdRes' + data[i]['id'] + '">';
+				html += '<a href="' + data[i]['origin_path'] + '" target="_blank">';
+				if(data[i]['thumbnail'] != ""){
+					html += '<img src="' + data[i]['thumbnail'] + '" />';
+				}else{
+					html += '查看';
+					html += '<br clear="both" />';
+				}
+
+				html += '</a>';
+
+				html += '<a href="javascript:del_topic_resource(' + data[i]['id'] + ')">删除</a>';
+				html += '</td>';
+
+			}
+			$("#trResList").html(html);
+		    $('.theme-popover-mask10').show();
+         	$('.theme-popover-mask10').height($(document).height()); 
+	        $('.theme-popover10').slideDown(200);
+
+		});
+	}
+
+    //查询话题
+	function search(page_index){
+		var search_text = $.trim($("#txtSearchText").val());
+		if(search_text == "请输入关键词")
+			$("#txtSearchText").val("");
+		$("#hdPageIndex").val(page_index);
+		return $("#submit_search").click();
+	}
+	
+	//设置话题置顶状态
+	//id: 话题id
+	//status: 置顶状态。0为不置顶。1为置顶 
+	function set_top(id, status){
+		if($("#zd" + id + "_" + status).attr("checked") == "checked")
+			return false;
+		$.post('/topic/update_topic_top/', {'id': id, 'status': status}, function(data){
+				if(data == 'fail'){
+					alert('操作失败。请与管理员联系。');
+				}else if(data == 'ok'){
+					$("#zd" + id + "_" + status).attr("checked", true);
+				}
+			});
+	}
+	
+	//删除话题
+	function del_topic(id){
+		if(!confirm("您确定要删除这个话题？"))
+			return;
+		$.post("/topic/update_topic_status/", {"id": id, "status": 1}, function(data){
+			if(data == "ok"){
+				alert("删除成功！")
+				  search(1);
+			}else{
+				alert("删除失败,请与管理员练习！");
+			}
+		});
+	}
+</script>
+{% endblock %}
+
+{% block footer %}
+ 
+
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+	<div class="cont_right_lczct">
+		<form action="#" method="get" id='frmSearch' style="margin:0px 10px 0px 0px; float:left;">
+
+            <input type="hidden" id="hdLibrary" name="library" value="{{ library_id }}" />    
+			<input type="text" id="txtSearchText" name="search_text" value="{{ search_text }}"  class=" yl"/>
+            <input type="submit" id="submit_search" style="display:none;" />
+            <input type="hidden" id="hdPageIndex" name="page_index" value="1" />
+		</form>
+		<button class="cx" onclick="search(1)">查询</button>
+    </div>
+    <div class="cont_right_lczcc">
+		<table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px; " class="liuyan">
+			<tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff;">
+				<td width="150px">
+                	<select id="slcLibrary" class="lei">
+                    <option value="">全部机构</option>
+                    {% for obj in librarys %}
+                        <option value="{{ obj.id }}" {% if library_id == obj.id %}selected="selected"{% endif %}>{{ obj.lib_name }}</option>
+                    {%  endfor %}
+                    </select>
+                </td>
+				<td width="150px">话题名称</td>
+				<td width="150px">创建者</td>
+				<td width="300px">话题内容</td>
+				<td width="300px">点赞数</td>
+                <td width="300px">参与人数</td>
+                <td width="300px">参与次数</td>
+				<td width="300px">评论内容</td>
+				<td width="300px"> 置顶</td>
+				<td width="300px">时间</td>
+				<td width="300px"> 操作</td>
+			</tr>
+			{% for obj in topic_list %}
+			<tr>
+				<td title="{{ obj.library_name }}">{{ obj.library_name|truncatechars:6 }}</td>
+				<td><a class="btn btn-primary theme-login10" href="javascript:show_topic_edit({{ obj.id }}, '{{ obj.title }}', '{{ obj.content|safe }}');" title="{{ obj.title }}">{{ obj.title|truncatechars:8 }}</a></td>
+				<td >{{ obj.nickname }}</td>
+				<td title="{{ obj.content }}">{{ obj.content|truncatechars:13 }}</td>
+				<td>{{ obj.praise_count }}</td>
+                <td>{{ obj.remark_user_count }}</td>
+                <td>{{ obj.remark_count }}</td>
+				<td><a class="chakan" href="/manager2/comment_list/?tid={{ obj.id }}">查看</a></td>
+				<td>
+                	<input type="radio" value="1" {% if obj.is_top == 1 %} checked="checked"{% endif %} id="zd{{obj.id}}_1" name="zd{{ obj.id }}" onMouseDown="set_top({{ obj.id }}, 1)"  />  是
+                    <input type="radio" value="0" {% if obj.is_top == 0 %} checked="checked"{% endif %} id="zd{{obj.id}}_0" name="zd{{ obj.id }}" onMouseDown="set_top({{ obj.id }}, 0)" /> 否</td>
+				<td>{{ obj.create_time }}</td>
+				<td><a class="btn btn-primary theme-login10" href="javascript:show_topic_edit({{ obj.id }}, '{{ obj.title }}', '{{ obj.content|safe }}');"> 修改</a>/<a href="javascript:del_topic({{ obj.id }})">删除</a></td>
+			</tr>
+		 
+			{% endfor %}
+
+		</table>
+		<div class="yema" id="yema">
+		</div>
+	</div>
+</div>
+
+
+<!--修改话题开始-->
+<div class="theme-popover-mask10"></div>
+<div class="theme-popover10">
+	<div class="theme-poptit10">
+		<a href="javascript:;" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod10 dform">
+	    <table cellpadding="0" cellspacing="0" >
+        	<tr>
+            	<td width="100" align="right">名称：</td>
+                <td align="left"><input class="ipt" type="text" id="txtTitle"  size="20" /></td>
+            </tr>
+	        <tr id="trTopicResource" class="res_list">
+            	<td height="10" align="right">引用资源：</td>
+                <td align="left" >
+                	<table>
+                    	<tr id="trResList">
+                        	
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+  	        <tr>
+           		<td width="100" align="right">话题内容：</td>
+                <td align="left">
+                	<textarea id="txtContent" rows="10" cols="80"></textarea>
+                </td>
+            </tr>
+
+            <tr>
+            	<td colspan="2" style="padding-left:200px;">
+                    <input type="hidden" id="hdTopicId" value="" />     
+                    <input class="btn btn-primary que" type="button" id="btnOk" value=" 确定 " />
+                    <input class="btn btn-primary qux" type="button" id="btnCancel" value=" 取消 " /> 
+                </td>
+            </tr>
+       </table>
+	</div>
+</div>
+<!--修改话题结束-->
+{% endblock %}

@@ -1,0 +1,165 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<script type="text/javascript">
+	$(function(){
+		
+		//设置导航栏选中状态
+		$("#li_nav_system").addClass("active");
+		$("#li_nav_system_admin_log").addClass("active");
+  
+		
+
+        set_input_default('txtSearchText', '请输入关键词');
+	});
+
+    //查询话题
+	function search(page_index){
+		var search_text = $.trim($("#txtSearchText").val());
+		if(search_text == "请输入关键词")
+			$("#txtSearchText").val("");
+		$("#hdPageIndex").val(page_index);
+		return $("#submit_search").click();
+	}
+	 
+	function del_topic(id){
+		if(!confirm("您确定要删除这个话题？"))
+			return;
+		$.post("/topic/update_topic_status/", {"id": id, "status": 1}, function(data){
+				if(data == "ok"){
+					alert("删除成功！")
+					  search(1);
+					}else{
+						alert("删除失败,请与管理员练习！");
+						}
+			});
+	}
+</script> 
+{% endblock %}
+
+{% block footer %}
+ 
+
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+    <div class="cont_right_lczct">
+        <form action="#" method="get" id='frmSearch' style="margin:0px 10px 0px 0px; float:left;">
+            省
+            <select id="sheng" name="province" >
+                
+                  {%  for obj in provinces %}
+                  
+                <option value="{{ obj }}" {% if sheng == obj %}selected="selected"{% endif %}>
+                {{ obj }}
+                </option>
+                
+                  {% endfor %}
+              
+            </select>
+            市
+            <select id="shi" name="city">
+                
+
+              {%  for obj in citys %}
+                  
+                <option value="{{ obj }}" {% if shi == obj %} selected="selected"{% endif %}>
+                {{ obj }}
+                </option>
+                
+              {%  endfor %}
+              
+            </select>
+            区
+            <select id="xian" name="country" >
+                <option value=""></option>
+                
+                  {%  for obj in regions %}
+                      
+                <option value="{{ obj }}" {% if xian == obj %}selected="selected"{% endif %}>
+                {{ obj }}
+                </option>
+                
+                 {%  endfor %}
+              
+            </select>
+            
+            <!--
+			全国级联地区表用。注释备用
+			乡<select id="xiang" name="street" ></select>--> 
+            
+            机构
+            <select id="library" name="library" >
+                <option value=""></option>
+                
+                {% for obj in librarys %}
+                    
+                <option value="{{ obj.0 }}" {% if library_id == obj.0 %}selected="selected"{% endif %}>
+                {{ obj.1 }}
+                </option>
+                
+                {%  endfor %}
+                
+            </select>
+            <input type="text" id="txtSearchText" name="search_text" value="{{ search_text|default:'请输入关键词' }}" class=" yl"/>
+            <input type="submit" id="submit_search" style="display:none;" />
+            <input type="hidden" id="hdPageIndex" name="page_index" value="1" />
+        </form>
+        <button class="cx" onClick="search()">查询</button>
+    </div>
+     
+    <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px; " class="liuyan" >
+        <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff;">
+            <td width="300">机构名称</td>
+            <td width="200">用户名</td>
+            <td width="300">操作内容</td>
+            <td width="250">操作时间</td>
+            <td width="250">IP地址</td>
+            <td width="250">操作</td>
+        </tr>
+        {% for one in results %}
+        <tr>
+            <td>{{ one.library.lib_name }}</td>
+            <td >{{ one.user.username }}</td>
+            <td>{{ one.content }}</td>
+            <td>{{ one.action_time|date:"Y-m-d H:i:s" }}</td>
+            <td>{{ one.ip }}</td>
+            <td>
+            	<a href="/manager2/m_log_delete/?id={{ one.id }}&page_index={{ page_index }}&page_size={{ page_size }}&key={{key}}&sheng={{ sheng }}&shi={{ shi }}&xian={{ xian }}" class="shan">删除</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+    <div class="yema">
+    	<span>共<b>{{ data_count }}</b>条记录</span>
+        <span>每页<b>{{ page_size }}</b>个</span>
+        <a href="/manager2/list_czrz/?page_index=1&key=">首页</a>
+        {% if not page_pre == 0 %} <a href="/manager2/list_czrz/?page_index={{ page_pre }}&key=" class="s1">上一页</a>\
+        {% endif %}
+        {%  if not page_next >= page_count %} <a href="/manager2/list_czrz/?page_index={{ page_next }}&key="  class="s1">下一页</a>\
+        {% endif %} <a href="/manager2/list_czrz/?page_index={{ page_count }}&key=">末页</a> <span>总共<b>{{ page_count }}</b>页</span> <span>第<b>{{ page_index }}</b>页</span> </div>
+</div>
+</div>
+</div>
+</div>
+
+<!--修改话题开始--> 
+<!-- <div class="theme-popover-mask10"></div>
+<div class="theme-popover10">
+	<div class="theme-poptit10">
+		<a href="javascript:;" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod10 dform">
+		<form class="theme-signin10" name="loginform" action="" method="post">
+         <table cellpadding="0" cellspacing="0" >
+	       <tr><td width="100" align="right">名称：</td><td><input class="ipt" type="text" name="log"  size="20" /></td></tr>
+	        <tr><td height="10" align="right"></td><td></td></tr>
+	       <tr><td width="100" align="right">话题内容：</td><td><textarea  rows="10" cols="80" ></textarea></td></tr>
+	       <tr><td colspan="2" style="padding-left:200px;"><input class="btn btn-primary que" type="submit" name="submit" value=" 确定 " /> <input class="btn btn-primary qux" type="submit" name="submit" value=" 取消 " /> </td></tr>
+	       </table>
+		</form>
+	</div>
+</div> --> 
+<!--修改话题结束--> 
+{% endblock %}

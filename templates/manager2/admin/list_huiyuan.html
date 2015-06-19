@@ -1,0 +1,517 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+{% load staticfiles %}
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<script type="text/javascript">
+ 
+ 
+
+$(document).ready(function($){
+	//设置导航栏选中状态
+	$("#li_nav_admin").addClass("active");
+	$("#li_nav_admin_users").addClass("active");
+	
+	//生成分页代码
+	$(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+	
+	
+	$('.theme-login2').click(function(){
+		$('.theme-popover-mask2').show();
+		$('.theme-popover-mask2').height($(document).height());
+		$('.theme-popover2').slideDown(200);
+	});
+
+	
+	$('.theme-login').click(function(){
+		$('.theme-popover-mask').show();
+		$('.theme-popover-mask').height($(document).height());
+		$('.theme-popover').slideDown(200);
+	})
+	$('.theme-poptit .close').click(function(){
+		$('.theme-popover-mask').hide();
+		$('.theme-popover').slideUp(200);
+	})
+	
+	//初始化上传控件的行为
+	$("#fileImg").change(function(){
+		check_img(document.getElementById('fileImg'), ['JPG', 'JPEG', 'PNG', 'BMP'], 'hdPath');
+	});
+	
+	$("#slcLibrary").change(function(){
+		$("#hdLibrary").val(this.value);
+		search(1);
+	});
+});
+
+//显示编辑窗口并初始化显示数据
+function show_edit(id){
+	$("input[name=reset]").click();
+	$("#hdUserId").val(id);
+	if(id == 0){
+		$("#a_ajax_img").attr("href", "");
+		$("#a_ajax_img").hide();
+		
+		$("#txtUsername").removeAttr("disabled");
+	}else{
+		//初始化显示数据
+		$("#txtUsername").attr("disabled", "disabled");
+		 $.get("/account/api_get_user_info/", {'id': id}, function(data){
+			var data = JSON.parse(data);
+			$("#slcEditLibrary").val(data['library_id']);
+			$("#txtUsername").val(data['username']);
+			$("#txtNickname").val(data['nickname']);
+			$("#txtEmail").val(data['email']);
+			$("#txtPhone").val(data['phone']);
+			$("#txtRealname").val(data['realname']);
+			
+			$("#txtSchoolName").val(data['school']);
+			$('#txtAge').val(data['age']);
+			if(data['sex'] == '0'){
+				$("#rdoGirl").attr("checked", "checked");
+			}
+			$("#txtQuestion").val(data['question']);
+			$("#txtAnswer").val(data['answer']);
+			$("#txtDescription").val(data['description']);
+			$("#txtBirthday").val(data['birthday']);
+
+			$("#a_ajax_img").attr("href", data['avatar_img']);
+			$("#a_ajax_img").show();
+		});
+	}
+	$('.theme-popover-mask8').show();
+	$('.theme-popover-mask8').height($(document).height());
+	$('.theme-popover8').slideDown(200);
+	
+}
+
+//隐藏编辑窗口
+function hide_edit(){
+	$('.theme-popover-mask8').hide();
+	$('.theme-popover8').slideUp(200);
+}
+
+
+
+//禁用会员
+function close_user(id){
+	if(!confirm("您确定要禁用这个会员么！")){
+		return;
+	}
+	$.post("/account/api_del_user/", {"id": id}, function(data){
+		if(data == "ok"){
+			alert("操作成功！");
+			location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+
+
+function edit_user(){
+	var user_id = $("#hdUserId").val();
+	var param = {};
+	param['library'] = $("#slcEditLibrary").val();
+	if(param['library'] == ""){
+		alert("请选择用户所在机构！");
+		return;
+	}
+	param['realname'] = $("#txtRealname").val();
+	param['nickname'] = $("#txtNickname").val();
+	if(param['nickname'] == ""){
+		alert("昵称不能为空！");
+		return;
+	}
+	param['phone'] = $("#txtPhone").val();
+	param['age'] = $("#txtAge").val();
+	param['sex'] = 1;
+	if($("#rdoGirl").attr("checked")){
+		param['sex'] = 0;
+	}
+	param['birthday'] = $("#txtBirthday").val();
+	param['email'] = $("#txtEmail").val();
+	param['school'] = $("#txtSchoolName").val();
+	param['question'] = $("#txtQuestion").val();
+	param['answer'] = $("#txtAnswer").val();
+	param['avatar'] = $("#a_ajax_img").attr("href");
+	param['description'] = $("#txtDescription").val();
+	
+    var pwd1 = $("#txtPassword1").val();
+	var pwd2 = $("#txtPassword2").val();
+	if(pwd1 != pwd2){
+		alert("两次输入的密码不同！");
+		return;
+	}
+	if(user_id == "0"){
+		param['username'] = $("#txtUsername").val();
+		if(pwd1 == "" || pwd2 == ""){
+			alert("请输入密码！");
+			return;
+		}
+	}else{
+		param['user_id'] = user_id;
+	}
+	param['password'] = pwd1;
+	$.post("/account/api_edit_user/", param, function(data){
+		if(data == "ok"){
+			alert("操作成功！");
+			location.reload();
+		}else if(data == "-1"){
+			alert("此用户名已被注册！");
+			return;
+		}else{
+			alert(data);
+		}
+	});
+	
+}
+
+
+//查询
+function search(page_index){
+	$("#hdPageIndex").val(page_index);
+	$("#submit").click();
+}
+
+
+</script> 
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+  <div class="cont_right_lc">
+    <div class="cont_right_lcl">
+      <form method="get" action="#">
+        <button class=" jg theme-login8" type="button" onclick="show_edit(0)">添加会员 </button>
+        
+        <!--
+
+        <input type="text" class="sr" />
+        <button class="jg theme-login2" href="javascript:;">选 &nbsp;择</button>
+        -->
+        <input type="hidden" value="{{ library }}" name="library" id="hdLibrary" />
+        <input type="text" value="{{ search_text }}" id="txtSearchText" name="search_text" class="sr" />
+        <button class="cx" onclick="search(1)">查询</button>
+        <input type="submit" id="submit" style="display:none;" />
+        <input type="hidden" id="hdPageIndex" name="page_index" value="1" />
+      </form>
+    </div>
+    <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+      <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+        <td width="250">
+        	<select id="slcLibrary" class="xz">
+                <option value="">全部机构</option>
+                {% for obj in library_list %}
+                <option value="{{ obj.id }}" {% if library_id == obj.id %} selected="selected"{% endif %}>{{ obj.lib_name }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td width="150">用户名</td>
+        <td width="150">昵称</td>
+        <td width="100">活动作品</td>
+        <td width="100">已出版作品</td>
+        <td width="100">待审核作品</td>
+        <td width="250">操作</td>
+      </tr>
+      {% for obj in data_list %}
+      <tr>
+        <td>{{ obj.lib_name }}</td>
+        <td>{{ obj.username }}</td>
+        <td>{{ obj.nickname }}</td>
+        <td>{{ obj.activity_fruit_count }}</td>
+        <td>{{ obj.publish_fruit_count }}</td>
+        <td>{{ obj.new_fruit_count }}</td>
+        <td><a class=" huifu theme-login8" href="javascript:show_edit({{ obj.id }});">修改</a>/<a class=" huifu theme-login1" href="javascript:close_user({{ obj.id }});">禁用</a></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div class="yema"></div>
+  </div>
+</div>
+
+<!--短信留言开始-->
+<div class="theme-popover-mask2"></div>
+<div class="theme-popover2">
+  <div class="theme-poptit2"> <a href="javascript:;" title="关闭" class="close">×</a>
+    <h3></h3>
+  </div>
+  <div class="theme-popbod2 dform">
+    <form class="theme-signin2 xinxi2" name="loginform" action="" method="post">
+      <ul>
+        <li> <span> 省份 </span>
+          <select class="kitjs-form-suggestselect">
+          </select>
+          <span> 市/县 </span>
+          <select class="kitjs-form-suggestselect">
+          </select>
+          <span> 区 </span>
+          <select class="kitjs-form-suggestselect">
+          </select>
+        </li>
+      </ul>
+      <div class="clear"></div>
+      <table cellpadding="0" cellspacing="0" class="liuyan">
+        <tr>
+          <td width="100">机构名称</td>
+          <td width="100">使用状态</td>
+          <td width="100">开通时间</td>
+          <td width="100">使用内容</td>
+          <td width="80">负责人</td>
+          <td width="100">联系方式</td>
+          <td width="50">选择</td>
+        </tr>
+        <tr>
+          <td>狐假虎狐</td>
+          <td>狐假虎狐</td>
+          <td>开通</td>
+          <td>2014-11-01</td>
+          <td>数据库</td>
+          <td>12345678912</td>
+          <td><input type="checkbox" value="1" name="ceshi" /></td>
+        </tr>
+        <tr>
+          <td>狐假虎狐</td>
+          <td>狐假虎狐</td>
+          <td>开通</td>
+          <td>2014-11-01</td>
+          <td>数据库</td>
+          <td>12345678912</td>
+          <td><input type="checkbox" value="1" name="ceshi" /></td>
+        </tr>
+        <tr>
+          <td>狐假虎狐</td>
+          <td>狐假虎狐</td>
+          <td>开通</td>
+          <td>2014-11-01</td>
+          <td>数据库</td>
+          <td>12345678912</td>
+          <td><input type="checkbox" value="1" name="ceshi" /></td>
+        </tr>
+        <tr>
+          <td>狐假虎狐</td>
+          <td>狐假虎狐</td>
+          <td>开通</td>
+          <td>2014-11-01</td>
+          <td>数据库</td>
+          <td>12345678912</td>
+          <td><input type="checkbox" value="1" name="ceshi" /></td>
+        </tr>
+      </table>
+      <input class="btn btn-primary que close" type="submit" name="submit" value=" 确定 " href="javascript:;" />
+      <input class="btn btn-primary qux" type="submit" name="submit" value=" 取消 " />
+    </form>
+  </div>
+</div>
+<!--短信留言结束--> 
+
+<!--短信留言开始-->
+<div class="theme-popover-mask1"></div>
+<div class="theme-popover1">
+  <div class="theme-poptit1"> <a href="javascript:;" title="关闭" class="close">×</a>
+    <h3></h3>
+  </div>
+  <div class="theme-popbod dform">
+    <form class="theme-signin11" name="loginform" action="" method="post">
+      <table cellpadding="0" cellspacing="15">
+        <tr>
+          <td><input type="radio" value="天数"  name="tian" />
+            7天</td>
+          <td></td>
+          <td><input type="radio" value="天数"  name="tian" />
+            70天</td>
+        </tr>
+        <tr>
+          <td><input type="radio" value="天数"  name="tian" />
+            15天</td>
+          <td></td>
+          <td><input type="radio" value="天数"  name="tian" />
+            100天</td>
+        </tr>
+        <tr>
+          <td><input type="radio" value="天数"  name="tian" />
+            50天</td>
+          <td></td>
+          <td><input type="radio" value="天数"  name="tian" />
+            150天</td>
+        </tr>
+        <tr>
+          <td colspan="3"><input class="btn btn-primary que" type="submit" name="submit" value=" 确定 " />
+            <input class="btn btn-primary qux" type="submit" name="submit" value=" 取消 " /></td>
+        </tr>
+      </table>
+    </form>
+  </div>
+</div>
+<!--短信留言结束--> 
+<!--修改开始-->
+<div class="theme-popover-mask8"></div>
+<div class="theme-popover8">
+  <div class="theme-poptit8"> <a href="javascript:hide_edit();" title="关闭" class="close">×</a>
+    <h3></h3>
+  </div>
+  <div class="theme-popbod8 dform">
+    <form class="theme-signin8" name="loginform" action="" method="post">
+
+      <table cellpadding="0" cellspacing="8" class="xinxi">
+        <tr>
+          <td></td>
+          <td width="100" class="ziliao">机构名称：</td>
+          <td width="150">
+          	<select name="library" id="slcEditLibrary" class="xz">
+                <option value=""></option>
+                {% for obj in library_list %}
+                <option value="{{ obj.id }}" {% if library_id == obj.id %} selected="selected"{% endif %}>{{ obj.lib_name }}</option>
+                {% endfor %}
+            </select>
+          </td>
+          <td></td>
+          <td width="100" class="ziliao">邮箱：</td>
+          <td width="150"><input type="text" id="txtEmail" /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="ziliao">用户名：</td>
+          <td ><input type="text" id="txtUsername" /></td>
+          <td></td>
+          <td class="ziliao"> 姓名：</td>
+          <td><input type="text" id="txtRealname" /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="ziliao">昵称：</td>
+          <td ><input type="text" id="txtNickname" /></td>
+          <td></td>
+          <td class="ziliao">学校：</td>
+          <td><input type="text" id="txtSchoolName" /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="ziliao">密码：</td>
+          <td ><input type="password" id="txtPassword1" /></td>
+          <td></td>
+          <td class="ziliao">年龄：</td>
+          <td><input type="number" id="txtAge" /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="ziliao">确认密码：</td>
+          <td ><input type="password" id="txtPassword2" /></td>
+          <td></td>
+          <td class="ziliao">性别</td>
+          <td>
+          	<input type="radio" value="1" id="rdoBoy" checked="checked"  name="sex" />
+            男
+            <input type="radio" value="0" id="rdoGirl"  name="sex" />
+            女</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="ziliao">安全问题：</td>
+          <td ><input type="text" id="txtQuestion" /></td>
+          <td></td>
+          <td class="ziliao">生日：</td>
+          <td><input type="date" id="txtBirthday" /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="ziliao">答案：</td>
+          <td ><input type="text" id="txtAnswer" /></td>
+          <td></td>
+          <td class="ziliao">头像：</td>
+          <td>
+            <input type="file" accept="image/*" id="fileImg" name="origin" style="display: none;" />
+            <input  type="button" value=" 上传头像 " onclick="javascript:$('#fileImg').click()"/>
+
+            <a  class="shan" id="a_ajax_img" style="display: none" target="_blank" > 点击查看</a>
+            <img id="loading" src="{% static 'images/loading.gif' %}" style="display:none;">
+            <input type="hidden" id="hdPath" value="" />
+           </td>
+
+            
+          <td></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="ziliao">个人说明：</td>
+          <td colspan="4"><textarea cols="60" id="txtDescription" rows="3"></textarea></td>
+          <td></td>
+        </tr>
+        <!--
+        <tr>
+          <td></td>
+          <td class="ziliao">已出版作品 ：</td>
+          <td ><input type="text" /></td>
+          <td></td>
+          <td class="ziliao">草稿作品： </td>
+          <td><input type="text" /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="ziliao">待审核作品：</td>
+          <td ><input type="text" /></td>
+          <td></td>
+          <td class="ziliao">活动作品：</td>
+          <td><input type="text" /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="ziliao">创作平台：</td>
+          <td><input type="radio" value="状态"  name="2" />
+            使用
+            <input type="radio" value="状态"  name="2" />
+            禁用</td>
+          <td></td>
+            </td>
+          <td class="ziliao">学习平台：</td>
+          <td><input type="radio" value="状态"  name="3" />
+            使用
+            <input type="radio" value="状态"  name="3" />
+            禁用</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="ziliao">日志 ：</td>
+          <td ><input class="" type="submit" name="submit" value=" 查看 " /></td>
+          <td></td>
+          <td class="ziliao">邀请码：</td>
+          <td><input type="text" /></td>
+          <td></td>
+        </tr>
+        -->
+        <tr>
+          <td></td>
+          <td class="ziliao">电话 ：</td>
+          <td ><input type="text" id="txtPhone" /></td>
+          <td></td>
+          <td class="ziliao"></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+          <td colspan="3" class="pd">
+              <input type="hidden" id="hdUserId"  />
+          	  <input class="btn btn-primary que" type="button" onclick="edit_user()" value=" 确定 " />
+              <input class="btn btn-primary qux" type="button" value=" 取消 " onclick="hide_edit()" />
+                  	<input type="reset" id="reset" name="reset" style="display:none;"   />
+          </td>
+          <td></td>
+          <td></td>
+        </tr>
+      </table>
+    </form>
+  </div>
+</div>
+<!--修改结束--> 
+{% endblock %} 

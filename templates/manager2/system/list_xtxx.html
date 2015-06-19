@@ -1,0 +1,178 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %}
+ 
+
+<script type="text/javascript">
+	$(function(){
+		
+		//设置导航栏选中状态
+		$("#li_nav_system").addClass("active");
+		$("#li_nav_system_message").addClass("active");
+		//设置搜索关键字文本框默认字
+        set_input_default('txtSearchText', '请输入关键词');
+		//生成分页代码
+        $(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+		
+		$("#sheng").change(function(){
+			set_region($("#sheng").val(), 2);
+		});
+		$("#shi").change(function(){
+			set_region($("#shi").val(), 3);
+		});
+		{% if not library_id %}
+		{% if province %}
+		set_region($("#sheng").val(), 2);
+		{% endif %}
+		{% else %}
+		$("#sheng").val("");
+		{% endif %}
+	});
+
+    //查询话题
+	function search(page_index){
+		var search_text = $.trim($("#txtSearchText").val());
+		if(search_text == "请输入关键词")
+			$("#txtSearchText").val("");
+		$("#hdPageIndex").val(page_index);
+		return $("#submit_search").click();
+	}
+	
+	
+	//设置地区选择框的数据
+	function set_region(parent_id, level){
+
+		var id = 'shi';
+		var now_id = '{{ city_id }}';
+		if(level == 3){
+			id = 'xian';
+			now_id = '{{ region_id }}';
+		}
+		
+		if(parent_id == ''){
+			if(level == 2){
+				$("#shi").empty();
+				$("#xian").empty();
+			}else if(level == 3){
+    			$("#xian").empty();
+			}
+		}
+		$.get("/library/api_get_region/", {"parent_id": parent_id}, function(data){
+			var data_list = JSON.parse(data);
+			var html = "<option value=''></option>";
+			for(var i =0; i<data_list.length; i++){
+				html += '<option value="' + data_list[i].id + '"';
+				if(data_list[i].id.toString() == now_id){
+					html += ' selected="selected" '
+				}
+				html += '>' + data_list[i].name + '</option>';
+			}
+			$("#" + id).html(html);
+			
+			{% if region_id %}
+			if(level == 2){
+		    	set_region($("#shi").val(), 3);
+			}
+		
+			{% endif %}
+		});
+	}
+	 
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+
+ <div class="cont_right_lczct">
+ <form action="#" method="get"> 
+ 省<select id="sheng" name="province" >
+      <option value=""></option>
+      {%  for obj in provinces %}
+      <option value="{{ obj.id }}" {% if province == obj.id %}selected="selected"{% endif %}>{{ obj.name }}</option>
+      {% endfor %}
+  </select>
+
+市<select id="shi" name="city">
+   <option value="">
+   
+  </select>
+
+区<select id="xian" name="country" >
+    <option value=""></option>
+       
+  </select>
+
+<!--
+全国级联地区表用。注释备用
+乡<select id="xiang" name="street" ></select>-->
+
+机构<select id="library" name="library" >
+    <option value=""></option>
+    {% for obj in librarys %}
+        <option value="{{ obj.0 }}" {% if library_id == obj.0 %}selected="selected"{% endif %}>{{ obj.1 }}</option>
+    {%  endfor %}
+    </select>
+    <input type="text" id="txtSearchText" name="search_text" value="{{ search_text }}"  class=" yl"/>
+    <input type="submit" id="submit" style="display:none" />
+    <input type="hidden" id="hdPageIndex" name="page_index" />
+	<button class="cx" type="button" onclick="search(1)">查询</button>
+	
+<button  class="jg">查看收到的消息</button><button  class="jg">发送系统维护消息</button>
+</form>
+         </div>
+    <div class="cont_right_lczcc">
+		<table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px; " class="liuyan">
+			<tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff;">
+				<td width="300px">机构名称</td>
+				<td width="200px">用户名</td>
+				<td width="300px">作品名称</td>
+				<td width="250px">消息类型</td>
+				<td width="250px">时间</td>
+				<td width="200px">操作</td>
+			</tr>
+			{% for obj in topic_list %}
+			<tr>
+				<td>{{ obj.library_name }}</td>
+				<td><a class="btn btn-primary theme-login10 " href="javascript:;">{{ obj.title }}</a></td>
+				<td >{{ obj.nickname }}</td>
+				<td>{{ obj.remark_count }}</td>
+				<td>{{ obj.content }}</td>
+				<td>{{ obj.praise_count }}</td>
+				<td><a class="chakan" href="/manager2/comment_list/?tid={{ obj.id }}">查看</a></td>
+				<td>
+                	<input type="radio" value="1" {% if obj.is_top == 1 %} checked="checked"{% endif %} id="zd{{obj.id}}_1" name="zd{{ obj.id }}" onMouseDown="set_top({{ obj.id }}, 1)"  />  是
+                    <input type="radio" value="0" {% if obj.is_top == 0 %} checked="checked"{% endif %} id="zd{{obj.id}}_0" name="zd{{ obj.id }}" onMouseDown="set_top({{ obj.id }}, 0)" /> 否</td>
+				<td>{{ obj.create_time }}</td>
+				<td><a class="btn btn-primary theme-login10 " href="javascript:;"> 修改</a>/<a href="javascript:del_topic({{ obj.id }})">删除</a></td>
+			</tr>
+		 
+			{% endfor %}
+
+		</table>
+		<div class="yema" id="yema">
+		</div>
+	</div>
+</div>
+
+
+<!--修改话题开始-->
+<!-- <div class="theme-popover-mask10"></div>
+<div class="theme-popover10">
+	<div class="theme-poptit10">
+		<a href="javascript:;" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod10 dform">
+		<form class="theme-signin10" name="loginform" action="" method="post">
+         <table cellpadding="0" cellspacing="0" >
+	       <tr><td width="100" align="right">名称：</td><td><input class="ipt" type="text" name="log"  size="20" /></td></tr>
+	        <tr><td height="10" align="right"></td><td></td></tr>
+	       <tr><td width="100" align="right">话题内容：</td><td><textarea  rows="10" cols="80" ></textarea></td></tr>
+	       <tr><td colspan="2" style="padding-left:200px;"><input class="btn btn-primary que" type="submit" name="submit" value=" 确定 " /> <input class="btn btn-primary qux" type="submit" name="submit" value=" 取消 " /> </td></tr>
+	       </table>
+		</form>
+	</div>
+</div> -->
+<!--修改话题结束-->
+{% endblock %}

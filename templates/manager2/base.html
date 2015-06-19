@@ -1,0 +1,619 @@
+ <!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>{{ site_name }}－－后台管理系统</title>
+<link href="/manager2/static/css/style.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/manager2/static/css/ace.min.css" id="main-ace-style" />
+
+<script type="text/javascript" src="/manager2/static/js/jquery-1.8.2.min.js"></script>
+
+<!--公共方法集-->
+<script type="text/javascript" src="/static/js/utils.js"></script>
+<script type="text/javascript">
+$(document).ready(function($){
+	<!--修改密码开始-->
+	$('.theme-login').click(function(){
+		$('.theme-popover-mask').show();
+		$('.theme-popover-mask').height($(document).height());
+		$('.theme-popover').slideDown(200);
+	});
+	$("#cancel").click(function(){
+		$("#reset").click();
+		$('.theme-poptit .close').click();	
+	});
+	$('.theme-poptit .close').click(function(){
+		$('.theme-popover-mask').hide();
+		$('.theme-popover').slideUp(200);
+	});
+	<!--修改密码结束-->
+	
+});
+
+function change_pass(id){
+	var pwd = $("#txtPwd").val();
+	var pwd1 = $("#txtPwd1").val();
+	var pwd2 = $("#txtPwd2").val();
+	if(pwd == "" || pwd1 == ""  || pwd2 == ""){
+		alert("密码不能为空！");
+		return;
+	}
+	if(pwd1 != pwd2){
+		alert("新密码不一致！");
+		return;
+	}
+	
+	var param = {};
+	param['id'] = id;
+	param['pwd'] = pwd;
+	param['pwd1'] = pwd1;
+	
+	$.post("/account/api_change_password/", param, function(data){
+		if(data == "ok"){
+			alert("修改成功！");
+			$("#reset").click();
+			$("#cancel").click();
+		}else if(data == "-1"){
+			alert("旧密码不正确!");
+		}else{
+			alert(data);
+		}
+	});
+
+}
+
+</script>
+
+{% block header %}{% endblock %}
+</head>
+
+<body class="no-skin">
+	<!--修改密码开始-->
+	<div id="content">
+		<div class="top">
+			<div class="top_l"><a href="/manager2/"><img src="/manager2/static/images/logo.png"/></a></div>
+			<div class="top_r">
+            	<span>您好，欢迎访问系统应用！</span>
+				<a class="btn btn-primary theme-login guanli" href="javascript:;">管理个人信息</a>
+				<a href="/manager2/logout/" class="tuichu">退出</a>
+                
+				<div class="theme-popover-mask"></div>
+
+				<div class="theme-popover">
+                    <div class="theme-poptit">
+                        <a href="javascript:;" title="关闭" class="close">×</a>
+                        <h3></h3>
+                    </div>
+                    <div class="theme-popbod dform">
+                        <form class="theme-signin" name="loginform" action="" method="post">
+                            <ol>
+                                 <li><strong>用户名：</strong><span>{{request.user.username}}</span></li>
+                                 <li><strong>所属机构：</strong><span>{{ request.user.library.lib_name }}</span></li>
+                                 <li><strong>管理级别：</strong><span>{{ request.session.level }}</span></li>
+                                 <li><strong>密码：</strong><input id="txtPwd" class="ipt" type="password" name="log"  size="20" /></li>
+                                <li><strong>新密码：</strong><input id="txtPwd1" class="ipt" type="password" name="log"  size="20" /></li>
+                                <li><strong>确认密码：</strong><input id="txtPwd2" class="ipt" type="password" name="pwd"  size="20" /></li>
+                                <li>
+                                	<input type="reset" id="reset" style="display:none;" />
+                                <input class="btn btn-primary que" type="button" onClick="change_pass({{ request.user.id }})"  value=" 确定 " />  <input class="btn btn-primary qux" type="button" id="cancel" value=" 取消 " /> </li>
+                            </ol>
+                        </form>
+                    </div>
+				</div>
+
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="cont">
+			<div class="main-container" id="main-container">
+				<script type="text/javascript">
+                    try{ace.settings.check('main-container' , 'fixed')}catch(e){}
+                </script>
+
+   				 <!-- #section:basics/sidebar -->
+    			<div id="sidebar" class="sidebar responsive">
+					<script type="text/javascript">
+                        try{ace.settings.check('sidebar' , 'fixed')}catch(e){}
+                    </script>
+        			<div class="zuo">
+                    	<!--nav start-->
+                        <!--新增导航项需要在新增页面控制导航项的css是否为active-->
+                        <ul class="nav nav-list">
+                            <li id="li_nav_admin">
+                                <a href="category_zgly.html" class="dropdown-toggle a1">
+                                    <i class="menu-icon fa fa-desktop"></i>
+                                    <span class="menu-text">用户管理</span>
+                                    <b class="arrow fa fa-angle-down">+</b>
+                                </a>
+        
+                                <b class="arrow"></b>
+                                
+                                <ul class="submenu">
+                                	{% if '/admin/' in request.session.permission %}
+                                     <li id="li_nav_admin_manager">
+                                        <a href="/manager2/admin/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            二级管理员
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    
+                                    {% if '/admin/library/' in request.session.permission %}
+                                    <li id="li_nav_admin_library">
+                                        <a href="/manager2/admin/library/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            机构管理员
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    
+                                    {% if '/admin/user/' in request.session.permission %}
+                                    <li id="li_nav_admin_users">
+                                        <a href="/manager2/admin/user/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            会员
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    <!--
+                                    {% if '/admin/old_library/' in request.session.permission %}
+                                    <li id="li_nav_admin_old_library">
+                                        <a href="/manager2/admin/old_library/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            将到期机构
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    -->
+                                </ul>
+                            </li>
+                
+                            <li id="li_nav_person_creator">
+                                <a href="list_gerencz.html" class="dropdown-toggle a2">
+                                    <i class="menu-icon fa fa-desktop"></i>
+                                    <span class="menu-text"> 原创管理 </span>
+                                    <b class="arrow fa fa-angle-down">+</b>
+                                </a>
+        
+                                <b class="arrow"></b>
+                                <ul class="submenu">
+                                
+                                	{% if '/person_creator/' in request.session.permission %}
+                                    <li id="li_nav_person_creator_default">
+                                        <a href="/manager2/person_creator/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            作品
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    
+                                    <!--
+                                    <li id="li_nav_person_creator_remark">
+                                        <a href="/manager2/person_creator/remark_manage/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            作品评论管理
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    -->
+                                    {% if '/person_creator/type_manage/' in request.session.permission %}
+                                    <li id="li_nav_person_creator_types">
+                                        <a href="/manager2/person_creator/type_manage/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            作品分类
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </li>
+                            {% if '/activity/list/' in request.session.permission %}
+                            <li id="li_nav_activity"  onClick="javascript:location.href='/manager2/activity/list/'">
+                                <a href="#" class="dropdown-toggle a3">
+                                    <i class="menu-icon fa fa-pencil-square-o"></i>
+									<span class="menu-text">活动管理</span>
+                                    
+                                </a>
+                                <!--
+                                <b class="arrow"></b>
+                                 <ul class="submenu">
+                                 	 
+                                    {% if '/activity/list/' in request.session.permission %}
+                                    <li id="li_nav_activity_list">
+                                        <a href="/manager2/activity/list/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            活动列表
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/activity/fruit_list/' in request.session.permission %}
+                                    <li id="li_nav_activity_opus">
+                                        <a href="/manager2/activity/fruit_list/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            活动作品管理
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/activity/news/' in request.session.permission %}
+                                    <li id="li_nav_activity_news">
+                                        <a href="/manager2/activity/news/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            结果与新闻管理
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/activity/background/' in request.session.permission %}
+                                    <li id="li_nav_activity_background">
+                                        <a href="/manager2/activity/background/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                        活动背景管理
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                                -->
+                            </li>
+                            {% endif %}
+                            <li id="li_nav_template">
+                                <a href="#" class="dropdown-toggle a9">
+                                    <i class="menu-icon fa fa-list"></i>
+                                    <span class="menu-text">模板管理</span>
+                                     <b class="arrow fa fa-angle-down">+</b>
+                                </a>
+                                <b class="arrow"></b>
+                                 <ul class="submenu">
+                                 	<!--
+                                    <li class="">
+                                        <a href="" target="_blank" class="dropdown-toggle">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                             作品模板
+                                            <b class="arrow fa fa-angle-down"></b>
+                                        </a>
+        
+                                        <b class="arrow"></b>
+        
+                                        <ul class="submenu">
+                                            <li class="">
+                                                <a href="list_mbhd.html">
+                                                    <i class="menu-icon fa fa-caret-right"></i>
+                                                    活动作品模板
+                                                </a>
+        
+                                                <b class="arrow"></b>
+                                            </li>
+        
+                                            <li class="">
+                                                <a href="list_mbyc.html">
+                                                    <i class="menu-icon fa fa-caret-right"></i>
+                                                    原创作品模板
+                                                </a>
+        
+                                                <b class="arrow"></b>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    -->
+                                    {% if '/opus_temp/list_mbyc/' in request.session.permission %}
+                                    <li id="li_nav_template_list_mbyc">
+                                        <a href="/manager2/opus_temp/list_mbyc/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            作品模板
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/opus_temp/list_mbzp/' in request.session.permission %}
+                                    <li id="li_nav_template_list_mbzp">
+                                        <a href="/manager2/opus_temp/list_mbzp/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            作品转模板
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/resource/size_manage/' in request.session.permission %}
+                                    <li id="li_nav_template_list_mbcc">
+                                        <a href="/manager2/resource/size_manage/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            作品尺寸
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    <!--
+                                    <li class="">
+                                        <a href="list_mbfm.html">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            活动封面
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    -->
+                                </ul>
+                            </li>
+                
+                            <li id="li_nav_topic">
+                                <a href="#" class="dropdown-toggle a1">
+                                    <i class="menu-icon fa fa-desktop"></i>
+                                    <span class="menu-text"> 话题创作管理 </span>
+                                    <b class="arrow">+</b>
+                                </a>
+                                <ul class="submenu">
+                                	{% if '/topic_list/' in request.session.permission %}
+                                	<li id="li_nav_item_topic_list" class="">
+                                        <a href="/manager2/topic_list/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            话题列表管理
+                                        </a>
+                
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/topic_emotion/' in request.session.permission %}
+                                    <li id="li_nav_item_emotion_manage" class="">
+                                        <a href="/manager2/topic_emotion/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            表情管理
+                                        </a>
+                
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                 </ul>
+                            </li>
+                            
+                
+                            <li id="li_nav_study" style="display:none;">
+                                <a href="" class="dropdown-toggle a5">
+                                    <i class="menu-icon fa fa-list-alt"></i>
+                                    <span class="menu-text"> 学习平台管理 </span>
+                                    <b class="arrow fa fa-angle-down">+</b>
+                                </a>
+                                <b class="arrow"></b>
+                                <ul class="submenu">
+                                	{% if '/study/book/' in request.session.permission %}
+                                    <li id="li_nav_study_book">
+                                        <a href="/manager2/study/book/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            图书管理
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/study/video/' in request.session.permission %}
+                                    <li id="li_nav_study_video">
+                                        <a href="/manager2/study/video/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            视频管理
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/study/music/' in request.session.permission %}
+                                    <li id="li_nav_study_music">
+                                        <a href="/manager2/study/music/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            音频管理
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/study/game/' in request.session.permission %}
+                                    <li id="li_nav_study_game">
+                                        <a href="/manager2/study/game/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            游戏管理
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/study/res_type/' in request.session.permission %}
+                                    <li id="li_nav_study_res_type">
+                                        <a href="/manager2/study/res_type/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            资源类型管理
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/study/res_channel/' in request.session.permission %}
+                                     <li id="li_nav_study_res_channel">
+                                        <a href="/manager2/study/res_channel/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            资源栏目管理
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </li>
+                
+                            <li id="li_nav_resource">
+                                <a href="#" class="dropdown-toggle a6">
+                                    <i class="menu-icon fa fa-pencil-square-o"></i>
+                                    <span class="menu-text">素材管理</span>
+                                    <b class="arrow fa fa-angle-down">+</b>
+                                </a>
+                
+                                <b class="arrow"></b>
+                                <ul class="submenu">
+                                	{% if '/resource/' in request.session.permission %}
+                                     <li id="li_nav_resource_common_manage">
+                                        <a href="/manager2/resource/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            公共素材管理
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/resource/person_manage/' in request.session.permission %}
+                                    <li id="li_nav_resource_person_manage">
+                                        <a href="/manager2/resource/person_manage/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            个人素材管理
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/resource/type_manage/' in request.session.permission %}
+                                    <li id="li_nav_resource_type_manage">
+                                        <a href="/manager2/resource/type_manage/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            素材分类管理
+                                        </a>
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </li>
+                            <!--专家评分管理开始-->
+                            
+                            <li id="li_nav_expert_score" style="display:none;">
+                            	
+                                <a href="#" target="_blank" class="dropdown-toggle a8">
+                                    <i class="menu-icon fa fa-pencil-square-o"></i>
+                                    <span class="menu-text">专家评分管理</span>
+                                    <b class="arrow fa fa-angle-down">+</b>
+                                </a>
+        
+                                <b class="arrow"></b>
+                                <ul class="submenu">
+                                	{% if '/expert_score_manage/' in request.session.permission %}
+                                    <li id="li_nav_expert_score_manage">
+                                        <a href="/manager2/expert_score_manage/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            专家评分
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                    {% if '/expert_score_manage/score_record/' in request.session.permission %}
+                                    <li id="li_nav_expert_score_record">
+                                        <a href="/manager2/expert_score_manage/score_record/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            评分结果
+                                        </a>
+        
+                                        <b class="arrow"></b>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </li>
+                            <!--专家评分管理结束-->
+                            
+                            <!--系统管理开始-->
+                            <li id ="li_nav_system" class=""  style="display:none" >
+                                <a href="" class="dropdown-toggle a7">
+                                    <i class="menu-icon fa fa-picture-o"></i>
+                                    <span class="menu-text"> 系统管理 </span>
+                                    <b class="arrow fa fa-angle-down">+</b>
+                                </a>
+                
+                                <b class="arrow"></b>
+                                  <ul class="submenu">
+
+                                    <li id="li_nav_system_message">
+                                        <a href="/manager2/system/list_xtxx/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            系统消息
+                                        </a>
+
+                                        <b class="arrow"></b>
+                                    </li>
+
+
+                                    <li id="li_nav_system_letter">
+                                        <a href="/manager2/system/list_lygl/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            留言管理
+                                        </a>
+
+                                        <b class="arrow"></b>
+                                    </li>
+
+
+                                     <li  id="li_nav_system_jyz">
+                                        <a href="/manager2/system/list_jygl">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            加油站管理
+                                        </a>
+
+                                        <b class="arrow"></b>
+                                    </li>
+
+
+                                    <li id="li_nav_system_person_log">
+                                        <a href="/manager2/system/list_grrz/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            个人用户操作日志
+                                        </a>
+
+                                        <b class="arrow"></b>
+                                    </li>
+                                    <li id="li_nav_system_admin_log">
+                                        <a href="/manager2/system/list_czrz/">
+                                            <i class="menu-icon fa fa-caret-right"></i>
+                                            管理员用户操作日志
+                                        </a>
+
+                                        <b class="arrow"></b>
+                                    </li>
+                                    
+                                  </ul>  
+                            </li>
+                        </ul>
+                        <!-- nav end -->
+						<script type="text/javascript">
+                            try{ace.settings.check('sidebar' , 'collapsed')}catch(e){}
+                        </script>
+                    </div>
+                </div>
+                <div class="main-content">
+                    <div class="right_con">
+                    	{% block content %}{% endblock %}
+                 		<div class="cont_bc">Copyright © 2013-2014 识为软件科技有限公司</div>
+                 	</div>
+     			</div>
+			</div>
+			<script src="/manager2/static/js/bootstrap.min.js"></script>
+            <script src="/manager2/static/js/ace-elements.min.js"></script>
+            <script src="/manager2/static/js/ace.min.js"></script>
+			<div class="clear"></div>
+		</div>
+	</div>
+</body>
+</html>
+

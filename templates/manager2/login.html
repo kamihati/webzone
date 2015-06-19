@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>登录界面</title>
+<link href="/manager2/static/css/css_01.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript">
+function change_validate(){
+	document.getElementById('linkv').src = '/manager2/api_valify_img/?r=' + Math.random();	
+}
+</script>
+</head>
+
+<body>
+<div class="login">
+<div class="nei">
+<div class="dl">
+<img src="/manager2/static/images/tit.png"/>
+<form method="post" action="#">
+<div class="yh"><b>用户名：</b><input name="username" id="txtUsername" type="text" /></div>
+<div class="yh"><b>密&nbsp;&nbsp;&nbsp;&nbsp;码：</b><input id="txtPassword" name="password" type="password" type="text" /></div>
+<div class="yh"><b>验证码：</b><input type="text" name="validate" class="ym" /><span><img onclick="change_validate()" src="" id="linkv" /></span></div>
+<div class="deng"><button id="btnLogin" type="submit">登&nbsp;&nbsp;录</button><a href="">忘记密码？</a></div>
+</form>
+<script>
+document.getElementById('txtUsername').focus();
+
+change_validate();
+
+{% if error %}
+alert("{{ error }}");
+{% endif %}
+</script>
+</div>
+</div>
+</div>
+</body>
+</html>

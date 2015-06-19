@@ -1,0 +1,242 @@
+{% extends 'manager/base.html' %}
+
+
+{% block header %}
+<script>
+function showdiv() {            
+            document.getElementById("bg").style.display ="block";
+            document.getElementById("show").style.display ="block";
+        }
+function hidediv() {
+            document.getElementById("bg").style.display ='none';
+            document.getElementById("show").style.display ='none';
+        }
+
+function on_resize(){
+	var w=document.documentElement.clientWidth
+	|| window.innerWidth
+	|| document.body.clientWidth;
+	
+	var h=document.documentElement.clientHeight
+	|| window.innerHeight
+	|| document.body.clientHeight;
+	
+	//h = $(window).height();
+	h = h-5;
+
+	$("#pg").css("width", (w-330)+"px");
+	$("#pg").css("height", h+"px");
+	$("#Q3").css("height", h+"px");
+	
+}
+window.onresize = on_resize;
+</script>
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+<!-- Add fancyBox main JS and CSS files -->
+<script src="{% static 'fancyBox/jquery.fancybox.js' %}?v=2.1.5"></script>
+<link rel="stylesheet" href="{% static 'fancyBox/jquery.fancybox.css' %}?v=2.1.5" media="screen">
+<script>
+	var status = {{status}};
+	$(document).ready(function(){
+		$('.fancybox').fancybox({
+			padding: 3,
+
+			openEffect : 'elastic',
+			openSpeed  : 150,
+
+			closeEffect : 'elastic',
+			closeSpeed  : 150,
+
+			closeClick : true
+		});
+		
+		on_page(1);
+	});
+	
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		
+		var display_page_count = 15;
+		var middle_page = parseInt(display_page_count/2);
+		var start_page = 1;
+		if (page_index > middle_page){
+			start_page = page_index - middle_page;
+		}
+		var end_page = start_page + display_page_count - 1;
+		if (end_page > page_count){
+			end_page = page_count;
+			start_page = page_count - display_page_count + 1;
+			if (start_page <= 0){
+				start_page = 1;
+			}
+		}
+		
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">首页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(1)\">首页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">尾页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + page_count + ")\">尾页</a></li>";
+		}
+		for (var i = start_page; i<=end_page; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		$.post("/manager/opus_list/", {"page_index":page_index, "status":status}, function(data){
+			try{
+				var json_data = JSON.parse(data);
+			} catch (exception){
+				window.location.reload();
+			}
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				//var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td><a href='#' onclick='show_opus(" + array_list[i]["id"]  + ")'>" + array_list[i]["title"] + "</a></td><td>";
+				var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td><a href='/manager/opus/?id=" + array_list[i]["id"]  + "' target='_blank'>" + array_list[i]["title"] + "</a></td><td>";
+				newRow += array_list[i]["username"] + "</td><td>";
+				newRow += array_list[i]["type_name"] + "</td><td>";
+				newRow += array_list[i]["class_name"] + "</td><td>";
+				newRow += array_list[i]["page_count"] + "</td><td>";
+				newRow += array_list[i]["preview_times"] + "</td><td>";
+				newRow += array_list[i]["comment_times"] + "</td><td>";
+				newRow += array_list[i]["praise_times"] + "</td><td>";
+				//newRow += "<a class='fancybox' href='" + array_list[i]["cover"] + "' target='_blank'>封面</a></td><td>";
+				newRow += array_list[i]["create_time"] + "</td>";
+				//newRow += array_list[i]["status_name"] + "</td><td>";
+				{% if status == 2%}
+              	if (array_list[i]["is_top"] == 1){
+					newRow += "<td><button class='btn btn-success btn-xs' onclick='stick_top(" + array_list[i]["id"] + ", 0)'>取消置优</button></td><td>";
+				} else {
+					newRow += "<td><button class='btn btn-danger btn-xs' onclick='stick_top(" + array_list[i]["id"] + ", 1)'>置优</button></td><td>";
+				}
+				newRow += "<button class='btn btn-success btn-xs' onclick='audit(" + array_list[i]["id"] + ", 0)'>打回草稿</button></td></tr>";
+				{%elif status == 1%}
+				if (array_list[i]["status"] == 1){
+					newRow += "<td><button class='btn btn-success btn-xs' onclick='audit(" + array_list[i]["id"] + ", 1)'>通过</button>&nbsp;";
+					newRow += "<button class='btn btn-danger btn-xs' onclick='audit(" + array_list[i]["id"] + ", -1)'>不通过</button></td></tr>";
+				}
+				{% else %}
+				newRow += "</tr>";
+				{%endif%}
+				
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+	
+	function show_opus(opus_id){
+		$("#pg").find('iframe').attr('src', '/manager/opus_gallery/?id=' + opus_id);
+		$("#Q3").find('iframe').attr('src', '/manager/opus_detail/?id=' + opus_id);
+		showdiv();
+	}
+	
+	function audit(opus_id, new_status){
+		if (confirm("你真的确定要执行该操作吗?") == true){
+			$.post("/manager/audit_opus/", {"id":opus_id, "status":new_status}, function(data){
+				if (data == "ok"){
+					if (status == 1){
+						$("#tr"+opus_id).find("td")[9].innerHTML = "发表中";
+					} else if (status == 2){
+						$("#tr"+opus_id).find("td")[9].innerHTML = "草稿";
+						$("#tr"+opus_id).find("td")[10].innerHTML = "草稿";
+					} else if (status == -1){
+						$("#tr"+opus_id).find("td")[9].innerHTML = "审核未通过";
+					}
+				} else {
+					alert(data);
+				}
+			});
+		}
+	}
+	
+	function stick_top(opus_id, is_top){
+		if (confirm("你真的确定要执行该操作吗?") == true){
+			$.post("/manager/top_opus/", {"id":opus_id, "is_top":is_top}, function(data){
+				if (data == 1){
+					$("#tr"+opus_id).find("td")[9].innerHTML = "已置优";
+				} else if (data == 0){
+					$("#tr"+opus_id).find("td")[9].innerHTML = "普通作品";
+				} else {
+					alert(data);
+				}
+			});
+		}
+	}
+	
+	function shade(){
+		alert("shade");
+	}
+</script>
+{% endblock %}
+
+
+{% block content %}
+<style type="text/css">
+        #bg{ display: none;  position: fixed;  top: 0;  left: 0;  width: 100%;  height: 100%;  background-color: black;  z-index:2001;}
+        #show{display: none;  position: fixed;  top: 0;  left: 0;  width: 100%;  height: 100%; z-index:2002;  overflow: auto;}
+</style>
+<div id="bg"></div>
+	<div id="show" style="margin:0; padding:0; border:0">
+	<div id="pg" style="float:left; margin:0; padding:0; border:0">
+		<iframe src="" style="width:100%; height:100%; border: 0;"></iframe>
+	</div>
+	<div id="Q3" style="float:right; width:310px; margin:0; padding:0; border:0;">
+		<iframe src="" style="width:100%; height:100%; border: 0;"></iframe>
+	</div>
+</div>
+<script>on_resize();</script>
+
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>标题</th>
+              <th>作者账号</th>
+              <th>作品大型</th>
+              <th>作品子类</th>
+              <th>总页数</th>
+              <th>浏览</th>
+              <th>评论</th>
+              <th>赞次数</th>
+              <!--th>封面</th-->
+              <th>创建时间</th>
+              <!--th>作品状态</th-->
+              {% if status == 2%}
+              <th>置优</th>
+              <th>打回草稿</th>
+              {%elif status == 1%}
+              <th>审核</th>
+              {%endif%}
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+	
+</ul>
+
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %}
+<script type="text/javascript">
+$(function(){
+	//设置导航栏选中状态
+	$("#li_nav_expert_score").addClass("active");
+	$("#li_nav_expert_score_record").addClass("active");
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+    <div class="cont_right_lczcc">
+        <div class="cont_right_lcl">
+            <a href="" class="jg">前台展现评分结果</a>
+            &nbsp;&nbsp;机构名称：
+            <select name="机构名称" class="xz">
+                <option value="河南省少儿图书馆">河南省少儿图书馆</option>
+                <option value="表情1">表情1</option>
+                <option value="画框">画框</option>
+            </select>
+            &nbsp;&nbsp;活动名称：
+            <select name="活动名称" class="xz">
+                <option value="河南省少儿图书馆">河南省少儿图书馆</option>
+                <option value="表情1">表情1</option>
+                <option value="画框">画框</option>
+            </select>
+            <a href="" class="jg">查询</a>
+        </div>
+		<table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px; " class="liuyan" >
+            <tr><td colspan="8" class="tit">评分结果</td></tr>
+            <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff;">
+            <td width="80">编号</td><td width="150" >机构名称</td><td width="150" >活动名称</td><td width="150" >报送单位</td><td width="150">作品名称</td><td width="100">所属组别</td><td width="100px">姓名</td><td width="80px">年龄</td><td width="80">评分</td><td width="400"> 评语</td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>活动名称</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td>100</td><td>工作成绩进步大，悟性较强，能很快适应新的岗位，能</td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>活动名称</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td>100</td><td>工作成绩进步大，悟性较强，能很快适应新的岗位，能</td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>活动名称</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td>100</td><td>工作成绩进步大，悟性较强，能很快适应新的岗位，能</td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>活动名称</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td>100</td><td>工作成绩进步大，悟性较强，能很快适应新的岗位，能</td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>活动名称</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td>100</td><td>工作成绩进步大，悟性较强，能很快适应新的岗位，能</td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>活动名称</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td>100</td><td>工作成绩进步大，悟性较强，能很快适应新的岗位，能</td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>活动名称</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td>100</td><td>工作成绩进步大，悟性较强，能很快适应新的岗位，能</td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>活动名称</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td>100</td><td>工作成绩进步大，悟性较强，能很快适应新的岗位，能</td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>活动名称</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td>100</td><td>工作成绩进步大，悟性较强，能很快适应新的岗位，能</td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>活动名称</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td>100</td><td>工作成绩进步大，悟性较强，能很快适应新的岗位，能</td>
+            </tr>
+        </table>
+        <div class="yema">
+            <span>共<b>100</b>条记录</span>
+            <span>每页<b>20</b>个</span>
+            <a href="">首页</a>
+            <a href="" class="s1">上一页</a>
+            <a href="" class="s1">下一页</a>
+            <a href="">末页</a>
+            <span>总共<b>15</b>页</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

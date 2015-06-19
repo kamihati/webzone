@@ -1,0 +1,150 @@
+﻿{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<!--tab切换开始--> 
+<script type="text/javascript">
+$(function(){
+	//设置导航栏选中状态
+	$("#li_nav_activity").addClass("active");
+	$("#li_nav_activity_create").addClass("active");
+
+	//生成分页代码
+    $(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+
+	//点击tab切换类别的处理
+	$(".cont_right_lczt ul li").click(function(){
+		var opus_type = 59;
+		switch(this.id){
+			case "p1":
+				break;
+			case "p2":
+				opus_type = 60;
+				break;
+			case "p3":
+			    opus_type = 61;
+				break;
+			case "p4":
+			    opus_type = 63;
+				break;
+			case "p5":
+				opus_type = 62;
+				break;
+			case "p6":
+				opus_type = 0;
+				break;
+			default:
+				break;
+		}
+
+		//如果为作品列表跳转到活动作品列表
+		if(opus_type == 0){
+			
+			location.href = "/manager2/activity/info_fruit_list/?id={{ activity.id }}";
+			
+		}else{
+			//否则更改显示类型
+			location.href = "/manager2/activity/info/?id={{ activity.id }}&opus_type=" + opus_type;
+		}
+	});
+	
+	//初始化页面状态
+	{% if opus_type != 59 %}
+	$(".cont_right_lczt ul li").removeAttr("class");
+	set_opus_type({{ opus_type }});
+	{% endif %}
+	 
+});
+
+function set_opus_type(opus_type){
+	var ele = "p1";
+	var btn_txt = "添加预告";
+	if(opus_type == 60){
+		ele = "p2";
+		btn_txt = "添加结果";
+	}else if(opus_type == 61){
+		ele = "p3";
+		btn_txt = "添加新闻";
+	}else if(opus_type == 63){
+		ele = "p4";
+		btn_txt = "添加播报";
+	}else if(opus_type == 62){
+		ele = "p5";
+		btn_txt = "添加通知";
+	}else{
+		opus_type = 59;
+	}
+	$("#" + ele).attr("class", "hover");
+
+	$("#btnEdit").text(btn_txt);
+	$("#btnEdit").click(function(){
+		//进入编辑界面
+		//location.href = '';
+	});
+}
+
+
+function search(page_index){
+	$("#hdPageIndex").val(page_index);
+	$("#submit").click();
+}
+
+</script> 
+<!--tab切换结束--> 
+{% endblock %}
+
+{% block content %}
+<form method="get" action="/manager2/activity/info/">
+	<input type="hidden" name="id" value="{{ activity.id }}" />
+    <input type="hidden" id="hdPageIndex" name="page_index" value="{{ page_index }}" />
+    <input type="hidden" name="opus_type" value="{{ opus_type|default:59 }}" />
+    <input type="submit" id="submit" style="display:none;" />
+</form>
+<div class="right_hua">
+  <div class="cont_right_lc">
+    <h1>{{ activity.title }}</h1>
+    <div class="cont_right_hd">
+      <div class="cont_right_hdl"><img src="/media/{{ activity.cover }}"/></div>
+      <p><a class="jg" href="/manager2/activity/edit_step_1/?id={{ activity.id }}">活动编辑</a><br/>
+        <b>简介：</b><span>{{ activity.description }}</span></p>
+      <div class="clear"></div>
+    </div>
+    <div class="cont_right_lczt">
+      <ul>
+        <li id="p1" class="hover"><a>活动预告</a></li>
+        <li id="p2"><a>活动结果</a></li>
+        <li id="p3"><a>活动新闻</a></li>
+        <li id="p4"><a>活动播报</a></li>
+        <li id="p5"><a>活动通知</a></li>
+        <li id="p6"><a>读者作品</a></li>
+      </ul>
+    </div>
+    <div class="cont_right_lczc" id="con_p_1">
+      <div class="cont_right_lczct">
+        <table>
+          <tr>
+              </td>
+            <td><a class="jg" id="btnEdit" href="/?opus_type={{ opus_type }}&activity_id={{ activity.id }}#/studio/" target="_blank"  type="button">添加预告</a></td>
+          </tr>
+        </table>
+      </div>
+      <div class="cont_right_lczcc">
+        <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+          <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+            <td width="500">标题</td>
+            <td width="300"> 创建时间 </td>
+            <td width="200"> 操作</td>
+          </tr>
+          {% for obj in data_list %}
+          <tr>
+            <td><a href="/manager/opus/?id={{ obj.opus_id }}">{{ obj.fruit_name }}</a></td>
+            <td>{{ obj.create_time }}</td>
+            <td><a class="shan" href="#">修改</a></td>
+          </tr>
+          {% endfor %}
+        </table>
+         <div class="yema"></div>
+      </div>
+    </div> 
+  </div>
+</div>
+{% endblock %}

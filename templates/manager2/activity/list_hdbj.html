@@ -1,0 +1,252 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+{% load staticfiles %}
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<!--修改密码开始--> 
+<script type="text/javascript">
+$(document).ready(function($){
+	//设置导航栏选中状态
+	$("#li_nav_activity").addClass("active");
+	$("#li_nav_activity_background").addClass("active");
+
+    //活动背景编辑界面关闭
+	$('.theme-poptit18 .close').click(function(){
+		$('.theme-popover-mask').hide();
+		$('.theme-popover18').slideUp(200);
+	})
+	
+	//生成分页代码
+    $(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+
+	//活动背景编辑窗口取消按钮
+	$("#btnCancel").click(function(){
+		$('.theme-poptit18 .close').click();
+	});
+	
+	//编辑活动背景提交按钮
+	$("#btnOk").click(function(){
+		var id =  $('#hdId').val();
+		var name = $("#txtName").val();
+		if(name == ""){
+			alert("背景名称不能为空");
+			return;
+		}
+		
+		var origin = $("#hdPath").val();
+		if(origin == "" && id == ""){
+			alert("未上传背景图片");
+			return;
+		}
+		var tag_font_style = $("#txtTagFontStyle").val();
+		var tag_font_color = $("#txtTagFontColor").val();
+		var tag_font_size = $("#txtTagFontSize").val();
+		if(tag_font_style == "" || tag_font_color == ""){
+			alert("标签字体属性不能为空");
+			return;
+		}
+		if(isNaN(tag_font_size)){
+			alert("字体尺寸必须为数字");
+			return;
+		}
+		var content_font_style = $("#txtContentFontStyle").val();
+		var content_font_color = $("#txtContentFontColor").val();
+		var content_font_size = $("#txtContentFontSize").val();
+		if(content_font_style == "" || content_font_color == ""){
+			alert("内容字体属性不能为空");
+			return;
+		}
+		if(isNaN(content_font_size)){
+			alert("内容字体尺寸必须为数字");
+			return;
+		}
+		var position = $("#txtPosition").val();
+		if(position == ""){
+			alert("内容文字位置不能为空！");
+			return;
+		}
+		var param = {};
+		param['id'] = id;
+		param['name'] = name;
+		param['origin'] = origin;
+		param['tag_font_style'] = tag_font_style;
+		param['tag_font_color'] = tag_font_color;
+		param['tag_font_size'] = tag_font_size;
+		param['content_font_style'] = content_font_style;
+		param['content_font_color'] = content_font_color;
+		param['content_font_size'] = content_font_size;
+		param['position'] = position;
+		$.post("/activity/background_update/", param, function(data){
+			if(data == "ok"){
+				alert("操作成功！");
+				location.reload();
+			}else{
+				
+			}
+		});
+		
+	});
+	
+	$("#fileImg").change(function(){
+
+		check_img(document.getElementById('fileImg'), ['JPG', 'JPEG', 'PNG', 'BMP'], 'hdPath');
+	});
+
+});
+
+//显示编辑窗口
+function view_edit(id){
+	 
+	$("#hdId").val(id);
+	//为空字符则是新建背景
+	if(id != 0){
+		$("#txtName").val($("#td_name_" + id).text());
+		var tag_font = $("#td_tag_font_" + id).text();
+		$("#txtTagFontStyle").val(tag_font.split("/")[0]);
+		$("#txtTagFontColor").val(tag_font.split("/")[1]);
+		$("#txtTagFontSize").val(tag_font.split("/")[2]);
+		var content_font = $("#td_content_font_" + id).text();
+		$("#txtContentFontStyle").val(content_font.split("/")[0]);
+		$("#txtContentFontColor").val(content_font.split("/")[1]);
+		$("#txtContentFontSize").val(content_font.split("/")[2]);
+		$("#txtPosition").val($("#td_position_" + id).text());
+		$("#a_ajax_img").attr("href", $("#link_" + id).attr("href"));
+		$("#a_ajax_img").show();
+		$("#txtPosition").val();
+	}
+
+	$('.theme-popover-mask').show();
+	$('.theme-popover-mask').height($(document).height());
+	$('.theme-popover18').slideDown(100);
+}
+
+
+function del_obj(id){
+	if(!confirm("您确定要删除这个背景吗？"))
+		return;
+	$.post("/activity/remove_background/", {"id": id}, function(data){
+		if(data == "ok"){
+			alert("删除成功！");
+			location.reload();
+		}else{
+			alert("删除失败！");
+		}
+	});
+}
+
+</script> 
+{% endblock %}
+{% block content %}
+<div class="right_hua">
+    <div class="cont_right_lc">
+        <div class="cont_right_lcl">
+            <button class="jg theme-login18" type="button" onclick="javascript:view_edit(0);">新增活动背景</button>
+        </div>
+        <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+            <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+                <td width="200">名称</td>
+                <td width="150">标签字体</td>
+                <td width="150">内容字体</td>
+                <td width="120">编辑位置</td>
+                <td width="150">创建时间</td>
+                <td width="100">引用次数</td>
+                <td width="150">操作</td>
+            </tr>
+            {% for obj in data_list %}
+            <tr>
+                <td id="td_name_{{ obj.id }}">{{ obj.name }}</td>
+                <td id="td_tag_font_{{obj.id}}">{{ obj.tag_font_style }}/{{ obj.tag_font_color }}/{{ obj.tag_font_size }}</td>
+                <td id="td_content_font_{{ obj.id }}">{{ obj.content_font_style }}/{{ obj.content_font_color }}/{{ obj.content_font_size }}</td>
+                <td id="td_position_{{ obj.id }}">{{ obj.position }}</td>
+                <td>{{ obj.create_time }}</td>
+                <td>{{ obj.use_num }}</td>
+                <td>
+                	<a class="shan" target="_blank" id="link_{{ obj.id }}" href="/media/{{ obj.origin_path }}">查看</a>/
+                    <a class="shan" href="javascript:view_edit({{ obj.id }})">修改</a>/
+                    <a class="shan" href="javascript:del_obj({{ obj.id }})">删除</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <div class="yema"></div>
+    </div>
+</div>
+
+<!--短信留言开始-->
+<div class="theme-popover-mask"></div>
+<div class="theme-popover18">
+    <div class="theme-poptit18"> <a href="javascript:;" title="关闭" class="close">×</a>
+        <h3></h3>
+    </div>
+    <div class="theme-popbod18 dform">
+        <form class="theme-signin18" name="loginform" action="#" method="post">
+            <table cellpadding="0" cellspacing="10" class="xinxi2">
+                <tr>
+                    <td style=" text-align:right;"> 名称：</td>
+                    <td style=" text-align:left;">
+                    	<input id="txtName" type="text" class="icx" />
+                    </td>
+                </tr>
+                <tr>
+                    <td  style=" text-align:right;">上传：</td>
+                    <td style=" text-align:left;">
+                    	<input type="file" accept="image/*" id="fileImg" name="origin" style="display: none;" />
+                        <button class="jg" type="button" onclick="javascript:$('#fileImg').click()">上传+</button>
+                        <a  class="shan" id="a_ajax_img" style="display: none" target="_blank" > 点击查看</a>
+                        <img id="loading" src="{% static 'images/loading.gif' %}" style="display:none;">
+                    	<input type="hidden" id="hdPath" value="" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 标签文字字体：</td>
+                    <td style=" text-align:left;">
+                    	<input id="txtTagFontStyle" type="text" class="icx" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 标签文字颜色：</td>
+                    <td style=" text-align:left;">
+                    	<input id="txtTagFontColor" type="text" class="icx" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 标签文字尺寸：</td>
+                    <td style=" text-align:left;">
+                    	<input id="txtTagFontSize" type="text" class="icx" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 内容字体：</td>
+                    <td style=" text-align:left;">
+                    	<input id="txtContentFontStyle" type="text" class="icx" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 内容文字颜色：</td>
+                    <td style=" text-align:left;">
+                    	<input id="txtContentFontColor" type="text" class="icx" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style=" text-align:right;"> 内容文字尺寸：</td>
+                    <td style=" text-align:left;">
+                    	<input id="txtContentFontSize" type="text" class="icx" />
+                    </td>
+                </tr>
+                <tr>
+                	<td style="text-align:right;"> 内容文字位置：</td>
+                    <td style=" text-align:left;" title="格式为（背景图宽/背景图高/编辑区x坐标/y坐标/编辑区宽/编辑区高)">
+                    	<input id="txtPosition" type="text" class="icx" />
+                    </td>
+                </tr>
+                 
+            </table>
+            <input type="hidden" id="hdId" value="" />
+            <input class="btn btn-primary que" type="button" id="btnOk" value=" 确定 " />
+            <input class="btn btn-primary qux" type="button" id="btnCancel" value=" 取消 " />
+            <input type="reset" style="display:none;" id="reset" />
+        </form>
+    </div>
+</div>
+<!--短信留言结束--> 
+{% endblock %} 

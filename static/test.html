@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		<meta charset="UTF-8">
+		<title>测试</title>
+	</head>
+
+	<body>
+		<form action="/api/upload_personal_res/" method="post" enctype="multipart/form-data">
+		<div>
+			res_title:<input type="text" name="res_title" id="res_title" value="请输入标题" /><br />
+			res_type:<input type="text" name="res_type" id="res_type" value="sound" /><br />
+			album_id:<input type="text" name="album_id" id="album_id" value="0" /><br />
+			选择文件：<input type="file" id="asset_file" name="asset_file" /><br />
+			<input type="submit"  />
+		</div>
+		</form>
+	</body>
+</html>

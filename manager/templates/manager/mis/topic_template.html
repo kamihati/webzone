@@ -1,0 +1,298 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% load staticfiles %}
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+{% endblock %}
+
+{% block footer %}
+<!-- Add fancyBox main JS and CSS files -->
+<script src="{% static 'fancyBox/jquery.fancybox.js' %}?v=2.1.5"></script>
+<link rel="stylesheet" href="{% static 'fancyBox/jquery.fancybox.css' %}?v=2.1.5" media="screen">
+
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+<style>
+.bootstrap-select { width:272px; }
+
+.fileinput-button {
+  position: relative;
+  overflow: hidden;
+}
+.fileinput-button input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  opacity: 0;
+  filter: alpha(opacit
+  y=0);
+  transform: translate(-300px, 0) scale(4);
+  font-size: 23px;
+  direction: ltr;
+  cursor: pointer;
+}
+</style>
+
+<script>
+	var old_classify_id = "";
+	
+	$(document).ready(function(){
+		on_page(1);
+		$('.fancybox').fancybox({
+			padding: 3,
+
+			openEffect : 'elastic',
+			openSpeed  : 150,
+
+			closeEffect : 'elastic',
+			closeSpeed  : 150,
+
+			closeClick : true
+		});
+	});
+	
+	
+	function on_page(page_index){
+		$.post("/manager/mis/topic_template_list/", function(data){
+			var array_list = JSON.parse(data);
+			$("#table1 tbody tr").remove();
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td><a href='#' onclick='update_template(" + array_list[i]["id"] + ")'>" + array_list[i]["title"] + "</a></td><td>";
+				newRow += array_list[i]["row_num"] + "</td><td>";
+				newRow += array_list[i]["col_num"] + "</td><td>";
+				if (array_list[i]["url"].length>0){
+					newRow += "<a class='fancybox' href='" + array_list[i]["url"] + "' target='_blank'>点击查看</a></td></tr>";
+				} else {
+					newRow += "无图</td></tr>";
+				}
+				//newRow += "<button class='btn btn-warning btn-xs' onclick='delete_opus_size(" + array_list[i]["id"] + ")'>点击删除</button></td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+		});
+	}
+	
+	
+	function submit_template(){
+		var hid_id = $("#hid_id").val();
+		var title = $("#title").val();
+		var row_num = parseInt($("#row_num").val());
+		var col_num = parseInt($("#col_num").val());
+		
+		var hid_res_path = $("#hid_res_path").val();
+		
+		$.post("/manager/mis/topic_template/", {"hid_id":hid_id, "title":title, "row_num":row_num,"col_num":col_num,"hid_res_path":hid_res_path}, function(data){
+			if (data == "ok"){
+				alert("提交成功！");
+				window.location.reload();
+			} else {
+				alert(data);
+			}
+		});
+	}
+	
+	function update_status(){
+		try{
+			var title = $("#title").val();
+			var row_num = parseInt($("#row_num").val());
+			var col_num = parseInt($("#col_num").val());
+			var hid_res_path = $("#hid_res_path").val();
+			
+			if (title.length > 0 && row_num > 0 && col_num > 0 && hid_res_path.length>0){
+				$("#btn_submit").attr("disabled",false);
+			} else {
+				$("#btn_submit").attr("disabled",true);
+			}
+		} catch (expection){
+			$("#btn_submit").attr("disabled",true);
+		}
+	}
+	
+	function new_template(){
+		$("#hid_id").val("0");
+		$("#title").val("");
+		$("#row_num").val("");
+		$("#col_num").val("");
+		
+		$("#btn_submit").attr("disabled",true);
+		$("#a_ajax_img").attr("href", "");
+		$("#a_ajax_img").hide();
+			
+		$("#myModal").modal("show");
+	}
+	
+	function update_template(id){
+		$("#hid_id").val(id);
+		
+		var td_list = $("#tr"+id).find('td');
+		$("#title").val($(td_list[0]).find('a').html());
+		$("#row_num").val(td_list[1].innerHTML);
+		$("#col_num").val(td_list[2].innerHTML);
+		$("#hid_res_path").val(td_list[3].innerHTML);
+		if (td_list[3].innerHTML != "无图"){
+			$("#btn_submit").attr("disabled",false);
+			$("#a_ajax_img").attr("href", $(td_list[3]).find('a').attr('href'));
+			$("#hid_res_path").val($(td_list[3]).find('a').attr('href'));
+			$("#a_ajax_img").show();
+		} else {
+			$("#btn_submit").attr("disabled",true);
+			$("#a_ajax_img").attr("href", "");
+			$("#a_ajax_img").hide();
+		}
+
+		$("#myModal").modal("show");
+	}
+	
+	function delete_template(id){
+		if (confirm("你真的确定要删除吗?") == true){
+			$.post("/manager/delete_opus_size/", {"id":id}, function(data){
+				var json_data = JSON.parse(data);
+				if (json_data.code == 1){
+					alert(json_data.data);
+					window.location.reload();
+				} else {
+					alert(json_data.data);
+				}
+			});
+		}
+	}
+	
+	function check_img(obj){
+		var filename = obj.value;
+		//检查文件类型
+		var exName = filename.substr(filename.lastIndexOf(".")+1).toUpperCase()    
+		if(exName=="JPG"||exName=="JPEG"||exName=="PNG"||exName=="BMP"||exName=="GIF"||exName=="SWF"){
+			//ajax 上传图片
+			upload_image();
+		} else {
+			alert("只能上传图片文件(*.jpg|*.jpeg|*.png|*.bmp|*.gif|*.swf)");
+		}
+	}
+	
+	function upload_image(){
+		$("#loading").show();
+		$.ajaxFileUpload({
+			url:"/manager/ajax_upload_img/",
+			secureuri:false,
+			fileElementId:"asset_file",
+			dataType: 'text',
+			success: function (data, status){
+				var json_data = JSON.parse(data); 
+				if (json_data.code == 1){
+					$("#a_ajax_img").attr("href", "/media/" + json_data.data.path);
+					$("#a_ajax_img").show();
+					$("#hid_res_path").val(json_data.data.path);
+					update_status();
+				} else {
+					alert(json_data.data);
+				}
+				$("#loading").hide();
+			},
+			error: function (data, status, e)
+			{
+				alert(e);
+				$("#loading").hide();
+			}
+		});
+	}
+
+    $('#btn_search').click(
+            function()
+            {
+                on_page(1);
+            }
+    );
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-2 pull-left">
+		<button class="btn btn-danger" onclick="new_template()">点击添加话题模板</button>
+	</div>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>模板名称</th>
+              <th>行</th>
+              <th>列</th>
+              <th>模板图片</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">话题模板详情</h4>
+      </div>
+      <div class="modal-body">
+      	<form class="form-horizontal" >
+      		<input type="hidden" value="0" id="hid_id" />
+			<div class="form-group" id="form_district">
+				<label class="col-md-3 control-label">模板名称：</label>
+				<div class="col-md-9 pull-left">
+					<input type="text" class="form-control" value="" id="title" style="width:260px" onblur="update_status()"/>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group">
+				<label class="col-md-3 control-label">模板图片：</label>
+				<input type="hidden" value="" id="hid_res_path" name="hid_res_path" />
+				<div class="col-md-6">
+					<span class="btn btn-primary fileinput-button">
+		                <i class="icon-plus icon-white"></i>
+		                <span>上传模板图片...</span>
+		                <input class="input-file" type="file" id="asset_file" name="asset_file" accept="image/*" onchange="check_img(this)">
+		            </span>
+		            <img id="loading" src="{% static 'images/loading.gif' %}" style="display:none;">
+		            <div class="btn-group">
+						<a class="fancybox btn btn-success" id="a_ajax_img" style="{% if not asset %}display: none{% endif %}" href="{% if asset %}{{MEDIA_URL}}{{ asset.res_path}}{% endif %}" target="_blank" ><span class="glyphicon glyphicon-picture"></span> 点击查看</a>
+					</div>
+				</div>
+			</div>
+			<div class="form-group" id="form_create">
+				<label class="col-md-3 control-label">行数：</label>
+				<div class="col-md-3 form-inline">
+				<div class="input-group">
+					<input type="text" class="form-control" id="row_num" onblur="update_status()">
+					<div class="input-group-addon">行</div>
+				</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_create">
+				<label class="col-md-3 control-label">列数：</label>
+				<div class="col-md-3 form-inline">
+				<div class="input-group">
+					<input type="text" class="form-control" id="col_num" onblur="update_status()">
+					<div class="input-group-addon">行</div>
+				</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+		</form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal">关闭</button>
+        <button class="btn btn-primary" id="btn_submit" onclick="submit_template()" disabled="disabled">确认提交</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+{% endblock %}

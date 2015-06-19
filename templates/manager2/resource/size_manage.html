@@ -1,0 +1,259 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+{% load staticfiles %}
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<script type="text/javascript">
+$(document).ready(function($){
+	//设置导航栏选中状态
+	$("#li_nav_template").addClass("active");
+	$("#li_nav_template_list_mbcc").addClass("active");
+	
+	//设置搜索关键字文本框默认字
+    set_input_default('txtSearchText', '请输入素材名称');
+	//设置分页代码
+    $(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+	
+	$("#fileImg").change(function(){
+
+		check_img(document.getElementById('fileImg'), ['JPG', 'JPEG', 'PNG', 'BMP'], 'hdPath');
+	});
+});
+
+function open_edit(id){
+	$('#hdDataId').val(id);
+	$.get("/resource/api_get_widget_page_size/", {"id": id}, function(data){
+		var result = JSON.parse(data);
+		$("#txtTitle").val(result.name);
+	    $("#a_ajax_img").attr("href", "/media/" + result.res_path);
+		$("#a_ajax_img").show();
+		$("#txtOriginHeight").val(result.origin_height);
+		$("#txtOriginWidth").val(result.origin_width);
+		$("#txtPrintHeight").val(result.print_height);
+		$("#txtPrintWidth").val(result.print_width);
+		$("#txtScreenWidth").val(result.screen_width);
+		$("#txtScreenHeight").val(result.screen_height);
+		if(result.create_type == '2'){
+			$("#rdoCreateType2").attr("checked", "checked");
+		}
+		if(result.read_type == '2'){
+			$("#rdoReadType2").attr("checked", "checked");
+		}
+		if(result.read_type == '2'){
+			$("#rdoTempType2").attr("checked", "checked");
+		}
+		
+	});
+	$('.theme-popover-mask').show();
+	$('.theme-popover-mask').height($(document).height());
+	$('.theme-popover21').slideDown(200);
+}
+
+function hide_edit(){
+	$('.theme-popover-mask').hide();
+		$('.theme-popover21').slideUp(200);
+}
+
+
+function search(page_index){
+    var search_text = $.trim($("#txtSearchText").val());
+	if(search_text == "请输入素材名称")
+        $("#txtSearchText").val("");
+    $("#hdPageIndex").val(page_index);
+    $("#submit").click();
+}
+
+
+function del_data(id){
+    if(!confirm('您确定要删除这个尺寸吗？'))
+        return;
+    $.post("/widget/api_delete_widget_page_size/", {"id": id}, function(data){
+        if(data == "ok"){
+            alert("删除成功！");
+            location.reload();
+        }
+    });
+}
+
+function edit_data(){
+	var param = {};
+	var id = $("#hdDataId").val();
+	if(id != ""){
+		param['id'] = id;
+	}
+	var title = $('#txtTitle').val();
+	if(title == ''){
+		alert("标题不能为空！");
+		return;
+	}
+	param['title'] = title;
+	var screen_width = $("#txtScreenWidth").val();
+	if(isNaN(screen_width)){
+		alert("屏幕宽度必须为有效数字！");
+		return;
+	}
+	param['screen_width'] = screen_width;
+	var print_width = $("#txtPrintWidth").val();
+	if(isNaN(print_width)){
+		alert("打印宽度必须为有效数字！");
+		return;
+	}
+	param['print_width'] = print_width;
+	var origin_width = $("#txtOriginWidth").val();
+	if(isNaN(origin_width)){
+		alert("原图宽度必须为有效数字！");
+		return;
+	}
+	param['origin_width'] = origin_width;
+	var screen_height = $("#txtScreenHeight").val();
+	if(isNaN(screen_height)){
+		alert("屏幕高度必须为有效数字！");
+		return;
+	}
+	param['screen_height'] = screen_height;
+	var print_height = $("#txtPrintHeight").val();
+	if(isNaN(print_height)){
+		alert("打印高度必须为有效数字！");
+		return;
+	}
+	param['print_height'] = print_height;
+	var origin_height = $("#txtOriginHeight").val();
+	if(isNaN(origin_height)){
+		alert("原图高度必须为有效数字！");
+		return;
+	}
+	param['origin_height'] = origin_height;
+	var create_type = 1;
+	if($("#rdoCreateType2").attr("checked")){
+		create_type = 2;
+	}
+	param['create_type'] = create_type;
+	var read_type = 1;
+	if($("#rdoReadType2").attr("checked")){
+		read_type = 2;
+	}
+	param['read_type'] = read_type;
+	var temp_type = 1;
+	if($("#rdoTempType2").attr("checked")){
+		temp_type = 2;
+	}
+	param['temp_type'] = temp_type;
+	
+	var res_path = $("#hdPath").val();
+	if(id == ""){
+		if(res_path == ""){
+			alert("请上传资源图片！");
+			return;
+		}
+	}
+	param['res_path'] = res_path;
+	
+	$.post("/resource/api_size_edit/", param, function(data){
+		if(data == 'ok'){
+			alert('操作成功！');
+			location.href = "/manager2/resource/size_manage/?t=" + get_timestamp();
+			//location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+</script> 
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+  <div class="cont_right_lc">
+    <form class="theme-signin2 " name="loginform" action="#" method="get">
+      <div class="fl" style="display:none;"> <a class="jg" href="/manager2/resource/template_manage/">模板管理</a> <a class="jg jg_hover"  href="#">作品尺寸管理</a> <a class="jg" href="/manager2/resource/">素材管理</a>&nbsp; </div>
+      <div class="cont_right_lcl"> <a class="jg theme-login21" href="javascript:open_edit();">新建作品尺寸</a>&nbsp;&nbsp;
+         
+        <input type="text" id="txtSearchText" class="icx" name="key" value="{{ key|default:'请输入素材名称' }}" />
+		<button class="cx" onclick="search(1)" type="button">查&nbsp;询</button>
+        <input type="hidden" id="hdPageIndex" value="1" name="page_index">
+        <input type="submit" id="submit" style="display: none;" />
+      </div>
+    </form>
+    <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+      <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+        <td width="200">标题</td>
+        <td width="150">创作</td>
+        <!--<td width="100">阅读</td>-->
+        <td width="150">屏幕高</td>
+        <td width="150">屏幕宽</td>
+        <td width="150">印刷高</td>
+        <td width="150">印刷宽</td>
+        <td width="150">创建时间</td>
+        <td width="150"><button class="shan">查看</button></td>
+        <td width="150">操作</td>
+      </tr>
+      {% for obj in data_list %}
+      <tr>
+        <td>{{ obj.name }}</td>
+        <td>{% if obj.create_type == 1 %}单页{% else %}双页{% endif %}</td>
+        <!--<td>{% if obj.read_type == 1 %}单页{% else %}双页{% endif %}</td>-->
+        <td>{{ obj.screen_height }}</td>
+        <td>{{ obj.screen_width }}</td>
+        <td>{{ obj.print_height }}</td>
+        <td>{{ obj.print_width }}</td>
+        <td>{{ obj.add_time }}</td>
+        <td><a class="shan" href="/media/{{ obj.res_path }}" target="_blank">查看</a></td>
+        <td><a class="shan theme-login12" href="javascript:open_edit({{ obj.id }});">修改</a>/<a class="shan" href="javascript:del_data({{ obj.id }})">删除</a></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div class="yema"></div>
+  </div>
+</div>
+
+<!--新建素材开始-->
+<div class="theme-popover-mask"></div>
+<div class="theme-popover21">
+  <div class="theme-poptit21"> <a href="javascript:hide_edit();" title="关闭" class="close">×</a>
+    <h3></h3>
+  </div>
+  <div class="theme-popbod21 dform">
+    <form class="theme-signin21 " name="loginform" action="" method="post">
+      <table cellpadding="0" cellspacing="10" class="xinxi2">
+        <tr>
+          <td>标题: 
+            <input type="text" class="icx" id="txtTitle"  />
+          </td>
+        </tr>
+        <tr>
+          <td>屏幕宽:<input id="txtScreenWidth" type="text" class="gd"  /> 印刷宽:<input id="txtPrintWidth" type="text" class="gd"/> 原图宽:<input id="txtOriginWidth" type="text" class="gd" /></td>
+        </tr>
+        <tr>
+          <td>屏幕高:<input type="text" id="txtScreenHeight" class="gd"  /> 印刷高:<input id="txtPrintHeight" type="text" class="gd"/> 原图高:<input id="txtOriginHeight" type="text" class="gd" /></td>
+        </tr>
+        <tr>
+          <td colspan="3" style=" text-align:left;">创作显示：
+            <input type="radio" id="rdoCreateType1" checked="checked" name="create_type" value="1" /><label for="rdoCreateType1">单页</label>
+            <input type="radio" id="rdoCreateType2" name="create_type" value="2"/><label for="rdoCreateType2">双页</label>
+            &nbsp;&nbsp;&nbsp; 阅读显示：
+            <input type="radio" id="rdoReadType1" checked="checked" name="read_type" value="1" /><label for="rdoReadType1">单页</label>
+            <input type="radio" id="rdoReadType2" name="read_type" value="2" /><label for="rdoReadType2">双页</label>
+            </td>
+        </tr>
+        <tr>
+            <td style=" text-align:left;">
+          	模板：
+            <input type="radio" name="temp_type" checked="checked" id="rdoTempType1" value="1" /><label for="rdoTempType1">横排</label>
+            <input type="radio" name="temp_type" id="rdoTempType2" value="2" /><label for="rdoTempType2">竖排</label>
+            封面：<input type="file" accept="image/*" id="fileImg" name="origin" style="display: none;" />
+                        <button class="jg" type="button" onclick="javascript:$('#fileImg').click()">上传+</button>
+                        <a  class="shan" id="a_ajax_img" style="display: none" target="_blank" > 点击查看</a>
+                        <img id="loading" src="{% static 'images/loading.gif' %}" style="display:none;">
+                    	<input type="hidden" id="hdPath" value="" />
+            </td>
+        </tr>
+      </table>
+      <input type="reset" name="reset" style="display:none;" />
+      <input type="hidden" id="hdDataId" />
+      <input class="btn btn-primary que" type="buton" onclick="edit_data()" value=" 确定 " />
+      <input class="btn btn-primary qux" type="reset" onclick="hide_edit()" value=" 取消 " />
+    </form>
+  </div>
+</div>
+<!--新建素材结束--> 
+{% endblock %}

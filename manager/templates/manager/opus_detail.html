@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		<meta charset="UTF-8">
+		{% load staticfiles %}
+		<!-- JavaScript -->
+		<script src="{% static 'js/jquery-1.10.2.min.js' %}"></script>
+		<script src="{% static 'bootstrap-3.0.3/js/bootstrap.min.js' %}"></script>
+
+		<link rel="stylesheet" href="{% static 'bootstrap-3.0.3/css/bootstrap.min.css' %}">
+		<link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+		<!--[if IE 7]>
+		<link rel="stylesheet" href="{% static 'css/font-awesome-ie7.min.css' %}">
+		<![endif]-->
+	</head>
+{% block header %}
+<script>
+	function getArgs(){
+	    var args = {};
+	    var match = null;
+	    var search = decodeURIComponent(location.search.substring(1));
+	    var reg = /(?:([^&]+)=([^&]+))/g;
+	    while((match = reg.exec(search))!==null){
+	        args[match[1]] = match[2];
+	    }
+	    return args;
+	}
+	
+	var opus_id = getArgs()["id"];
+	if(opus_id.length > 0){
+		$.post("/manager/get_opus_brief/", {"id": opus_id}, function(data){
+			var json_data = JSON.parse(data);
+			$("#h1_title").html(json_data.title);
+			$("#p_brief").html(json_data.brief);
+		});
+	}
+</script>
+{% endblock %}
+
+<body style="background-color: white;">
+<div class="container">
+	<div class="row">
+	  <div class="jumbotron">
+        <div style="inline">
+        	<img class="img-circle" id="img_avatar" src="/media/avatar_s.png" style="margin-left: -25px"> 
+        </div>
+        <h1 id="h1_title" style="padding-left: 20px; margin-top: -38px"></h1>
+        <p id="p_brief"></p>
+      </div>
+	</div>
+</div>
+</body>

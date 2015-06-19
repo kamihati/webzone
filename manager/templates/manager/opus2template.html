@@ -1,0 +1,171 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% load staticfiles %}
+<!-- Add fancyBox main JS and CSS files -->
+<script src="{% static 'fancyBox/jquery.fancybox.js' %}?v=2.1.5"></script>
+<link rel="stylesheet" href="{% static 'fancyBox/jquery.fancybox.css' %}?v=2.1.5" media="screen">
+
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+{% endblock %}
+
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-3 pull-left" id="div_library" {% if request.user.library_id %}style="display: none"{% endif %}>
+	    <select class="selectpicker show-menu-arrow show-tick" id="sel_library">
+		</select>
+	</div>
+  <div class="input-group col-md-6 pull-left">
+	  <input type="text" id="search_text" name="search_text" placeholder="请输入作品标题进行搜索" class="form-control">
+	  <span class="input-group-btn">
+	    <button class="btn btn-primary" id="btn_search" type="button" onclick="on_page(1)">
+	    <span class="glyphicon glyphicon-search"></span> 点击搜索</button>
+	  </span>
+  </div>
+</div>
+
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover table-condensed" id="table1">
+            <thead>
+            <tr>
+            <th>作品名称</th>
+            <th>作者账号</th>
+            <th>所属机构</th>
+            <th>作品大型</th>
+            <th>作品子类</th>
+            <th>总页数</th>
+            <th>发表时间</th>
+            <th>封面预览</th>
+            <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            	<tr></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <ul class="pagination">
+	</ul>
+</div>
+{% endblock %}
+{% block footer %}
+    <script>
+        var page = 0;
+        var cur_page_elem = null;
+        $(document).ready(function(){
+    		$('.fancybox').fancybox({
+    			padding: 3,
+
+    			openEffect : 'elastic',
+    			openSpeed  : 150,
+
+    			closeEffect : 'elastic',
+    			closeSpeed  : 150,
+
+    			closeClick : true
+    		});
+    		
+    		update_lib_list();
+        });
+        
+        function apply_for_template(opus_id)
+        {
+            $.post('/manager/apply_for_template/',{"opus_id":opus_id}, function(data){
+            	var json_data = JSON.parse(data);
+            	if (json_data.code == 1){{
+            		var opus_id = json_data.data.opus_id;
+            		alert(json_data.data.msg);
+            		$("#tr"+opus_id).hide();
+            	}
+					$("#tr"+opus_id).hide();
+				} else {
+					alert(json_data.data);
+				}
+            });
+        }
+    
+    
+    function update_lib_list(){
+		$.post("/manager/get_library_list/", function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				$("#sel_library").append("<option value='0'>公共图书馆</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_library").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				{% if request.user.library_id %}
+				$("#sel_library").val({{request.user.library_id}});
+				$("#sel_library").attr("disabled", true);
+				{% endif %}
+				
+				$('.selectpicker').selectpicker();
+				$('.selectpicker').selectpicker('refresh');
+				on_page(1);
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+    
+    function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">上一页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index - 1) + ")\">上一页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">下一页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index + 1) + ")\">下一页</a></li>";
+		}
+		for (var i = 1; i <= page_count; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		var lib_id = $("#sel_library").val();
+        var search_text = $("#search_text").val();
+		$.post("/manager/opus2template/", {"page_index":page_index, 'lib_id':lib_id, 'search_text':search_text}, function(data){
+			try{
+				var json_data = JSON.parse(data);
+			} catch (exception){
+				window.location.reload();
+			}
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr id='tr" + array_list[i]["id"] + "'><td>" + array_list[i]["title"] + "</td><td>";
+				newRow += array_list[i]["username"] + "</td><td>";
+				newRow += array_list[i]["lib_name"] + "</td><td>";
+				newRow += array_list[i]["type_name"] + "</td><td>";
+				newRow += array_list[i]["class_name"] + "</td><td>";
+				newRow += array_list[i]["page_count"] + "</td><td>";
+				newRow += array_list[i]["update_time"] + "</td><td>";
+				newRow += "<a class='fancybox' href='" + array_list[i]["url"] + "' target='_blank'>点击查看</a></td><td>";
+				newRow += "<button class='btn btn-success btn-xs' onclick='apply_for_template(" + array_list[i]["id"] + ")'>转为模板</button></td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+    </script>
+{% endblock %}
+

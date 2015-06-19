@@ -1,0 +1,97 @@
+﻿{% extends 'manager2/base.html' %}
+
+{% block header %} 
+
+<!--修改尺寸开始--> 
+<script type="text/javascript">
+$(document).ready(function($){
+	//设置导航栏选中状态
+	$("#li_nav_template").addClass("active");
+	$("#li_nav_template_list_mbzp").addClass("active");
+	
+	
+	//设置搜索关键字文本框默认字
+    set_input_default('txtSearchText', '请输入作品名称');
+	
+	//设置分页代码
+    $(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+	
+	
+	//更换子类
+	$("#slcClass1").change(function(){
+
+		$("#txtSearchText").val("");
+		$("#hdClass1").val(this.value);
+		search(1);
+	});
+
+});
+
+
+function opus2template(opus_id){
+	$.post('/diy/api_opus_to_template/',{"id":opus_id}, function(data){
+		if(data == "-1"){
+			alert("此作品已转换为模板！");
+		}else if(!isNaN(data)){
+			alert("转换成功,模板id为" + data);
+		}else{
+			alert(data);
+		}
+
+	});
+}
+
+
+function search(page_index){
+	$("#hdPageIndex").val(page_index);
+	$("#txtSearchText").val($("#txtSearchText").val().replace("请输入作品名称", ""));
+	$("#submit").click();
+}
+
+</script> 
+{% endblock %}
+{% block content %}
+<div class="right_hua">
+<div class="cont_right_lc">
+  <div class="cont_right_lczc" id="con_n_1">
+    <form action="#" method="get">
+        <input type="text" id="txtSearchText" class="icx" name="key" value="{{ key|default:'请输入作品名称' }}" />
+        <button class="ti" onclick="search(1)" type="button">查&nbsp;询</button>
+        <input type="hidden" id="hdPageIndex" value="1" name="page_index" />
+        <input type="hidden" id="hdClass2" value="{{ class2_id }}" name="class2" />
+        <input type="hidden" id="hdClass1" value="{{ class1_id }}" name="class1" />
+        <input type="submit" id="submit" style="display: none;" />
+    </form>
+  </div>
+  <div class="cont_right_lczcc">
+    <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+      <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+        <td width="260">标题</td>
+        <td width="200">
+        	<select class="lei" id="slcClass1">
+                <option value="">作品类型</option>
+                {% for obj in class1_list %}
+                <option value="{{ obj.id }}" {% if class1_id == obj.id %} selected="selected"{% endif %}>{{ obj.name }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td width="100">创建</td>
+        <td width="100">页数</td>
+        <td width="200">创建时间</td>
+        <td width="150">设为模板</td>
+      </tr>
+      {% for obj in data_list %}
+      <tr>
+        <td>{{ obj.title }}</td>
+        <td>{{ obj.class1_name }}</td>
+        <td>{% if obj.create_type == 1 %}单页{% else %}双页{% endif %}</td>
+        <td>{{ obj.page_count }}</td>
+        <td>{{ obj.create_time }}</td>
+        <td><a href="javascript:opus2template({{ obj.id }})">转为模板</a></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="yema"></div>
+</div>
+{% endblock %}

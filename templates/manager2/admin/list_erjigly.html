@@ -1,0 +1,390 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %}
+{% load staticfiles %}
+
+<!--导入树状结构图的jQuery资源-->
+<link rel="stylesheet" href="{% static 'zTree_v3/css/zTreeStyle/zTreeStyle.css' %}">
+<script src="{% static 'zTree_v3/js/jquery.ztree.core-3.5.min.js' %}"></script>
+<script src="{% static 'zTree_v3/js/jquery.ztree.excheck-3.5.min.js' %}"></script>
+
+<script type="text/javascript">
+    $(function(){
+		//设置导航栏选中状态
+		$("#li_nav_admin").addClass("active");
+		$("#li_nav_admin_manager").addClass("active");
+		
+		//生成分页代码
+		$(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+		
+		//设置搜索关键字文本框默认字
+		set_input_default('txtSearchText', '请输入用户名或者姓名'); 
+	});
+	
+	//搜索分页
+	function query(page_index){
+		$("#hdPageIndex").val(page_index);
+		$("#txtSearchText").val($("#txtSearchText").val().replace("请输入用户名或者姓名", ""));
+		$("#submit").click();
+	}
+	
+	//编辑二级管理员信息
+	function edit_user(){
+		var param = {};
+	    var user_id = $("#hdUserId").val();
+		var password = $("#txtPassword1").val();
+		var password2 = $("#txtPassword2").val();
+		if(password != password2){
+			alert("两次输入的密码不同！");
+			return;
+		}
+		if(user_id != '' && user_id != '0'){
+			param['user_id'] = user_id;
+			
+			
+		}else{
+			if(password == ""){
+				alert("密码不能为空！");
+				return;
+			}
+		}
+		param['password'] = password;
+		
+	    var library_id = $("#slcLibrary").val();
+		param['library'] = library_id;
+		
+		var username = $("#txtUsername").val();
+		if(username == ""){
+			alert("用户名不能为空！");
+			return;
+		}
+		param['username'] = username;
+		param['auth_type'] = 8;
+		
+		var realname = $("#txtRealname").val();
+		if(realname == ''){
+			alert("姓名不能为空！");
+			return;
+		}
+		param['realname'] = realname;
+		
+		var nickname = $("#txtNickname").val();
+		if(nickname == ''){
+			alert("笔名不能为空！");
+			return;
+		}
+		param['nickname'] = nickname;
+		
+		var phone = $("#txtPhone").val();
+		if(phone == ''){
+			alert("电话不能为空！");
+			return;
+		}
+		param['phone'] = phone;
+		
+		var qq = $("#txtQq").val();
+		if(qq != ''){
+			param['qq'] = qq;
+		}
+		
+		var email = $("#txtEmail").val();
+		if(email != ""){
+			param['email'] = email;
+		}
+		
+		param['target_urls'] = get_checkbox_val("user_manage") + "," + get_checkbox_val("person_manage") + "," + get_checkbox_val("activity_manage") + "," + get_checkbox_val("topic_manage") + "," + get_checkbox_val("study_manage") + "," + get_checkbox_val("sys_manage") + "," + get_checkbox_val("expert_manage") + "," + get_checkbox_val("resource_manage") + "," + get_checkbox_val("template_manage");
+		
+		$.post("/account/api_edit_user/", param, function(data){
+			if(data == "ok"){
+				alert("操作成功！");
+				location.reload();
+			}else if(data == "-1"){
+				alert("此用户名已被注册！");
+				return;
+			}else{
+				alert(data);
+			}
+		});
+	}
+	
+	//显示编辑二级管理员的弹窗
+	function show_edit(id){
+		reset_win();
+		$("#hdUserId").val(id);
+		if(id != 0){
+			 $("#txtUsername").attr("disabled", "disabled");
+			 $.get("/account/api_get_user_info/", {'id': id}, function(data){
+				var data = JSON.parse(data);
+				$("#slcLibrary").val(data['library_id']);
+				$("#txtUsername").val(data['username']);
+				$("#txtNickname").val(data['nickname']);
+				$("#txtEmail").val(data['email']);
+				$("#txtPhone").val(data['phone']);
+				$("#txtQq").val(data['qq']);
+				$("#txtRealname").val(data['realname']);
+				for(var i=0; i<data['urls'].length; i++){
+					$("input[value='" + data['urls'][i] + "']").attr("checked", "checked");
+				}
+			});
+		}
+				
+		$('.theme-popover-mask8').show();
+		$('.theme-popover-mask8').height($(document).height());
+		$('.theme-popover8').slideDown(200);
+	}
+	
+	function reset_win(){
+		$("#txtUsername").attr("disabled", false);
+		$("input[type=text]").each(function(index, element) {
+            $(element).val("");
+        });
+		$("#slcLibrary").val("");
+		$("#txtEmail").val("");
+		$("input[type=checkbox]").each(function(index, element) {
+			$(element).attr("checked", false);
+		});
+	}
+	//隐藏编辑二级管理员的弹窗
+	function hide_edit(){
+		reset_win();
+		$("#txtUsername").attr("disabled", "");
+		$('.theme-popover-mask8').hide();
+		$('.theme-popover8').slideUp(200);
+	}
+	
+	//删除二级管理员
+	function delete_user(id){
+		if(!confirm("您确定要删除这个二级管理员么！"))
+			return;
+		$.post("/account/api_del_user/", {"id": id}, function(data){
+			if(data == "ok"){
+				alert("删除成功！");
+				location.reload();
+			}else{
+				alert(data);
+			}
+		});
+	}
+ 
+</script>
+
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+    <div class="cont_right_lczc">
+    	<div class="cont_right_lczct">
+        	<form method="get" action="#">
+            <input class="btn btn-primary theme-login8 jg" type="button" onclick="show_edit(0)" value="新增二级管理员" />
+            <input type="text" id="txtSearchText" name="search_text" value="{{ search_text }}" class=" yl"/>
+            <input type="submit" id="submit" style="display:none" />
+            <input type="hidden" id="hdPageIndex" value="1" />
+            <button class="cx" type="button" onclick="query(1)">查询</button>
+            </form>
+        </div> 
+    	<div class="cont_right_lczcc">
+    		<table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px; " class="liuyan" >
+   		 		<tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff;">
+    				<td width="150px">用户名</td>
+                    <td width="150px">姓名</td>
+                    <td width="150px">总登陆次数</td>
+                    <td width="300px">上次登录</td>
+                    <td width="300px">操作</td>
+    			</tr>
+                {% for obj in data_list %}
+    			<tr>
+    				<td>{{ obj.username }}</td>
+                    <td>{{ obj.realname }}</td>
+                    <td>{{ obj.login_times }}</td>
+                    <td>{{ obj.last_login }}</td>
+                    <td>
+                    	<a class=" huifu theme-login6" href="javascript:show_edit({{ obj.id }})"> 修改</a>/<a href="javascript:delete_user({{ obj.id }})">删除</a>
+                    </td>
+    			</tr>
+                {% endfor %}
+            </table>
+		    <div class="yema"></div>
+        </div>
+    </div>
+</div>
+
+
+<!--编辑二级管理员开始-->
+<div class="theme-popover-mask8"></div>
+<div class="theme-popover8">
+	<div class="theme-poptit8">
+		<a href="javascript:hide_edit();" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod8 dform">
+		<form class="theme-signin" name="loginform" id="frmMain" action="" method="post">
+        	<table cellpadding="0" cellspacing="8" class="xinxi">
+        		<tr>
+         			<td width="140" class="ziliao">机构名称：</td>
+                    <td width="200">
+                    	<select name="library" id="slcLibrary">
+                        	<option value=""></option>
+                            {% for obj in library_list %}
+                            <option value="{{ obj.id }}">{{ obj.lib_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td width="20"></td>
+                    <td width="60" class="ziliao">姓名：</td>
+                    <td width="150"><input type="text" id="txtRealname" name="realname" /></td>
+                    <td width="10"></td>
+         		</tr>
+         		<tr>
+       				<td class="ziliao">用户名：</td>
+                    <td ><input type="text" id="txtUsername" name="username" /></td>
+                    <td></td>
+                    <td class="ziliao">  手机号：</td>
+                    <td><input type="text" id="txtPhone" name="phone" /></td>
+                    <td></td>
+         		</tr>
+          		<tr>
+        			<td class="ziliao">笔名：</td>
+                    <td ><input type="text" id="txtNickname" name="nickname" /></td>
+                    <td></td>
+                    <td class="ziliao">QQ：</td>
+                    <td><input type="text" id="txtQq" name="qq" /></td>
+                    <td></td>
+         		</tr>
+         		<tr>
+        			<td class="ziliao">密码：</td>
+                    <td ><input type="password" name="password" id="txtPassword1" /></td>
+                    <td></td>
+                    <td class="ziliao">邮箱：</td>
+                    <td><input type="email" id="txtEmail" name="email" /></td>
+                    <td></td>
+         		</tr>
+         		<tr>
+        			<td class="ziliao">确认密码：</td>
+                    <td ><input type="password" name="password" id="txtPassword2" /></td>
+                    <td></td>
+                    <td class="ziliao"></td>
+                    <td></td>
+                    <td></td>
+         		</tr>
+          		<tr>
+        			<td class="ziliao">用户管理：</td>
+                    <td colspan="4">
+                    	<input type="checkbox" value="" name="user_manage" onclick="check_item('user_manage')" />全选
+                        <input type="checkbox" value="/admin/" name="user_manage" />二级管理员
+                        <input type="checkbox" value="/admin/library/" name="user_manage" />机构管理员
+                        <input type="checkbox" value="/admin/user/" name="user_manage" />会员
+                    </td>
+                    <td></td>
+         		</tr>
+                <tr>
+          			<td class="ziliao">原创管理：</td>
+                    <td colspan="4">
+                    	<input type="checkbox" name="person_manage" value="" onclick="check_item('person_manage')"/>全选
+                        <input type="checkbox" name="person_manage" value="/person_creator/" />作品
+                        <input type="checkbox" name="person_manage" value="/person_creator/type_manage/" />作品分类
+                    </td>
+                    <td></td>
+         		</tr>
+         		<tr>
+         			<td class="ziliao">活动管理：</td>
+                    <td colspan="4">
+                    	<!--
+                    	<input type="checkbox" name="activity_manage" value="" onclick="check_item('activity_manage')" />全选
+                        -->
+                        <input type="checkbox" name="activity_manage" value="/activity/list/" />活动管理
+                        <!--
+                        <input type="checkbox" name="activity_manage" value="/activity/create/" /> 创建活动
+                        <input type="checkbox" name="activity_manage" value="/activity/fruit_list/" />活动作品管理
+                        -->
+                    </td>
+                    <td></td>
+         		</tr>
+                <tr>
+         			<td class="ziliao">模板管理：</td>
+                    <td colspan="4">
+                    	<input type="checkbox" name="template_manage" value="" onclick="check_item('template_manage')" />全选
+                        <input type="checkbox" name="template_manage" value="/opus_temp/list_mbyc/" />作品模版
+                        <input type="checkbox" name="template_manage" value="/opus_temp/list_mbzp/" />作品转模版
+                        <input type="checkbox" name="template_manage" value="/resource/size_manage/" />作品尺寸管理
+                        <!--
+                        <input type="checkbox" name="activity_manage" value="/activity/create/" /> 创建活动
+                        <input type="checkbox" name="activity_manage" value="/activity/fruit_list/" />活动作品管理
+                        -->
+                    </td>
+                    <td></td>
+         		</tr>
+
+	            <tr>
+                    <td class="ziliao">话题管理：</td>
+                    <td colspan="4">
+                        <input type="checkbox" name="topic_manage" value="" onclick="check_item('topic_manage')" />全选
+                        <input type="checkbox" name="topic_manage" value="/topic_list/" />话题列表
+                        <input type="checkbox" name="topic_manage" value="/topic_emotion/" />话题表情管理 
+                    </td>
+                    <td></td>
+         		</tr>
+                <!--
+            	<tr>
+          			<td class="ziliao">学习平台管理：</td>
+                    <td colspan="4">
+                    	<input type="checkbox" name="study_manage" value="" onclick="check_item('study_manage')" />全选
+                        <input type="checkbox" name="study_manage" value="/study/book/" />图书管理
+                        <input type="checkbox" name="study_manage" value="/study/video/" />视频管理
+                        <input type="checkbox" name="study_manage" value="/study/music/" />音频管理
+                        <input type="checkbox" name="study_manage" value="/study/game/" />游戏管理
+                    </td>
+                    <td></td>
+                </tr>
+                -->
+                <tr>
+          			<td class="ziliao">素材管理</td>
+                    <td colspan="4">
+                        <input type="checkbox" name="resource_manage" value="" onclick="check_item('resource_manage')" />全选
+                        <input type="checkbox" name="resource_manage" value="/resource/" />公共素材管理
+                        <input type="checkbox" name="resource_manage" value="/resource/person_manage/" />个人素材管理
+                        <input type="checkbox" name="resource_manage" value="/resource/type_manage/" />素材分类管理
+                    </td>
+                    <td></td>
+         		</tr>
+                <!--
+                <tr>
+          			<td class="ziliao">系统管理：</td>
+                    <td colspan="4">
+                    	<input type="checkbox" name="sys_manage" value="" onclick="check_item('sys_manage')" />全选
+                        <input type="checkbox" name="sys_manage" value="/list_person_czrz/" /> 个人用户操作日志管理
+                        <input type="checkbox" name="sys_manage" value="/list_admin_czrz/" />管理员用户操作日志
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+          			<td class="ziliao"></td>
+                    <td colspan="4">
+                    	<input type="checkbox" name="sys_manage" value="/list_xxgl/" />消息管理
+                        <input type="checkbox" name="sys_manage" value="/list_lygl/" />留言管理</td>
+                        <td></td>
+         		</tr>
+                <tr>
+		            <td class="ziliao">专家评分管理：</td>
+                    <td colspan="4">
+                    	<input type="checkbox" name="expert_manage" value="" onclick="check_item('expert_manage')" />全选
+                        <input type="checkbox" name="expert_manage" value="/expert_score_manage/" /> 专家评分管理
+                        <input type="checkbox" name="expert_manage" value="/expert_score_manage/score_record/" />专家评分结果
+                    </td>
+                    <td></td>
+                </tr> 
+                -->
+                <tr>
+          		    <td></td>
+                    <td colspan="3">
+                    	<input class="btn btn-primary qd" type="button" onclick="edit_user()" value=" 确定 " />
+                        <input type="hidden" id="hdUserId" />
+                        <input type="reset" id="reset" style="display:none;" />
+                        <input class="btn btn-primary qux" type="button" onclick="hide_edit()" value=" 取消 " />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+<!--编辑耳机管理员结束-->
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends 'manager2/base.html' %}
+{% block header %}
+<script type="text/javascript">
+$(function(){
+    //左侧导航控制
+    $("#li_nav_resource").addClass("active");
+    $("#li_nav_resource_person_manage").addClass("active");
+
+    //设置搜索关键字文本框默认字
+    set_input_default('txtSearchText', '请输入机构名称、用户名、标题');
+
+    $('.theme-login2').click(function(){
+        $('.theme-popover-mask2').show();
+        $('.theme-popover-mask2').height($(document).height());
+        $('.theme-popover2').slideDown(200);
+    });
+    $('.theme-poptit2 .close').click(function(){
+        $('.theme-popover-mask2').hide();
+        $('.theme-popover2').slideUp(200);
+    });
+
+    //设置分页代码
+    $(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+	
+	
+	//切换机构
+	$("#slcLibrary").change(function(){
+		$("#txtSearchText").val("");
+		$("#hdLibrary").val(this.value);
+		search(1);
+	});
+	
+	//更换类别
+	$("#slcType").change(function(){
+		$("#txtSearchText").val("");
+	    $("#hdType").val(this.value);
+		search(1);
+	});
+});
+
+//删除个人资源。
+function del_res(id){
+    if(!confirm("您确定要删除这个个人素材吗？")){
+        return false;
+    }
+    $.post("/resource/drop_person_res/", {"id": id}, function(data){
+        if(data == "ok"){
+            alert("删除成功！");
+            location.reload();
+        }else{
+
+        }
+    });
+}
+
+//搜索
+function search(page_index){
+    var search_text = $.trim($("#txtSearchText").val());
+	if(search_text == "请输入机构名称、用户名、标题")
+        $("#txtSearchText").val("");
+    $("#hdPageIndex").val(page_index);
+    $("#submit").click();
+}
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+	<div class="cont_right_lc">
+		<div class="cont_right_lcl">
+            <form action="#" method="get">
+            
+            <input type="hidden" name="type_id" value="{{ type_id }}" id="hdType" />
+            <input type="hidden" name="library_id" value="{{ library_id }}" id="hdLibrary" />
+            <input type="text" id="txtSearchText" name="key" class="icx" value="{{ key|default:'请输入机构名称、用户名、标题' }}" />
+            <button type="submit" style="display: none;" id="submit" />
+            <button  class="cx" onclick="search(1)">查&nbsp;询</button>
+            <!--隐藏域记录页数-->
+            <input type="hidden" id="hdPageIndex" name="page_index" value="1" />
+            </form>
+        </div>
+
+        <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+            <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+                <td width="200">标题</td>
+                <td width="150">用户名</td>
+                <td width="250">
+                	<select id="slcLibrary" class="lei">
+                        <option value="" selected="selected">全部机构</option>
+                        {% for obj in library_list %}
+                            <option value="{{ obj.id }}" {% if library_id == obj.id %} selected="selected" {% endif %}>{{ obj.lib_name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td width="100">
+                	<select id="slcType" class="xz">
+                        <option value="" selected="selected">资源类型</option>
+                        {% for obj in person_types %}
+                            <option value="{{ obj.id }}" {% if type_id == obj.id %} selected="selected" {% endif %}>{{ obj.name }}</option>
+                        {%  endfor %}
+                    </select>
+                </td>
+                
+                <td width="150">创建时间</td>
+                <td width="100">查看</td>
+                <td width="150">操作</td>
+            </tr>
+            {% for obj in data_list %}
+                <tr>
+                    <td>{{ obj.title }}</td>
+                    <td>{{ obj.username }}</td>
+                    <td>{{ obj.lib_name }}</td>
+                    <td>{{ obj.type_name }}</td>
+                    
+                    <td>{{ obj.create_time }}</td>
+                    <td><a href="/resource/view/?is_person=1&id={{ obj.id }}" target="_blank" class="shan">查看</a></td>
+                    <td><a class="shan" href="javascript:del_res({{ obj.id }})">删除</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+        <div class="yema"></div>
+    </div>
+</div>
+
+
+<!--新增素材开始-->
+<div class="theme-popover-mask2"></div>
+<div class="theme-popover2">
+	<div class="theme-poptit2">
+		<a href="javascript:;" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod2 dform">
+        <table cellpadding="0" cellspacing="10" class="xinxi1">
+            <tr>
+                <td width="20"></td>
+                <td>
+                    <h3>素材类型</h3>
+                    <div class="lx">
+                        <input type="radio" name="10"/>背景
+                        <input type="radio" name="10"/>装饰
+                        <input type="radio" name="10"/>画框
+                        <input type="radio" name="10"/>背景音乐
+                        <input type="radio" name="10"/>动画
+                        <input type="radio" name="10"/>音频
+                        <input type="radio" name="10"/>视频
+                        <input type="radio" name="10"/>图片
+                        <input type="radio" name="10"/>文档
+                    </div>
+                </td>
+                <td width="30"></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td width="20"></td>
+                <td colspan="3" style=" text-align:left;">批量导入:<button class="jg">批量导入EXCEL</button> <button class="jg">批量导入素材</button></td>
+            </tr>
+            <tr>
+                <td width="20"></td>
+                <td colspan="3" style=" text-align:left;">单个导入:标题<input type="text" />文件：<button class="jg">上传+</button></td>
+            </tr>
+        </table>
+        <input class="btn btn-primary que" type="submit" name="submit" value=" 确定 " />  <input class="btn btn-primary qux" type="submit" name="submit" value=" 取消 " />
+	</div>
+</div>
+<!--新增素材结束-->
+{% endblock %}

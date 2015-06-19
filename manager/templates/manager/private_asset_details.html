@@ -1,0 +1,122 @@
+{% extends 'manager/base.html' %}
+
+{% block content %}
+    <div class="container-fluid">
+    <div class="row-fluid">
+        <a class="btn btn-danger btn-large" href="/manager/mis/c_private_asset/">返回私有素材列表</a>
+    </div>
+    <div class="row-fluid well" style="margin-top: 10px;">
+
+    {% ifnotequal asset "" %}
+        <span class="span12 page-header"> <center><h3><strong>{{ asset.res_title }}</strong></h3></center></span>
+        <span class="span12">
+            <center>
+{#            {% for x in res_type_list %}#}
+{#                <input type="radio" value="x.0" name="res_type"#}
+{#                {%  ifequal x.0 asset.res_type %}#}
+{#                  checked="true"#}
+{#                {% endifequal %}#}
+{#                ><label>{{ x.1 }}</label>&nbsp#}
+{#            {% endfor %}#}
+
+                {% for x in res_type_list %}
+
+                 {%  ifequal x.0 asset.res_type %}
+                    <label>作品类型：{{ x.1 }}</label>
+                  {% endifequal %}
+
+                {% endfor %}
+            </center>
+        </span>
+          <span class= "span12 ">
+
+
+              <center>
+               <label>作者名：</label>{{ asset.user.username }}&nbsp<br/>
+               <label>被引用次数：</label>{{ asset.ref_times }}&nbsp
+               <label>分享次数：</label>{{ asset.share_times }}&nbsp
+              </center>
+          </span>
+              <span class= "span12 ">
+              <center>
+                  <label>审核状态：</label>
+                  {% for x in asset_msg_type %}
+                      {% ifequal x.0 asset.status %}
+                        {{ x.1 }}&nbsp
+                      {% endifequal %}
+                  {% endfor %}
+
+              </center>
+          </span>
+        <span class="span12">
+        <center>
+         {% ifequal asset.codec_status  1 %}
+            {% if asset.res_path %}
+
+                <a href="#myModal" role="button" class="btn"  data-toggle="modal">点击查看资源</a>
+
+                <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h3>查看资源</h3>
+                    </div>
+                    <div class="modal-body">
+
+                        <a href="/media/{{ asset.res_path }}" >点击下载</a>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+                    </div>
+                </div>
+                    </div>
+                </div>
+
+            {% endif %}
+
+        </center>
+        </span>
+
+        <span class="span12">
+        <center>
+
+            {% if asset.img_large_path %}
+
+
+                <a href="#myModal2" role="button" class="btn"  data-toggle="modal">点击查看图片</a>
+
+                <div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h3>查看图片</h3>
+                    </div>
+                    <div class="modal-body">
+
+                        <img src="/media/{{asset.img_large_path}}" width="480px" height="320px">
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+                    </div>
+                </div>
+                </div>
+                </div>
+
+            {% endif %}
+
+         {% else %}
+             <div>该资源未完成转码，暂时无法查看</div>
+         {% endifequal %}
+        </center>
+        </span>
+    {% else %}
+        <div class="span12"><center><label>非法操作</label></center></div>
+    {% endifnotequal %}
+        </div>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,337 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<!--tab切换开始--> 
+<script type="text/javascript">
+    $(function () {
+        $("#yinpin").hide();
+         //控制一级子菜单
+        $(".mm,.tj,.qx").click(function () {
+            $("#yinpin").toggle();
+        });
+		
+		//设置导航栏选中状态
+		$("#li_nav_study").addClass("active");
+		$("#li_nav_study_game").addClass("active");
+    });
+</script> 
+<!--tab切换结束--> 
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+    <div class="cont_right_lczcc">
+        <div class="cont_right_lc"> <a  class="mm">添加游戏</a>
+            <input type="text" class="icx" value="请输入书名、ID号、作者、上传用户" />
+            <button  class="cx">查&nbsp;询</button>
+            <ul id="yinpin">
+                <li>
+                    <ul>
+                        <li>
+                            <div class="tianjia">
+                                <table cellpadding="0" cellspacing="5" class="">
+                                    <tr>
+                                        <td width="100"></td>
+                                        <td><button class="jg">批量导入EXCEL</button></td>
+                                        <td><button class="jg">批量导入文件</button></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="100"></td>
+                                        <td class="ziliao">*题名:</td>
+                                        <td><input type="text"/></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="100"></td>
+                                        <td class="ziliao">系列题名:</td>
+                                        <td><input type="text"/></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="100"></td>
+                                        <td class="ziliao">*分类选择:</td>
+                                        <td><h3>机构名称</h3>
+                                            <div class="kemu">全选
+                                                <input type="checkbox" name="全选" class="fx" />
+                                                <br/>
+                                                语文乐园
+                                                <input type="checkbox" name="语文乐园" />
+                                                <br/>
+                                                才艺乐园
+                                                <input type="checkbox" name="才艺乐园" />
+                                                <br/>
+                                                数学乐园
+                                                <input type="checkbox" name="数学乐园" />
+                                                <br/>
+                                                英语乐园
+                                                <input type="checkbox" name="英语乐园" />
+                                                <br/>
+                                                阅读乐园
+                                                <input type="checkbox" name="阅读乐园" />
+                                                <br/>
+                                                益智乐园
+                                                <input type="checkbox" name="益智乐园" />
+                                                <br/>
+                                                科普乐园
+                                                <input type="checkbox" name="科普乐园" />
+                                            </div></td>
+                                        <td width="10"></td>
+                                        <td><h3>圈子名称</h3>
+                                            <div class="kemu">全选
+                                                <input type="checkbox" name="全选" class="fx" />
+                                                <br/>
+                                                语文乐园
+                                                <input type="checkbox" name="语文乐园" />
+                                                <br/>
+                                                才艺乐园
+                                                <input type="checkbox" name="才艺乐园" />
+                                                <br/>
+                                                数学乐园
+                                                <input type="checkbox" name="数学乐园" />
+                                                <br/>
+                                                英语乐园
+                                                <input type="checkbox" name="英语乐园" />
+                                                <br/>
+                                                阅读乐园
+                                                <input type="checkbox" name="阅读乐园" />
+                                                <br/>
+                                                益智乐园
+                                                <input type="checkbox" name="益智乐园" />
+                                                <br/>
+                                                科普乐园
+                                                <input type="checkbox" name="科普乐园" />
+                                            </div></td>
+                                        <td width="10"></td>
+                                        <td><h3>门类</h3>
+                                            <div class="kemu">文字
+                                                <input type="checkbox" name="文字 " class="fx" />
+                                                <br/>
+                                                才艺
+                                                <input type="checkbox" name="才艺" />
+                                                <br/>
+                                                成长点滴
+                                                <input type="checkbox" name="成长点滴" />
+                                                <br/>
+                                            </div></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="100"></td>
+                                        <td class="ziliao">首字母:</td>
+                                        <td><select name="A" class="">
+                                                <option value="A">A</option>
+                                                <option value="B">B</option>
+                                                <option value="C">C</option>
+                                                <option value="D"> D</option>
+                                                <option value="E">E</option>
+                                                <option value="F">F</option>
+                                                <option value="G">G</option>
+                                                <option value="H">H</option>
+                                                <option value="I">I</option>
+                                                <option value="J">J</option>
+                                                <option value="K">K</option>
+                                                <option value="L">L</option>
+                                                <option value="M">M</option>
+                                                <option value="N"> N</option>
+                                                <option value="O">O</option>
+                                                <option value="P">P</option>
+                                                <option value="Q">Q</option>
+                                                <option value="R">R</option>
+                                                <option value="S">S</option>
+                                                <option value="T">T</option>
+                                                <option value="U">U</option>
+                                                <option value="V">V</option>
+                                                <option value="W">W</option>
+                                                <option value="X"> X</option>
+                                                <option value="Y">Y</option>
+                                                <option value="Z">Z</option>
+                                            </select></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="100"></td>
+                                        <td class="ziliao">*责任人:</td>
+                                        <td><input type="text"/></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    
+                                        <td width="100"></td>
+                                        <td class="ziliao">标签:</td>
+                                        <td><input type="text"/></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    
+                                        <td width="100"></td>
+                                        <td class="ziliao">主题词:</td>
+                                        <td><input type="text"/></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="100"></td>
+                                        <td class="ziliao">*封面图片:</td>
+                                        <td><button class="jg">+选择图片</button>
+                                            <a href="" charset="shan" style="color:#333;">点击查看</a></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                        </tr>
+                                    
+                                    
+                                        <td width="100"></td>
+                                        <td class="ziliao">*上传游戏:</td>
+                                        <td><button class="jg">+上传游戏</button>
+                                            <a href="" charset="shan" style="color:#333;">点击查看</a></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    
+                                        <td width="100"></td>
+                                        <td class="ziliao">简介:</td>
+                                        <td colspan="6"><textarea rows="5" cols="60"></textarea></td>
+                                    </tr>
+                                        </tr>
+                                    
+                                    
+                                        <td></td>
+                                        <td></td>
+                                        <td colspan="6"><button class="tj">确定</button>
+                                            <button class=" qx">取消</button></td>
+                                    </tr>
+                                        </tr>
+                                    
+                                </table>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;" class="liuyan" >
+                <tr style=" background:#8ac6ff; height:40px; font-size:14px; line-height:40px; color:#fff; ">
+                    <td width="200">ID</td>
+                    <td width="150">游戏名称</td>
+                    <td width="100">作者</td>
+                    <td width="100">浏览次数</td>
+                    <td width="100">点赞次数</td>
+                    <td width="100">评论次数</td>
+                    <td width="150">上传用户</td>
+                    <td width="80">上传时间</td>
+                    <td width="150">操作</td>
+                </tr>
+                <tr>
+                    <td>ID123456</td>
+                    <td>通话素材</td>
+                    <td>风格类</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>风格类型</td>
+                    <td>2014-12-12</td>
+                    <td><button class="shan">修改</button>
+                        /
+                        <button class="shan">删除</button></td>
+                </tr>
+                <tr>
+                    <td>ID123456</td>
+                    <td>通话素材</td>
+                    <td>风格类</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>风格类型</td>
+                    <td>2014-12-12</td>
+                    <td><button class="shan">修改</button>
+                        /
+                        <button class="shan">删除</button></td>
+                </tr>
+                <tr>
+                    <td>ID123456</td>
+                    <td>通话素材</td>
+                    <td>风格类</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>风格类型</td>
+                    <td>2014-12-12</td>
+                    <td><button class="shan">修改</button>
+                        /
+                        <button class="shan">删除</button></td>
+                </tr>
+                <tr>
+                    <td>ID123456</td>
+                    <td>通话素材</td>
+                    <td>风格类</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>风格类型</td>
+                    <td>2014-12-12</td>
+                    <td><button class="shan">修改</button>
+                        /
+                        <button class="shan">删除</button></td>
+                </tr>
+                <tr>
+                    <td>ID123456</td>
+                    <td>通话素材</td>
+                    <td>风格类</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>风格类型</td>
+                    <td>2014-12-12</td>
+                    <td><button class="shan">修改</button>
+                        /
+                        <button class="shan">删除</button></td>
+                </tr>
+                <tr>
+                    <td>ID123456</td>
+                    <td>通话素材</td>
+                    <td>风格类</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>风格类型</td>
+                    <td>2014-12-12</td>
+                    <td><button class="shan">修改</button>
+                        /
+                        <button class="shan">删除</button></td>
+                </tr>
+            </table>
+        </div>
+        <div class="yema"> <span>共<b>100</b>条记录</span> <span>每页<b>20</b>个</span> <a href="">首页</a> <a href="" class="s1">上一页</a> <a href="" class="s1">下一页</a> <a href="">末页</a> <span>总共<b>15</b>页</span> </div>
+    </div>
+</div>
+{% endblock %} 

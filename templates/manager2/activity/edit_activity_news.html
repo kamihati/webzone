@@ -1,0 +1,212 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+{% load staticfiles %}
+<style type="text/css">
+#slcBackground{}
+</style>
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<script type="text/javascript" language="javascript" src="{% static 'image-picker/image-picker.min.js' %}"></script>
+<script type="text/javascript" language="javascript" src="{% static 'image-picker/image-picker.js' %}"></script>
+<link href="{% static 'image-picker/image-picker.css' %}" rel="stylesheet" type="text/css" />
+<script type="text/javascript">
+$(document).ready(function($){
+    //设置导航栏选中状态
+	$("#li_nav_activity").addClass("active");
+	$("#li_nav_activity_news").addClass("active");
+	 
+    {% if news %}
+	$("#slcLibrary").val("{{ news.library_id }}");
+	$("#slcLibrary").change();
+	$("#rdoNewsType{{ news.news_type }}").attr("checked", "checked");
+	$("#txtTitle").val("{{ news.title }}");
+	
+	$("#a_ajax_img").attr("href", "/media/{{ news.cover }}");
+	$("#a_ajax_img").show();
+	$("#slcBackground").val("{{ news.background_id }}");
+	$("#txtContent").val("{{ news.content }}");
+	{% endif %}
+	
+	$("#fileImg").change(function(){
+        check_img(document.getElementById('fileImg'), ['JPG', 'JPEG', 'PNG', 'BMP'], 'hdPath');
+	});
+	
+	$("#slcBackground").imagepicker({
+		hide_select : true,
+		show_label  : false
+	});
+	
+	$("#btnOk").click(function(){
+		var param = {};
+		var library = $("#slcLibrary").val();
+		if(library == ""){
+			alert("请选择机构！");
+			return;
+		}
+		param['library'] = library;
+		var activity = $("#slcActivity").val();
+		if(activity == ""){
+			alert("请选择活动！");
+			return;
+		}
+		param['activity'] = activity;
+		var title = $("#txtTitle").val();
+		if(title == ""){
+			alert("请填写标题");
+			return;
+		}
+		if(title.length > 40){
+			alert("标题不能超过40个字！");
+			return;
+		}
+		param['title'] = title;
+		var news_type = 1;
+		if($("#rdoNewsType2").attr("checked")){
+			news_type = 2;
+		}
+		param['news_type'] = news_type;
+		var cover = $("#hdPath").val();
+		if(cover == ""){
+			{% if not news %}
+			alert("请选择封面！");
+			return;
+			{% endif %}
+		}
+		param['cover'] = cover;
+		var background_id = $("#slcBackground").val();
+		param['background'] = background_id;
+		var content = $("#txtContent").val();
+		if(content == ""){
+			alert("请填写要发布的内容");
+			return;
+		}
+		if(content.length > 2000){
+			alert("发布内容不能超过2000个字！");
+			return;
+		}
+		param['content'] = content;
+		$.post('/manager2/activity/news_edit/{% if news %}?id={{ news.id }}{% endif %}', param, function(data){
+			if(data == "ok"){
+				alert("编辑成功！");
+				location.href = "/manager2/activity/news/";
+			}else {
+			}
+		});
+	});
+});
+
+//选择机构时改变活动列表
+function show_activity(){
+	var lib_id = $("#slcLibrary").val();
+	if(lib_id == ""){
+		$("#slcActivity").html("");
+	}else{
+		$.get("/activity/get_activity_by_library/", {"library_id": lib_id}, function(data){
+		 
+			var activitys = JSON.parse(data);
+			var html = "";
+			var activity_id = 0;
+			{% if news %}
+			activity_id = {{ news.activity_id }};
+			
+			{% endif %}
+			for(var i=0; i<activitys.length; i++){
+				html += '<option value="' + activitys[i]['id'] + '" ';
+				if(activity_id == parseInt(activitys[i]['id'])){
+					html += 'selected="selected"';
+				}
+				html += '>' + activitys[i]['name'] + '</option>';
+			}
+			$("#slcActivity").empty().html(html);
+		});
+	}
+}
+//提交表单内容
+function edit_form(){
+	
+}
+</script> 
+{% endblock %}
+{% block content %}
+<div class="right_hua">
+    <div class="cont_right_lc" id="step_1">
+        <table cellpadding="0" cellspacing="5" class="xinxi" >
+        	<tr>
+            	<td width="100"></td>
+                <td width="150" class="ziliao">选择活动：</td>
+                <td>
+                	<select name="library" onChange="show_activity()" id="slcLibrary" class="xz">
+                    	<option value="" selected="selected"></option>
+                        {% for obj in library_list %}
+                        <option value="{{ obj.id }}">{{ obj.lib_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="activity" id="slcActivity" class="xz"></select>
+                </td>
+            </tr>
+
+        	<tr>
+            	<td width="100"></td>
+                <td width="150" class="ziliao">标题：</td>
+                <td><input type="text" name="title" id="txtTitle" value="" /></td>
+            </tr>
+            <tr>
+                <td width="100"></td>
+                <td width="150" class="ziliao">类别：</td>
+                <td>
+                	<input type="radio" name="news_type" checked="checked" id="rdoNewsType1" value="1" class="fx" />
+                    新闻播报
+                    <input type="radio" name="news_type" id="rdoNewsType2" {% if news_type == 2 %}checked="checked"{% endif %} value="2" class="fx" />
+                    活动结果
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td width="100"></td>
+                <td width="150" class="ziliao">上传封面：</td>
+                <td>
+                	<input type="file" accept="image/*" id="fileImg" name="origin" style="display: none;" />
+                    <button class="jg" type="button" onclick="javascript:$('#fileImg').click()">上传+</button>
+                    <a  class="shan" id="a_ajax_img" style="display: none" target="_blank" > 点击查看</a>
+                    <img id="loading" src="{% static 'images/loading.gif' %}" style="display:none;">
+                    <input type="hidden" id="hdPath" value="" />
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td width="100"></td>
+                <td width="150" class="ziliao" valign="top">活动背景：</td>
+                <td>
+                	<div class="image_picker_div">
+                	<select id="slcBackground" class="image-picker masonry show-html">
+                    	{% for obj in background_list %}
+                        <option data-img-src="/media/{{ obj.origin_path }}" value="{{ obj.id }}">{{ obj.name }}</option>
+                        {% endfor %}
+                    </select>
+                    </div>
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan="5" height="5"></td>
+            </tr>
+            <tr>
+                <td width="100"></td>
+                <td width="150" class="ziliao" valign="top">内容：</td>
+                <td><textarea id="txtContent" style="width:490px;" rows="7"></textarea></td>
+                <td></td>
+            </tr>
+             
+            <tr>
+                <td width="100"></td>
+                <td></td>
+                <td>
+                	<input class="tj" value="确认" id="btnOk" / >
+                    <a class="qx" href="/manager2/activity/news/">返回</a>
+                </td>
+                <td colspan="2">
+            </tr>
+        </table>
+    </div> 
+</div>
+{% endblock %} 

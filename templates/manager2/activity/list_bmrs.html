@@ -1,0 +1,76 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<script type="text/javascript">
+$(function(){
+	//设置导航栏选中状态
+	$("#li_nav_activity").addClass("active");
+	$("#li_nav_activity_list").addClass("active");
+
+	//生成分页代码
+	$(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+});
+
+
+function del_data(id){
+	if(!confirm("您确定要这么做么？")){
+		return;
+	}
+	$.post("/activity/api_del_activity_sign_member/", {'id': id}, function(data){
+		if(data == 'ok'){
+			alert('操作成功！');
+			location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+
+function search(page_index){
+	$("#hdPageIndex").val(page_index);
+	$("#submit").click();
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<form method="get" action="#" style="display:none">
+<input type="hidden" id="hdPageIndex" name="page_index" />
+<input type="hidden" id="hdActivityId" name="activity_id" value="{{ activity_id }}" />
+<input type="submit" id="submit" />
+</form>
+<div class="right_hua">
+  <div class="cont_right_lc">
+    <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px; " class="liuyan" >
+      <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff;">
+        <td width="150">所属活动</td>
+        <td width="80">编号</td>
+        <td width="100">姓名</td>
+        <td width="80">年龄</td>
+        <td width="80">性别</td>
+        <td width="150">学校</td>
+        <td width="100">E-mail</td>
+        <td width="200">电话</td>
+        <td width="300">地址</td>
+        <td width="300">报送单位</td>
+        <td width="200">操作</td>
+      </tr>
+      {% for obj in data_list %}
+      <tr>
+        <td>{{ obj.title }}</td>
+        <td>{{ obj.number }}</td>
+        <td >{{ obj.realname }}</td>
+        <td>{{ obj.age }}</td>
+        <td>{{ obj.sex }}</td>
+        <td>{{ obj.school }}</td>
+        <td>{{ obj.email }}</td>
+        <td>{{ obj.telephone }}</td>
+        <td>{{ obj.address }}</td>
+        <td>{{ obj.unit_name }}</td>
+        <td><!--<a class=" huifu theme-login6" href="javascript:;"> 修改</a>/--><a href="javascript:del_data({{ obj.id }})">删除</a></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div class="yema"></div>
+</div>
+{% endblock %}

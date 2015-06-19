@@ -1,0 +1,412 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+
+<!-- Add fancyBox main JS and CSS files -->
+<script src="{% static 'fancyBox/jquery.fancybox.js' %}?v=2.1.5"></script>
+<link rel="stylesheet" href="{% static 'fancyBox/jquery.fancybox.css' %}?v=2.1.5" media="screen">
+
+
+<style>
+.fileinput-button {
+  position: relative;
+  overflow: hidden;
+}
+.fileinput-button input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  opacity: 0;
+  filter: alpha(opacit
+  y=0);
+  transform: translate(-300px, 0) scale(4);
+  font-size: 23px;
+  direction: ltr;
+  cursor: pointer;
+}
+</style>
+
+<script>
+	var old_district_id = "";
+	var old_unit_id = "";
+
+	function init_province(){
+		$.post("/manager/get_province_list/", function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				$("#sel_province").append("<option value='0'>请选择所属省</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_province").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				$('.selectpicker').selectpicker();
+				$('.selectpicker').selectpicker('refresh');
+				init_unit();
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function update_city(){
+		update_status();
+		var province_id = $("#sel_province option:selected").val();
+		document.getElementById("sel_city").options.length = 0;
+		$("#sel_city").append("<option value='0'>请选择所属市</option>");
+		document.getElementById("sel_county").options.length = 0;
+		$("#sel_county").append("<option value='0'>请选择所属区/县</option>");
+		$('.selectpicker').selectpicker('refresh');
+		if (province_id == "0"){
+			update_unit();
+			return;
+		}
+		$.post("/manager/get_city_list/", {"id":province_id}, function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_city").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				if(old_district_id.length==4){
+					$("#sel_city").val(old_district_id);
+					$("#sel_city").change();
+				} else if(old_district_id.length==6){
+					$("#sel_city").val(old_district_id.substr(0, 4));
+					$("#sel_city").change();
+				}
+				$('.selectpicker').selectpicker('refresh');
+				update_unit();
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function update_county(){
+		update_status();
+		var city_id = $("#sel_city option:selected").val();
+		document.getElementById("sel_county").options.length = 0;
+		$("#sel_county").append("<option value='0'>请选择所属区/县</option>");
+		$('.selectpicker').selectpicker('refresh');
+		if (city_id == "0" || city_id == undefined){
+			update_unit();
+			return;
+		}
+		$.post("/manager/get_county_list/", {"id":city_id}, function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_county").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				if(old_district_id.length==6){
+					$("#sel_county").val(old_district_id);
+				}
+				$('.selectpicker').selectpicker('refresh');
+				update_unit();
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function init_unit(){
+		$.post("/manager/get_unit_list/", {% if story_opus %}{"id":"{{story_opus.district_id}}"},{% endif %} function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				$("#sel_unit").append("<option value='0'>请选择报送单位</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_unit").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				{% if story_opus %}
+					old_unit_id = "{{story_opus.unit_id}}";
+					$("#sel_unit").val(old_unit_id);
+					$('.selectpicker').selectpicker('refresh');
+					var district_id = "{{story_opus.district_id}}";
+					if (district_id.length == 2){
+						$("#sel_province").val(district_id);
+						$('.selectpicker').selectpicker('refresh');
+					} else {
+						$("#sel_province").val(district_id.substr(0, 2));
+						$("#sel_province").change();
+						old_district_id = district_id;
+					}
+				{% else %}
+					update_number();
+					$('.selectpicker').selectpicker();
+					$('.selectpicker').selectpicker('refresh');
+				{% endif %}
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function update_number(){
+		$.post("/manager/get_new_number/", function(data){
+			$("#span_username").html("gsdw" + data);
+			$("#span_number").html(data);
+		})
+	}
+	
+	function update_unit(){
+		var province_id = parseInt($("#sel_province option:selected").val());
+		var city_id = parseInt($("#sel_city option:selected").val());
+		var county_id = parseInt($("#sel_county option:selected").val());
+		var district_id = county_id || city_id || province_id;
+		$.post("/manager/get_unit_list/", {"id":district_id}, function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				document.getElementById("sel_unit").options.length = 0;
+				var lib_list = json_data.data;
+				$("#sel_unit").append("<option value='0'>请选择报送单位</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_unit").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				$("#sel_unit").val(old_unit_id);
+				$('.selectpicker').selectpicker('refresh');
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	$(document).ready(function(){
+		$('.fancybox').fancybox({
+			padding: 3,
+
+			openEffect : 'elastic',
+			openSpeed  : 150,
+
+			closeEffect : 'elastic',
+			closeSpeed  : 150,
+
+			closeClick : true
+		});
+		
+		init_province();
+	});
+	
+	function check_video(obj){
+		var filename = obj.value;
+		//检查文件类型
+		var exName = filename.substr(filename.lastIndexOf(".")+1).toUpperCase()    
+		if(exName=="MP2"||exName=="MP4"||exName=="MPEG"||exName=="MPG"||exName=="3GPP"||exName=="FLV"||exName=="MOV"||exName=="WMV"||exName=="AVI"||exName=="VOB"||exName=="MTS"||exName=="M2TS"||exName=="MXF"||exName=="F4V"||exName=="M4V"){
+			
+		} else {
+			alert("只能上传视频文件");
+		}
+	}
+	
+	function update_status(){
+		var unit_id = $("#sel_unit option:selected").val();
+		var story_name = $("#story_name").val();
+		var actor_name = $("#actor_name").val();
+		var actor_brief = $("#actor_brief").val();
+		var story_brief = $("#story_brief").val();
+		var age = $("#age").val();
+		var school_name = $("#school_name").val();
+		var telephone = $("#telephone").val();
+		var email = $("#email").val();
+		
+		var is_valid = unit_id != "0" && story_name.length>0 && actor_name.length>0 && actor_brief.length>0 && story_brief.length>0;
+		is_valid = is_valid && age.length>0 && school_name.length>0 && telephone.length>0 && email.length>0;
+		
+		if (is_valid){
+			$("#btn_submit").removeClass("disabled");
+		}
+	}
+	
+	function on_submit(){
+		var unit_id = $("#sel_unit option:selected").val();
+		var story_name = $("#story_name").val();
+		var actor_name = $("#actor_name").val();
+		var actor_brief = $("#actor_brief").val();
+		var story_brief = $("#story_brief").val();
+		var age = $("#age").val();
+		var school_name = $("#school_name").val();
+		var telephone = $("#telephone").val();
+		var email = $("#email").val();
+		
+		var is_valid = unit_id != "0" && story_name.length>0 && actor_name.length>0 && actor_brief.length>0 && story_brief.length>0;
+		is_valid = is_valid && age.length>0 && school_name.length>0 && telephone.length>0 && email.length>0;
+		is_valid = is_valid && ($("#hid_story_id").val().length>0 || $("#story_file").val().length>0);
+		
+		if (is_valid){
+			$("#btn_submit").addClass("disabled");
+			$("#form1").submit();
+		}
+	}
+</script>
+{% endblock %}
+
+{% block content %}
+
+{% if result == "ok" %}
+<div style="text-align: center">
+	<span class="inline"><img src="{% static 'images/success.gif' %}"><h3>信息提交成功</h3></span>
+	<div class="alert alert-success">
+		<div class="row">
+			<label class="col-md-2" style="padding-top: 5px">自动生成账号:</label>
+			<div class="col-md-4">
+				<div class="input-group">
+				  <span class="input-group-addon">账号</span>
+				  <input type="text" class="form-control" value="{{username}}" readonly="readonly">
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="input-group">
+				  <span class="input-group-addon">密码</span>
+				  <input type="text" class="form-control" value="{{password}}" readonly="readonly">
+				</div>
+			</div>
+		</div>
+	</div>
+		<hr />
+		<a href="/manager/story_list/" class="btn btn-large btn-success offset2">返回选手作品列表</a>
+		<a href="/manager/story_opus/" class="btn btn-large btn-primary offset1">新增选手作品>></a>
+</div>
+
+{% else %}
+	<form class="form-horizontal" id="form1" role="form" method="post" enctype="multipart/form-data">
+		<input type="hidden" value="{% if story_opus %}{{ story_opus.id }}{% endif %}" id="hid_story_id" name="hid_story_id" />
+		
+		<div class="form-group">
+			<label class="col-md-2 control-label">所属区域</label>
+			<div class="col-md-9">
+				<div class="input-group col-md-3 pull-left">
+					<select class="selectpicker" data-live-search="true" id="sel_province" onchange="update_city();"></select>
+				</div>
+				<div class="input-group col-md-3 pull-left">
+					<select class="selectpicker" data-live-search="true" id="sel_city" onchange="update_county();">
+						<option value='0'>请选择所属市</option>
+					</select>
+				</div>
+				<div class="input-group col-md-3 pull-left">
+					<select class="selectpicker" data-live-search="true" id="sel_county" onchange="update_unit()">
+						<option value='0'>请选择所属区/县</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="form-group" id="div_unit">
+			<label class="col-md-2 control-label">报送单位</label>
+			<div class="col-md-3">
+				<select class="selectpicker" id="sel_unit" name="sel_unit" class="form-control" onchange="update_status()">
+				</select>
+			</div>
+			<div class="col-md-6">
+				<span class="btn btn-primary fileinput-button">
+	                <i class="icon-plus icon-white"></i>
+	                <span>点击上图故事视频...</span>
+	                <input class="input-file" type="file" id="story_file" name="story_file" accept="video/*" onchange="check_video(this)">
+	            </span>
+	            {% if story_opus %}
+	            <a class="fancybox btn btn-success" id="a_ajax_mask" href="{{MEDIA_URL}}{{ story_opus.auth_asset.img_large_path }}" target="_blank" ><span class="glyphicon glyphicon-picture"></span> 点击查看</a>
+	            {% endif %}
+			</div>
+		</div>
+		<div class="form-group" id="form_actor_brief">
+			<label class="col-md-2 control-label">故事名称</label>
+			<div class="col-md-8">
+				<input type="text" class="form-control" id="story_name" name="story_name" value="{% if story_opus %}{{ story_opus.story_name }}{% endif %}" onblur="update_status()" placeholder="请输入故事标题" style="width:360px">
+			</div>
+		</div>
+		
+		<div class="form-group" id="form_actor_name">
+			<label class="col-md-2 control-label">姓名</label>
+			<div class="col-md-3">
+				<input type="text" class="form-control" id="actor_name" name="actor_name" value="{% if story_opus %}{{ story_opus.actor_name }}{% endif %}" onblur="update_status()" placeholder="请输入作者姓名" style="width:160px">
+			</div>
+			<div class="col-md-3 form-inline">
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_group" id="rdo11" value="1" {% if story_opus and story_opus.group_id == 1 %}checked{% endif %}>
+						学前组</label>
+				</div>
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_group" id="rdo12" value="2" {% if story_opus %} {% if story_opus.group_id == 2 %}checked{% endif %} {%else%}checked{% endif %}>
+						小学组</label>
+				</div>
+			</div>
+		</div>
+		<div class="form-group" id="form_actor_name">
+			<label class="col-md-2 control-label">生成账号</label>
+			<div class="col-md-3">
+				<span class="label label-primary" style="padding:8px 15px; font-size:14px" id="span_username">{% if story_opus %}{{ story_opus.user.username }}{% endif %}</span>
+			</div>
+			<div class="col-md-4 form-inline">
+				<span style="font-weight:bold">账号编号</span>
+				<span class="label label-primary" style="padding:8px 15px; font-size:14px" id="span_number">{% if story_opus %}{{ story_opus.user.number }}{% endif %}</span>
+			</div>
+		</div>
+		<div class="form-group" id="form_actor_brief">
+			<label class="col-md-2 control-label">作者简介：</label>
+			<div class="col-md-8 pull-left">
+				<textarea id="actor_brief" name="actor_brief" rows="4" placeholder="请输入作者简介" class="col-md-12">{% if story_opus %}{{ story_opus.actor_brief }}{% endif %}</textarea>
+			</div>
+		</div>
+		<div class="form-group" id="form_story_brief">
+			<label class="col-md-2 control-label">作品简介：</label>
+			<div class="col-md-8 pull-left">
+				<textarea id="story_brief" name="story_brief" rows="4" placeholder="请输入作品简介" class="col-md-12">{% if story_opus %}{{ story_opus.story_brief }}{% endif %}</textarea>
+			</div>
+		</div>
+		<div class="form-group" id="form_actor_brief">
+			<label class="col-md-2 control-label">性别</label>
+			<div class="col-md-3">
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_sex" id="rdo1" value="1" {% if story_opus and story_opus.sex == 1 %}checked{% endif %}>
+						男</label>
+				</div>
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_sex" id="rdo2" value="0" {% if story_opus %} {% if story_opus.sex == 0 %}checked{%endif%} {%else%}checked{% endif %}>
+						女</label>
+				</div>
+			</div>
+			<div class="col-md-2 form-inline">
+				<span style="font-weight:bold">年龄</span>
+				<input type="text" class="form-control" id="age" name="age" value="{% if story_opus %}{{ story_opus.age }}{% endif %}" onblur="update_status()" style="width:60px">&nbsp;岁
+			</div>
+		</div>
+		<div class="form-group" id="form_school_name">
+			<label class="col-md-2 control-label">学校/幼儿园</label>
+			<div class="col-md-8">
+				<input type="text" class="form-control" id="school_name" name="school_name" value="{% if story_opus %}{{ story_opus.school_name }}{% endif %}" onblur="update_status()" placeholder="请输入学校/幼儿园名称" style="width:360px">
+			</div>
+		</div>
+		<div class="form-group" id="form_telephone">
+			<label class="col-md-2 control-label">联系电话</label>
+			<div class="col-md-8">
+				<input type="text" class="form-control" id="telephone" name="telephone" value="{% if story_opus %}{{ story_opus.telephone }}{% endif %}" onblur="update_status()" placeholder="请输入联系电话" style="width:260px">
+			</div>
+		</div>
+		<div class="form-group" id="form_email">
+			<label class="col-md-2 control-label">E-mail</label>
+			<div class="col-md-8">
+				<input type="text" class="form-control" id="email" name="email" value="{% if story_opus %}{{ story_opus.email }}{% endif %}" onblur="update_status()" placeholder="请输入E-mail" style="width:260px">
+			</div>
+		</div>
+		
+		<div class="form-group">
+			<div class="col-md-offset-2 col-md-6">
+				<div class="btn-group">
+				    <button type="button" class="btn btn-primary{% if not story_opus %} disabled{% endif %}" id="btn_submit" onclick="on_submit()">
+				    <span class="glyphicon glyphicon-save"></span> 更新选手作品作品资料</button>
+				</div>
+			</div>
+		</div>
+	</form>
+{% endif %}
+{% endblock %}

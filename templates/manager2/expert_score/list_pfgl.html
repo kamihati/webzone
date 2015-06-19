@@ -1,0 +1,99 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %}
+<!--评分开始-->
+<script type="text/javascript">
+$(document).ready(function($){
+    //设置导航栏选中状态
+	$("#li_nav_expert_score").addClass("active");
+	 
+	
+	$('.theme-login11').click(function(){
+		$('.theme-popover-mask11').show();
+		$('.theme-popover-mask11').height($(document).height());
+		$('.theme-popover11').slideDown(200);
+	})
+	$('.theme-poptit11 .close').click(function(){
+		$('.theme-popover-mask11').hide();
+		$('.theme-popover11').slideUp(200);
+	})
+
+});
+</script>
+<!--评分结束-->
+{% endblock %}
+
+{% block content %}
+<!--评分窗口开始-->
+
+<div class="theme-popover-mask11"></div>
+
+<div class="theme-popover11">
+	<div class="theme-poptit11">
+		<a href="javascript:;" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod11 dform">
+		<form class="theme-signin11" name="loginform" action="" method="post">
+         <table cellpadding="0" cellspacing="0" >
+       <tr><td width="70" align="right">写评语：</td><td><textarea  rows="10" cols="80" ></textarea></td></tr>
+       <tr><td colspan="2" style="padding-left:60px;"><input class="btn btn-primary que" type="submit" name="submit" value=" 确定 " /> <input class="btn btn-primary qux" type="submit" name="submit" value=" 取消 " /> </td></tr>
+       </table>
+   
+		</form>
+	</div>
+</div>
+<!-- 评分窗口结束-->
+
+<div class="right_hua">
+    <div class="cont_right_lczcc">
+        <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px; " class="liuyan" >
+            <tr><td colspan="8" class="tit">专家评分</td></tr>
+            <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff;">
+            <td width="100px">编号</td><td width="200px" >报送单位</td><td width="150px">作品名称</td><td width="150px">所属组别</td><td width="150px">姓名</td><td width="150px">年龄</td><td width="150px">评分</td><td width="200px"> 评语</td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td><input type="text" value="请打分" class="df"/></td><td><a class="shan theme-login11 " href="javascript:;">写评语</a></td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td><input type="text" value="请打分" class="df"/></td><td><a class="shan theme-login11 " href="javascript:;">写评语</a></td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td><input type="text" value="请打分" class="df"/></td><td><a class="shan theme-login11 " href="javascript:;">写评语</a></td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td><input type="text" value="请打分" class="df"/></td><td><a class="shan theme-login11 " href="javascript:;">写评语</a></td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td><input type="text" value="请打分" class="df"/></td><td><a class="shan theme-login11 " href="javascript:;">写评语</a></td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td><input type="text" value="请打分" class="df"/></td><td><a class="shan theme-login11 " href="javascript:;">写评语</a></td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td><input type="text" value="请打分" class="df"/></td><td><a class="shan theme-login11 " href="javascript:;">写评语</a></td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td><input type="text" value="请打分" class="df"/></td><td><a class="shan theme-login11 " href="javascript:;">写评语</a></td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td><input type="text" value="请打分" class="df"/></td><td><a class="shan theme-login11 " href="javascript:;">写评语</a></td>
+            </tr>
+            <tr>
+            <td>000001</td><td>河南省少儿图书馆</td><td>超能陆战队</td><td>小学组</td><td>唐笑笑</td><td>6</td><td><input type="text" value="请打分" class="df"/></td><td><a class="shan theme-login11 " href="javascript:;">写评语</a></td>
+            </tr>
+        </table>
+		<div class="yema">
+			<span>共<b>100</b>条记录</span>
+			<span>每页<b>20</b>个</span>
+            <a href="">首页</a>
+            <a href="" class="s1">上一页</a>
+            <a href="" class="s1">下一页</a>
+            <a href="">末页</a>
+            <span>第<b>15</b>页</span>
+            <span>总共<b>15</b>页</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+         

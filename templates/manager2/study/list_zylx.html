@@ -1,0 +1,74 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<!--tab切换开始--> 
+<script type="text/javascript">
+    $(function () {
+        $("#yinpin").hide();
+         //控制一级子菜单
+        $(".mm,.tj,.qx").click(function () {
+            $("#yinpin").toggle();
+        });
+		
+		//设置导航栏选中状态
+		$("#li_nav_study").addClass("active");
+		$("#li_nav_study_res_type").addClass("active");
+    });
+</script> 
+<!--tab切换结束--> 
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+    <div class="cont_right_lczcc">
+        <div class="cont_right_lc">
+            <div class="cont_right_lcy">
+                <div class="sucai_t">资源类型名称
+                    <input type="text" value="" class="icx"/>
+                    <button class="ti">确定</button>
+                    <button class="quxi">取消</button>
+                </div>
+                <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;" class="liuyan" >
+                    <tr style=" background:#8ac6ff; height:40px; font-size:14px; line-height:40px; color:#fff; ">
+                        <td width="230">类型</td>
+                        <td width="200">操作</td>
+                    </tr>
+                    <tr>
+                        <td height="40">图片</td>
+                        <td><button class="shan">修改</button>
+                            /
+                            <button class="shan">删除</button></td>
+                    </tr>
+                    <tr>
+                        <td height="40">音频</td>
+                        <td><button class="shan">修改</button>
+                            /
+                            <button class="shan">删除</button></td>
+                    </tr>
+                    <tr>
+                        <td height="40">视频</td>
+                        <td><button class="shan">修改</button>
+                            /
+                            <button class="shan">删除</button></td>
+                    </tr>
+                    <tr>
+                        <td height="40">文档</td>
+                        <td><button class="shan">修改</button>
+                            /
+                            <button class="shan">删除</button></td>
+                    </tr>
+                    
+                        <td height="40">涂鸦</td>
+                        <td><button class="shan">修改</button>
+                            /
+                            <button class="shan">删除</button></td>
+                    </tr>
+                </table>
+                <div class="yemas"> <a  href="" >◀</a> <span>1</span> <a href="" class="s1" >2</a> <a href="" >▶</a>
+                    <div class="clear"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,135 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<script type="text/javascript">
+$(document).ready(function($){
+
+	//设置导航栏选中状态
+	$("#li_nav_person_creator").addClass("active");
+	$("#li_nav_person_creator_default").addClass("active");
+	
+	//生成分页代码
+    $(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+});
+
+function edit_comment(){
+	var id = $("#hdRemarkId").val();
+	var content = $.trim($("#txtContent").val());
+	if(content == ""){
+		alert("评论内容不能为空！");
+		return;
+	}
+	$.post("/diy/api_edit_opus_comment/", {'id': id, 'content': content}, function(data){
+		if(data == 'ok'){
+			alert("编辑成功！");
+			location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+
+function search(page_index){
+	$("#hdPageIndex").val(page_index);
+	$("#submit").click();
+}
+
+function show_edit(id, content){
+	$("#hdRemarkId").val(id);
+	$("#txtContent").val(content);
+	$('.theme-popover-mask11').show();
+	$('.theme-popover-mask11').height($(document).height());
+	$('.theme-popover11').slideDown(200);
+}
+
+function hide_edit(){
+	$('input[name=reset]').click();
+	$('.theme-popover-mask11').hide();
+	$('.theme-popover11').slideUp(200);
+}
+
+function del_commment(id){
+	if(!confirm("您确定要删除这个评论吗？")){
+		return;
+	}
+	$.post("/diy/api_del_opus_comment/", {"id": id}, function(data){
+		if(data == 'ok'){
+			alert("删除评论成功！");
+			location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+</script> 
+{% endblock %}
+
+{% block content %}
+<form method="get" action="#" style="display:none;">
+<input type="hidden" id="hdPageIndex" name="page_index" value="1" />
+<input type="hidden" id="hdOpusId" name="id" value="{{ opus_id }}" />
+<input type="submit" id="submit" style="display:none" />
+</form>
+<div class="right_hua">
+
+  <div class="cont_right_lczcc">
+    <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px; " class="liuyan" >
+      <tr>
+        <td colspan="5" class="tit">作品评论信息</td>
+      </tr>
+      <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff;">
+        <td width="200px">用户所属机构</td>
+        <td width="100px">评论人</td>
+        <td>评论内容</td>
+        <td width="200px"> 操作</td>
+      </tr>
+      {% for obj in data_list %}
+
+      <tr>
+        <td>{{ obj.lib_name }}</td>
+        <td>{{  obj.nickname }} </td>
+        <td>{{ obj.comment }}</td>
+        <td><a class="btn btn-primary theme-login11 " href="javascript:show_edit('{{ obj.id }}', '{{ obj.comment }}');"> 修改</a>/<a href="javascript:del_comment({{ obj.id }})">删除</a></td>
+      </tr>
+      {% endfor %}
+      <tr>
+      	<td colspan="4">    <div class="yema"></div></td>
+      </tr>
+    </table>
+
+  </div>
+</div>
+
+
+<!--修改评论开始-->
+
+<div class="theme-popover-mask11"></div>
+
+<div class="theme-popover11">
+	<div class="theme-poptit11">
+		<a href="javascript:hide_edit();" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod11 dform">
+		 <form method="post" action="#">
+        <table cellpadding="0" cellspacing="0" >
+       		<tr>
+            	<td width="100" align="right">评论内容：</td>
+                <td><textarea  rows="10" id="txtContent" cols="80" ></textarea></td>
+            </tr>
+            <tr>
+            	<td colspan="2" style="padding-left:60px;">
+                    <input type="hidden" id="hdRemarkId" value="" />
+                    <input class="btn btn-primary que" type="button" onClick="edit_comment()" value=" 确定 " />
+                    <input type="reset" name="reset" style="display:none;" />
+                    <input class="btn btn-primary qux" type="button" onClick="hide_edit()" value=" 取消 " />
+                    
+                </td>
+            </tr>
+       </table>
+   </form>
+	 
+	</div>
+</div>
+<!--修改评论结束-->
+{% endblock %}

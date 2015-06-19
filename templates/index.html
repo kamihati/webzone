@@ -1,0 +1,99 @@
+<!--<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">-->
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>{{ site_name }}-云汇网络出版平台</title>
+	
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+
+	<script src="/media/swf/rightclick-2.0.js" language="javascript"></script>
+	<script src="/media/swf/swfobject-2.0.js" language="javascript"></script>
+    <script src="/media/swf/swfaddress.js" language="javascript"></script>
+	<script id="scriptVertion" src="/media/swf/version.js" language="JavaScript"></script>
+    <script src="/static/js/jquery-1.11.0.js" language="javascript"></script>
+	
+	<style type="text/css">
+	/* hide from ie5 mac \*/
+	html {
+	  height: 100%;
+	  overflow: hidden;
+	}
+	#flashcontent {
+	  height: 100%;
+	  background: #FFFFCC;
+	  border: 1px solid #CCCC66;
+	  padding: 2em;
+	  z-index:20;
+	}
+	/* end hide */
+	body {
+	  height: 100%;
+	  margin: 0;
+	  padding: 0;
+	  background-color: #eee;
+	  background-image:url(../static/images/admin_loader.jpg);
+	  background-size:100%;
+	  position:relative;
+	  z-index:0;
+	}
+	</style>
+</head>
+ 
+
+<div style="width:100%; text-align:center; z-index:10; margin-top:80px;" id="loading">
+	<img src="/static/images/01.gif" />
+</div>
+<div id="flashcontent">Place fallback content here for users who don't have Flash</div>
+
+<script>
+<!--
+var flashvars = {
+	geteway_host: "http://{{ host }}/",
+
+    // geteway_host: 'http://127.0.0.1:8000/',
+	module_ver: version,
+	assets_ver: version,
+	lib_id: {{ lib_id }},
+	lib_url: "{{ lib_url }}",
+    asset_url: "{{ asset_url }}",
+    error: "{{ error_msg }}",
+	is_wtf: '{{ is_wtf }}',
+	activity_id: '{{ activity_id|default:0 }}',
+	opus_type: '{{ opus_type|default:0 }}',
+	user_id: '{{ user_id|default:0 }}',
+	
+};
+var params = {
+	quality: "high",
+	wmode: "transparent",
+	menu: "false",
+	allowFullScreen: "true",
+	allowScriptAccess: "always",
+	allowNetworking:"all"
+};
+var attributes = {
+	id: "WebGameFlashObject",
+	name: "WebGameFlashObject"
+};
+
+ 
+	
+swfobject.embedSWF("/media/swf/{% if host == 'yh.3qdou.com' %}WebOpus.swf{% else %}WebOpus.swf{% endif %}?ver="+version, "flashcontent", "100%", "100%", "10.2.0", "/media/swf/expressInstall.swf", flashvars, params, attributes );
+
+
+var s1 = setInterval(function(){
+	var ele = document.getElementById("WebGameFlashObject");
+	if(ele != null){
+		if(ele.PercentLoaded() == 100){
+			$("#loading").hide();
+			clearInterval(s1);
+		}
+
+	}else{
+		//未加载完成
+	}
+}, 100);
+
+
+</script>

@@ -1,0 +1,388 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+
+<script>
+	var old_district_id = "";
+
+	$(document).ready(function(){
+		init_province();
+		on_page(1);
+	});
+
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">上一页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index - 1) + ")\">上一页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">下一页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index + 1) + ")\">下一页</a></li>";
+		}
+		for (var i = 1; i <= page_count; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		var search_text = $("#search_text").val();
+		$.post("/manager/story_unit_list/", {"page_index":page_index, "search_text":search_text}, function(data){
+			var json_data = JSON.parse(data);
+			$("#table1 tbody tr").remove();
+
+
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td><a href='#' onclick='update_unit(" + array_list[i]["id"]  + ")'>" + array_list[i]["unit_name"] + "</a></td><td style='display:none'>";
+				newRow += array_list[i]["brief"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["district_name"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["district_id"] + "</td><td>";
+				newRow += array_list[i]["contact"] + "</td><td>";
+				newRow += array_list[i]["telephone"] + "</td><td>";
+				newRow += array_list[i]["email"] + "</td><td>";
+				newRow += array_list[i]["story_count"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["update_time"] + "</td><td>";
+				newRow += "<button class='btn btn-warning btn-xs' onclick='delete_unit(" + array_list[i]["id"] + ")'>点击删除</button></td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+
+		});
+	}
+	
+	function update_unit(unit_id){
+		$("#hid_unit_id").val(unit_id);
+		var td_list = $("#tr"+unit_id).find('td');
+		$("#name").val($(td_list[0]).find('a').html());
+		$("#brief").val(td_list[1].innerHTML);
+		var district_id = td_list[3].innerHTML;
+		$("#contact").val(td_list[4].innerHTML);
+		$("#telephone").val(td_list[5].innerHTML);
+		$("#email").val(td_list[6].innerHTML);
+		if (district_id.length == 2){
+			$("#sel_province").val(district_id);
+		} else {
+			$("#sel_province").val(district_id.substr(0, 2));
+			$("#sel_province").change();
+			old_district_id = district_id;
+		}
+		$('.selectpicker').selectpicker('refresh');
+		
+		$("#myModal").modal("show");
+	}
+	
+	function delete_unit(unit_id){
+		if (confirm("你真的确定要删除吗?") == true){
+			$.post("/manager/delete_unit/", {"id":unit_id}, function(data){
+				var json_data = JSON.parse(data);
+				if (json_data.code == 1){
+					window.location.reload();
+				} else {
+					alert(json_data.data);
+				}
+			});
+		}
+	}
+	
+	function new_unit(){
+		$("#hid_unit_id").val("0");
+		$("#name").val("");
+		$("#brief").val("");
+		$("#contact").val("");
+		$("#telephone").val("");
+		$("#email").val("");
+		
+		$("#sel_province").val("0");
+		$("#sel_city").val("0");
+		$('.selectpicker').selectpicker('refresh');
+		
+		$("#myModal").modal("show");
+	}
+	
+	function submit_unit(){
+		var province_id = parseInt($("#sel_province option:selected").val());
+		var city_id = parseInt($("#sel_city option:selected").val());
+		var county_id = parseInt($("#sel_county option:selected").val());
+		var district_id = county_id || city_id || province_id;
+		if (district_id > 0){
+			$("#form_district").removeClass("has-error").addClass("has-success");
+			$("#form_district").find("p").html("");
+		} else {
+			$("#form_district").removeClass("has-success").addClass("has-error");
+			$("#form_district").find("p").html("请选择区域");
+		}
+		
+		var unit_id = $("#hid_unit_id").val();
+		var name = $("#name").val();
+		var contact = $("#contact").val();
+		var telephone = $("#telephone").val();
+		var email = $("#email").val();
+		var brief = $("#brief").val();
+		if (name.length == 0){
+			$("#form_name").removeClass("has-success").addClass("has-error");
+		} else {
+			$("#form_name").removeClass("has-error").addClass("has-success");
+		}
+		if (contact.length == 0){
+			$("#form_contact").removeClass("has-success").addClass("has-error");
+		} else {
+			$("#form_contact").removeClass("has-error").addClass("has-success");
+		}
+		if (telephone.length == 0){
+			$("#form_telephone").removeClass("has-success").addClass("has-error");
+		} else {
+			$("#form_telephone").removeClass("has-error").addClass("has-success");
+		}
+		
+		if (name.length > 0 && contact.length > 0 && telephone.length > 0 && email.length > 0 && district_id > 0){
+			$.post("/manager/story_unit/", {"unit_id":unit_id, "id":district_id, "name":name, "contact":contact, "telephone":telephone, "email":email, "brief":brief}, function(data){
+				var json_data = JSON.parse(data);
+				if (json_data.code == 1){
+					alert(json_data.data);
+					window.location.reload();
+				} else {
+					alert(json_data.data);
+				}
+			});
+		}
+	}
+	
+	function update_status(){
+		var name = $("#name").val();
+		var contact = $("#contact").val();
+		var telephone = $("#telephone").val();
+		var email = $("#email").val();
+		var province_id = parseInt($("#sel_province option:selected").val());
+		var city_id = parseInt($("#sel_city option:selected").val());
+		var county_id = parseInt($("#sel_county option:selected").val());
+		var district_id = county_id || city_id || province_id;
+		
+		if (name.length > 0 && contact.length > 0 && telephone.length > 0 && email.length > 0 && district_id > 0){
+			$("#btn_submit").attr("disabled",false)
+		} else {
+			$("#btn_submit").attr("disabled",true)
+		}
+	}
+	
+	function init_province(){
+		$.post("/manager/get_province_list/", function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				$("#sel_province").append("<option value='0'>请选择所属省</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_province").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				$('.selectpicker').selectpicker();
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function update_city(){
+		update_status();
+		var province_id = $("#sel_province option:selected").val();
+		if (province_id == "0"){
+			return;
+		}
+		document.getElementById("sel_city").options.length = 0;
+		$("#sel_city").append("<option value='0'>请选择所属市</option>");
+		$('.selectpicker').selectpicker('refresh');
+		
+		$.post("/manager/get_city_list/", {"id":province_id}, function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_city").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				if(old_district_id.length==4){
+					$("#sel_city").val(old_district_id);
+					$("#sel_city").change();
+				} else if(old_district_id.length==6){
+					$("#sel_city").val(old_district_id.substr(0, 4));
+					$("#sel_city").change();
+				}
+				$('.selectpicker').selectpicker('refresh');
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function update_county(){
+		update_status();
+		var city_id = $("#sel_city option:selected").val();
+		if (city_id == "0"){
+			return;
+		}
+		document.getElementById("sel_county").options.length = 0;
+		$("#sel_county").append("<option value='0'>请选择所属县</option>");
+		$('.selectpicker').selectpicker('refresh');
+		
+		$.post("/manager/get_county_list/", {"id":city_id}, function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_county").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				if(old_district_id.length==6){
+					$("#sel_county").val(old_district_id);
+				}
+				$('.selectpicker').selectpicker('refresh');
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+
+
+    $('#btn_search').click(
+     function()
+    {
+        $("#table1 tbody tr").empty();
+        on_page(1);
+    });
+
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-2 pull-left">
+		<button class="btn btn-danger" onclick="new_unit()">点击添加报送单位</button>
+	</div>
+
+  <div class="input-group col-md-5 pull-left">
+  <input type="text" id="search_text" name="search_text" placeholder="请输入报送单位名称" class="form-control">
+  <span class="input-group-btn">
+    <button class="btn btn-primary" id="btn_search" type="button" >
+    <span class="glyphicon glyphicon-search"></span> 点击搜索</button>
+  </span>
+  </div>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>报送单位名称</th>
+              <th style="display:none">简介</th>
+              <th style="display:none">所属区域</th>
+              <th style="display:none">区域ID</th>
+              <th>联系人</th>
+              <th>联系电话</th>
+              <th>E-mail</th>
+              <th>作品数</th>
+              <th style="display:none">录入时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">报送单位资料</h4>
+      </div>
+      <div class="modal-body">
+      	<form class="form-horizontal" >
+      		<input type="hidden" value="0" id="hid_unit_id" />
+	        <div class="form-group" id="form_name">
+				<label class="col-md-3 control-label">报送单位名称：</label>
+				<div class="col-md-6 pull-left">
+					<input type="text" class="form-control" id="name" name="name" value="" placeholder="请输入报送单位名称" onblur="update_status()">
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_district">
+				<label class="col-md-3 control-label">所属区域：</label>
+				<div class="col-md-9 pull-left">
+					<div class="input-group col-md-3 pull-left">
+						<select class="selectpicker" data-live-search="true" id="sel_province" onchange="update_city()"></select>
+					</div>
+					<div class="input-group col-md-3 pull-left">
+						<select class="selectpicker" data-live-search="true" id="sel_city" onchange="update_county()">
+							<option value='0'>请选择所属市</option>
+						</select>
+					</div>
+					<div class="input-group col-md-3 pull-left">
+						<select class="selectpicker" data-live-search="true" id="sel_county">
+							<option value='0'>请选择所属县</option>
+						</select>
+					</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_contact">
+				<label class="col-md-3 control-label">联系人：</label>
+				<div class="col-md-6 pull-left">
+					<input type="text" class="form-control" id="contact" name="contact" value="" placeholder="请输入联系人" onblur="update_status()">
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_telephone">
+				<label class="col-md-3 control-label">联系电话：</label>
+				<div class="col-md-6 pull-left">
+					<input type="text" class="form-control" id="telephone" name="telephone" value="" placeholder="请输入联系电话" onblur="update_status()">
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_email">
+				<label class="col-md-3 control-label">E-mail：</label>
+				<div class="col-md-6 pull-left">
+					<input type="text" class="form-control" id="email" name="email" value="" placeholder="请输入E-mail" onblur="update_status()">
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_brief">
+				<label class="col-md-3 control-label">单位简介：</label>
+				<div class="col-md-8 pull-left">
+					<textarea id="brief" rows="6" placeholder="请输入单位简介" class="col-md-12"></textarea>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+		</form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal">关闭</button>
+        <button class="btn btn-primary" id="btn_submit" onclick="submit_unit()" disabled="disabled">确认提交</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+{% endblock %}

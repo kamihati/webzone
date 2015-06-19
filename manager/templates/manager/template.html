@@ -1,0 +1,123 @@
+{% extends 'manager/base.html' %}
+
+
+{% block header %}
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+<!-- Add fancyBox main JS and CSS files -->
+<script src="{% static 'fancyBox/jquery.fancybox.js' %}?v=2.1.5"></script>
+<link rel="stylesheet" href="{% static 'fancyBox/jquery.fancybox.css' %}?v=2.1.5" media="screen">
+<script>
+	$(document).ready(function(){
+		$('.fancybox').fancybox({
+			padding: 3,
+
+			openEffect : 'elastic',
+			openSpeed  : 150,
+
+			closeEffect : 'elastic',
+			closeSpeed  : 150,
+
+			closeClick : true
+		});
+		
+		on_page(1);
+	});
+	
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">上一页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index - 1) + ")\">上一页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">下一页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index + 1) + ")\">下一页</a></li>";
+		}
+		for (var i = 1; i <= page_count; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		$.post("/manager/template/?id={{ asset.id }}", {"page_index":page_index}, function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == -1){
+				alert(json_data.data);
+				return;
+			}
+			$("#table1 tbody tr").remove();
+			json_data = json_data.data;
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td><a href='/manager/template_page/?id={{ asset.id }}&page_index=" + array_list[i]["page_index"]  + "'>" + array_list[i]["page_index"] + "</a></td><td>";
+				newRow += array_list[i]["ref_times"] + "</td><td>";
+				newRow += "<a class='fancybox' href='" + array_list[i]["json_path"] + "' target='_blank'>json文件</a></td><td>";
+				newRow += "<a class='fancybox' href='" + array_list[i]["img_path"] + "' target='_blank'>页效果图</a></td><td>";
+				newRow += array_list[i]["create_time"] + "</td><td>";
+				newRow += "<button class='btn btn-warning btn-xs' onclick='delete_template_page(" + array_list[i]["id"] + ")'>点击删除</button></td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+	
+	function delete_template_page(template_page_id){
+		if (confirm("你真的确定要删除吗?") == true){
+			$.post("/manager/delete_template_page/", {"id":template_page_id}, function(data){
+				if (data == "ok"){
+					//$("#tr"+template_id).hide();
+					window.location.reload();
+				} else {
+					alert(data);
+				}
+			});
+		}
+	}
+</script>
+{% endblock %}
+
+
+{% block content %}
+<div class="row">
+	<div class="col-md-4 btn-group">
+	<a class="btn btn-danger" href="/manager/template_page/?id={{ asset.id }}">
+		<span class="glyphicon glyphicon-file"></span> 新增《{{ asset.res_title }}》第{{ asset.page_count|add:1 }}页模板页</a>
+	</div>
+</div>
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>页码</th>
+              <th>引用次数</th>
+              <th>JSON</th>
+              <th>页效果图</th>
+              <th>创建时间</th>
+              <th>删除</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+{% endblock %}

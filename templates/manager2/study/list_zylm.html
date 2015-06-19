@@ -1,0 +1,122 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<!--tab切换开始--> 
+<script type="text/javascript">
+    $(function () {
+        $("#yinpin").hide();
+         //控制一级子菜单
+        $(".mm,.tj,.qx").click(function () {
+            $("#yinpin").toggle();
+        });
+		
+		//设置导航栏选中状态
+		$("#li_nav_study").addClass("active");
+		$("#li_nav_study_res_channel").addClass("active");
+    });
+</script> 
+<!--tab切换结束--> 
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+    <div class="cont_right_lczcc">
+        <div class="cont_right_lc">
+            <div class="men1">
+                <input type="text" value="输入一级栏目名称" style="width:180px;"/>
+                <button class="jg">新建</button>
+                <ul>
+                    <li class="n1"><span class="m1">一级栏目名称</span>
+                        <p class="m2">操作</p>
+                    </li>
+                    <li><span><a href="">语文乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span><a href="">才艺乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span><a href="">数学乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span><a href="">英语乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span><a href="">阅读乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span><a href="">益智乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span><a href="">科普乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <div class="clear"></div>
+                </ul>
+            </div>
+            <div class="men1">
+                <input type="text" value="输入二级栏目名称" style="width:180px;"/>
+                <button class="jg">新建</button>
+                <ul>
+                    <li class="n1"><span class="m1">二级栏目名称</span>
+                        <p class="m2">操作</p>
+                    </li>
+                    <li><span><a href="">语文乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span><a href="">才艺乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span><a href="">数学乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span><a href="">英语乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span><a href="">阅读乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span><a href="">益智乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span><a href="">科普乐园</a></span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <div class="clear"></div>
+                </ul>
+            </div>
+            <div class="men1">
+                <input type="text" value="输入三级栏目名称" style="width:180px;"/>
+                <button class="jg">新建</button>
+                <ul>
+                    <li class="n1"><span class="m1">三级栏目名称</span>
+                        <p class="m2">操作</p>
+                    </li>
+                    <li><span>语文乐园</span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span>才艺乐园</span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span>数学乐园</span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span>英语乐园</span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span>阅读乐园</span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span>益智乐园</span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <li><span>科普乐园</span>
+                        <p><a class="shan">修改</a>/<a class="shan">删除</a></p>
+                    </li>
+                    <div class="clear"></div>
+                </ul>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

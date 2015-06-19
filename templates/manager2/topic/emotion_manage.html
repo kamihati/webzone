@@ -1,0 +1,414 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %}
+{% load staticfiles %}
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+<script type="text/javascript">
+$(document).ready(function($){
+
+	$('.theme-poptit13 .close').click(function(){
+        $("#hdPhizId").val("");
+        $("#op_phiz_type_").attr("selected", "selected");
+
+
+        $("#a_ajax_img").attr("href", "");
+        $("#a_ajax_img").hide();
+
+        $("#txtEmotionName").val("");
+        $("#txtEmotionName").blur();
+		$('.theme-popover-mask').hide();
+		$('.theme-popover13').slideUp(200);
+	});
+	<!--表情编辑窗口控制结束-->
+	
+	<!--表情分类编辑窗口控制开始-->
+	$('.theme-login14').click(function(){
+		$('.theme-popover-mask').show();
+		//$('.theme-popover-mask').height($(document).height());
+		$('.theme-popover14').slideDown(200);
+	});
+	$('.theme-poptit14 .close').click(function(){
+		$('.theme-popover-mask').hide();
+		$('.theme-popover14').slideUp(200);
+	});
+	<!--表情分类编辑窗口控制结束-->
+	
+	//生成分页代码
+    $("#yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+	
+	//设置导航栏选中状态
+	$("#li_nav_topic").addClass("active");
+	$("#li_nav_item_emotion_manage").addClass("active");
+
+    //设置搜索关键字文本框默认字
+    set_input_default('txtEmotionName', '请输入表情名称');
+
+    //设置搜索关键字文本框默认字
+    set_input_default('txtSearchText', '请输入表情名称');
+
+    //设置搜索关键字文本框默认字
+    set_input_default('txtPhizTypeName', '请输入添加的分类名称');
+});
+
+//搜索表情
+function search(page_index){
+    $("#txtSearchText").val($.trim($("#txtSearchText").val().replace("请输入表情名称", "")));
+    $("#hdPageIndex").val(page_index);
+	$("#submit").click()
+}
+
+//修改表情类型名称
+function edit_phiz_type(id){
+	var name = $.trim($("#txtPhizTypeName_" + id).val());
+    if(name == ""){
+        alert("不能为空！");
+        return;
+    }
+    $.post("/topic/edit_phiz_type/", {"id": id, "name": name}, function(data){
+        if(data == "ok"){
+            alert("编辑成功！");
+            location.reload();
+        }else{
+
+        }
+    });
+}
+
+//增加表情类型
+function add_phiz_type(){
+    var name = $.trim($("#txtPhizTypeName").val().replace("请输入添加的分类名称", ""));
+    $.post("/topic/add_phiz_type/", {"name": name}, function(data){
+        if(data == "ok"){
+            alert("添加表情类型成功！");
+            location.reload();
+        }else if(data == "0"){
+            alert("类型名称已存在！");
+
+        }
+    });
+}
+
+//显示编辑栏
+function show_edit_phiz_type(id){
+    $("#trPhizType_" + id + "_e").show();
+    $("#trPhizType_" + id + "_v").hide();
+}
+
+//隐藏编辑栏
+function hide_edit_phiz_type(id){
+    $("#trPhizType_" + id + "_v").show();
+    $("#trPhizType_" + id + "_e").hide();
+}
+
+//删除表情类型
+function remove_phiz_type(id){
+	if(!confirm("您确定要删除么?"))
+		return false;
+	$.post("/topic/del_phiz_type/", {"id": id}, function(data){
+		if(data == "ok"){
+            alert("删除成功！");
+			location.reload();
+		}else{
+
+		}
+	});
+}
+
+//删除表情
+function del_emothion(id){
+    if(!confirm("您确定要删除这个表情吗？"))
+        return;
+    $.post("/topic/del_phiz/", {"id": id}, function(data){
+        if(data == "ok"){
+            alert("删除成功！");
+            location.reload();
+        }else{
+
+        }
+    });
+}
+
+
+//显示编辑表情窗口
+function show_edit_phiz(id, type_id, name, res_path, mark, width, height){
+    if(id != "") {
+        $("#hdPhizId").val(id);
+        $("#op_phiz_type_" + type_id).attr("selected", "selected");
+        $("#txtEmotionName").val(name);
+
+		$("#txtMark").val(mark);
+		$("#txtHeight").val(height);
+		$("#txtWidth").val(width);
+
+        $("#a_ajax_img").attr("href", res_path);
+        $("#a_ajax_img").show();
+    }
+    $('.theme-popover-mask').show();
+    $('.theme-popover-mask').height($(document).height());
+    $('.theme-popover13').slideDown(200);
+}
+
+//增加话题表情
+function add_phiz(){
+    var phiz_id = $("#hdPhizId").val();
+    var type_id = $("#slcPhizType").val();
+    if(type_id == ""){
+        alert("请选择表情类别！");
+        return;
+    }
+
+    var phiz_name = $.trim($("#txtEmotionName").val().replace("请输入表情名称", ""));
+    if(phiz_name == ""){
+        alert("表情名称不能为空！");
+        return;
+    }
+	
+	var mark = $("#txtMark").val();
+	if(mark == ""){
+		alert("表情标记不能为空！");
+		return;
+	}
+	var height = $("#txtHeight").val();
+	if(height == ""){
+		alert("表情高度不能为空！");
+		return;
+	}
+	if(isNaN(height)){
+		alert("表情高度必须为数字！");
+		return;
+	}
+	var width = $("#txtWidth").val();
+	if(width == ""){
+		alert("表情宽度不能为空！");
+		return;
+	}
+	if(isNaN(width)){
+		alert("表情宽度不能为空！");
+		return;
+	}
+	
+
+    var phiz_path = $("#hdPhizPath").val();
+    if(phiz_id == "") {
+        if (phiz_path == "") {
+            alert("请先选择要做表情的图片！");
+            return
+        }
+    }
+	var param = {};
+	param['phiz_type'] = type_id;
+	param['phiz_name'] = phiz_name;
+	param['phiz_path'] = phiz_path;
+	param['width'] = width;
+	param['height'] = height;
+	param['mark'] = mark;
+	
+    var url = "/topic/add_phiz/";
+    if(phiz_id != ""){
+        url = "/topic/edit_phiz/";
+        param["id"] = phiz_id;
+    }
+    $.post(url, param, function(data){
+        if(data == "1"){
+            alert("操作成功！");
+            location.reload();
+        }else if(data == "-1"){
+            alert("图片格式不正确！");
+
+        }else if(data == "-2"){
+			alert("表情标记已存在！");
+			return;
+		}
+    });
+
+}
+
+function check_img(obj){
+    var filename = obj.value;
+    //检查文件类型
+    var exName = filename.substr(filename.lastIndexOf(".")+1).toUpperCase()
+    if(exName=="JPG"||exName=="JPEG"||exName=="PNG"||exName=="BMP"||exName=="GIF"||exName=="SWF"){
+        //ajax 上传图片
+        upload_image();
+    } else {
+        alert("只能上传图片文件(*.jpg|*.jpeg|*.png|*.bmp|*.gif|*.swf)");
+    }
+}
+
+function upload_image(){
+    $("#loading").show();
+    $.ajaxFileUpload({
+        url:"/manager/ajax_upload_img/",
+        secureuri:false,
+        fileElementId:"fileEmotion",
+        dataType: 'text',
+        success: function (data, status){
+            var json_data = JSON.parse(data);
+            if (json_data.code == 1){
+                $("#a_ajax_img").attr("href", "/media/" + json_data.data.path);
+                $("#a_ajax_img").show();
+                $("#hdPhizPath").val(json_data.data.path);
+                //update_status();
+            } else {
+                alert(json_data.data);
+            }
+
+            $("#loading").hide();
+        },
+        error: function (data, status, e)
+        {
+            alert(e);
+            $("#loading").hide();
+        }
+    });
+}
+
+</script>
+{% endblock %}
+
+{% block content %}
+
+<!--表情编辑开始-->
+<div class="theme-popover-mask13"></div>
+<div class="theme-popover13">
+	<div class="theme-poptit13">
+		<a href="#" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod13 dform">
+		<form class="theme-signin13 xinxi2" action="/topic/add_phiz/" method="post">
+        	<table cellpadding="0" cellspacing="10" class="xinxi1">
+       			<tr>
+                    <td style=" text-align:right;">表情所属分类：</td>
+                    <td style=" text-align:left;">
+                    	<select name="phiz_type" id="slcPhizType" class="xz">
+                            <option id="op_phiz_type_" value="">请选择表情分类</option>
+                            {% for obj in phiz_type_list %}
+                            <option id="op_phiz_type_{{ obj.id }}" value="{{ obj.id }}">{{ obj.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+		        <tr>
+        			<td style=" text-align:right;">表情名称：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtEmotionName" name="phiz_name" class="icx" value="请输入表情名称" /></td>
+                </tr>
+                <tr>
+        			<td style=" text-align:right;">表情标记：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtMark" name="phiz_mark" class="icx" value="0" /></td>
+                </tr>
+                <tr>
+        			<td style=" text-align:right;">表情高度：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtHeight" name="phiz_height" class="icx" value="0" /></td>
+                </tr>
+                <tr>
+        			<td style=" text-align:right;">表情宽度：</td>
+                    <td style=" text-align:left;"><input type="text" id="txtWidth" name="phiz_width" class="icx" value="0" /></td>
+                </tr>
+        		<tr>
+                    <td style=" text-align:right;">上传表情：</td>
+                    <td style=" text-align:left;">
+                        <input type="file" accept="image/*" id="fileEmotion" name="emotion" onchange="check_img(this)" style="display: none;" />
+                        <button class="jg" type="button" onclick="javascript:$('#fileEmotion').click()">上传+</button>
+                        <a  class="fancybox btn btn-success" id="a_ajax_img" style="display: none" target="_blank" > 点击查看</a>
+                        <img id="loading" src="{% static 'images/loading.gif' %}" style="display:none;">
+                        <input type="hidden" id="hdPhizPath" name="phiz_path" value="">
+                         <input type="hidden" id="hdPhizId" name="phiz_id" value="">
+                    </td>
+                </tr>
+
+       		</table>
+            <input type="submit" id="submitPhiz" style="display: none;" />
+            <input class="btn btn-primary que" type="button" onclick="add_phiz()" value=" 确定 " />
+		</form>
+	</div>
+</div>
+<!--表情编辑结束-->
+
+<!--表情分类编辑开始-->
+<div class="theme-popover-mask14"></div>
+<div class="theme-popover14">
+	<div class="theme-poptit14">
+		<a href="javascript:;" title="关闭" class="close">×</a>
+		<h3></h3>
+	</div>
+	<div class="theme-popbod14 dform">
+
+        	<table cellpadding="0" cellspacing="10" class="xinxi1">
+         		<tr>
+        			<td colspan="4">
+                        <input type="text" id="txtPhizTypeName" value="请输入添加的分类名称"/>
+                        <button id="btnEditPhizType" onclick="add_phiz_type()" class="jg" type="button">新建</button></td>
+        		</tr>
+        		<tr>
+     				<td width="20"></td><td>分类名称</td> <td>操作</td> <td></td>
+        		</tr>
+                {% for obj in phiz_type_list %}
+                <tr id="trPhizType_{{ obj.id }}_v">
+         			<td width="20"></td>
+                    <td>{{ obj.name }}</td>
+                    <td><a href="javascript:show_edit_phiz_type({{obj.id}})" class="sc">修改</a>/<a href="javascript:remove_phiz_type({{ obj.id }})" class="sc">删除</a></td>
+                    <td></td>
+           			<td width="20"></td>
+                </tr>
+                <tr id="trPhizType_{{ obj.id }}_e" style="display: none;">
+         			<td width="20"></td>
+                    <td><input type="text" value="{{ obj.name }}" style="width: 80px;" id="txtPhizTypeName_{{ obj.id }}"></td>
+                    <td><a href="javascript:edit_phiz_type({{obj.id}})" class="sc">修改</a>/<a href="javascript:hide_edit_phiz_type({{ obj.id }})" class="sc">关闭</a></td>
+                    <td></td>
+           			<td width="20"></td>
+                </tr>
+                {% endfor %}
+         	</table>
+
+    </div>
+</div>
+<!--表情分类编辑结束-->
+         
+<!--表情列表区域开始-->  
+<div class="right_hua">
+	<div class="cont_right_lc">
+    	<div class="cont_right_lcl">
+        <form method="get" action="#">
+            <input type="button" class="jg theme-login13" onclick="show_edit_phiz('', '', '', '')" value="添加表情" />
+        	<input type="button" class="jg theme-login14" value="表情分类管理" />
+            <select name="phiz_type" id="slcPhizType" class="xz">
+            	<option value="0">请选择表情分类</option>
+                {% for obj in phiz_type_list %}
+                <option value="{{ obj.id }}" {% if phiz_type == obj.id %} selected="selected" {% endif %}>{{ obj.name }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="search_text" id="txtSearchText" class="icx" value="{{ search_text|default:'请输入表情名称' }}" />
+            <input type="hidden" id="hdPageIndex" name="page_index" value="{{ page_index }}" />
+            <input type="submit" id="submit" style="display: none;">
+
+			<input type="button"  class="cx" onClick="search(1)" value="查&nbsp;询" />
+            </form>
+		</div>
+		<table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+			<tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+				<td width="150">表情名称</td>
+                <td width="100">表情标记</td>
+                <td width="150">尺寸(宽*高)</td>
+                <td width="200">所属分类</td>
+                <td width="250">查看表情</td>
+                <td width="250">操作</td>
+            </tr>
+            {% for obj in data_list %}
+			<tr>
+            	<td>{{ obj.title }}</td>
+                <td>{{ obj.mark }}</td>
+                <td>{{ obj.width }}*{{ obj.height }}</td>
+                <td>{{ obj.type_name }}</td>
+                <td><a class="shan" href="{{ obj.url }}" target="_blank">查看</a></td>
+                <td><a class="shan theme-login13" href="javascript:show_edit_phiz('{{ obj.id }}', '{{ obj.type_id }}', '{{ obj.title }}', '{{ obj.url }}', '{{ obj.mark }}', '{{ obj.width }}', '{{ obj.height }}')">修改</a>/<a href="javascript:del_emothion({{ obj.id }})" class="shan">删除</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+		<div id="yema" class="yema"></div>
+	</div>
+</div>
+<!--表情列表区域结束-->
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends 'manager/base.html' %}
+
+
+{% block header %}
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+<script>
+    var search_text = "";
+	$(document).ready(function(){
+		on_page(1);
+	});
+	
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">上一页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index - 1) + ")\">上一页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">下一页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index + 1) + ")\">下一页</a></li>";
+		}
+		for (var i = 1; i <= page_count; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+        search_text = $("#search_text").val();
+		$.post("/manager/notice_list/", {"page_index":page_index,'search_text':search_text}, function(data){
+			try{
+				var json_data = JSON.parse(data);
+			} catch (exception){
+				window.location.reload();
+			}
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr><td><a href='/manager/notice/?id=" + array_list[i]["id"]  + "'>" + array_list[i]["content"] + "</a></td><td>";
+				newRow += array_list[i]["read_times"] + "</td><td>";
+				newRow += array_list[i]["expire_time"] + "</td><td>";
+				newRow += array_list[i]["create_time"] + "</td><td>";
+				newRow += array_list[i]["status_name"] + "</td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+	
+    $('#btn_search').click(function()
+    {
+        on_page(1);
+
+    });
+</script>
+{% endblock %}
+
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-2 pull-left">
+		<a class="btn btn-danger" href="/manager/notice/">新增活动公告</a>
+	</div>
+
+  <div class="input-group col-md-5 pull-left">
+  <input type="text" id="search_text" name="search_text" placeholder="请输入公告内容" class="form-control">
+  <span class="input-group-btn">
+    <button class="btn btn-primary" id="btn_search" type="button" >
+    <span class="glyphicon glyphicon-search"></span> 点击搜索</button>
+  </span>
+  </div>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>公告内容</th>
+              <th>已读人次</th>
+              <th>过期时间</th>
+              <th>创建时间</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+{% endblock %}

@@ -1,0 +1,261 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+
+<script>
+	var old_district_id = "";
+	
+	$(document).ready(function(){
+		init_opus_type();
+		on_page(1);
+	});
+
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">上一页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index - 1) + ")\">上一页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">下一页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index + 1) + ")\">下一页</a></li>";
+		}
+		for (var i = 1; i <= page_count; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		var search_text = $("#search_text").val();
+		$.post("/manager/opus_type_list/", {"page_index":page_index, "search_text":search_text}, function(data){
+			var json_data = JSON.parse(data);
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td><a href='#' onclick='update_opus_type(" + array_list[i]["id"]  + "," + array_list[i]["parent_id"]  + ")'>" + array_list[i]["classify_name"] + "</a></td><td>";
+				newRow += array_list[i]["parent_name"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["create_type_id"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["read_type_id"] + "</td><td>";
+				newRow += array_list[i]["create_type"] + "</td><td>";
+				newRow += array_list[i]["read_type"] + "</td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+	
+	function submit_opus_type(){
+		var hid_id = $("#hid_id").val();
+		var parent_id = $("#sel_type").val();
+		var classify_name = $("#classify_name").val();
+		var rdo_create = $("input[name=rdo_create]:checked").val();
+		var rdo_read = $("input[name=rdo_read]:checked").val();
+		
+		if (classify_name.length == 0){
+			$("#form_name").removeClass("has-success").addClass("has-error");
+		} else {
+			$("#form_name").removeClass("has-error").addClass("has-success");
+			$("#btn_submit").attr("disabled",true);
+			$.post("/manager/opus_type/", {"hid_id":hid_id,"parent_id":parent_id,"classify_name":classify_name,"rdo_create":rdo_create,"rdo_read":rdo_read}, function(data){
+				var json_data = JSON.parse(data);
+				if (json_data.code == 1){
+					window.location.reload();
+				} else {
+					alert(json_data.data);
+				}
+			});
+		}
+	}
+	
+	function update_status(){
+		var classify_name = $("#classify_name").val();
+		if (classify_name.length > 0){
+			$("#btn_submit").attr("disabled",false);
+		} else {
+			$("#btn_submit").attr("disabled",true);
+		}
+	}
+	
+	function init_opus_type(){
+		$.post("/manager/get_opus_type_list/", function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				$("#sel_type").append("<option value='0'>请选择上级作品分类</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_type").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				$('.selectpicker').selectpicker();
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function new_opus_type(){
+		$("#sel_type").val("0");
+		$("#classify_name").val("");
+		$('.selectpicker').selectpicker('refresh');
+		
+		$("#myModal").modal("show");
+	}
+	
+	function update_opus_type(classify_id, parent_id){
+		$("#hid_id").val(classify_id);
+		$("#sel_type").val(parent_id);
+		$('.selectpicker').selectpicker('refresh');
+		
+		var td_list = $("#tr"+classify_id).find('td');
+		$("#classify_name").val($(td_list[0]).find('a').html());
+		if (td_list[2].innerHTML == "1"){
+			document.getElementById("rdo1").checked = true;
+			document.getElementById("rdo2").checked = false;
+		} else {
+			document.getElementById("rdo1").checked = false;
+			document.getElementById("rdo2").checked = true;
+		}
+		if (td_list[3].innerHTML == "1"){
+			document.getElementById("rdo11").checked = true;
+			document.getElementById("rdo22").checked = false;
+		} else {
+			document.getElementById("rdo11").checked = false;
+			document.getElementById("rdo22").checked = true;
+		}
+		
+		$("#btn_submit").attr("disabled",false);
+		$("#myModal").modal("show");
+	}
+
+
+    $('#btn_search').click(
+            function()
+            {
+                on_page(1);
+            }
+    );
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-2 pull-left">
+		<button class="btn btn-danger" onclick="new_opus_type()">点击新增加作品分类</button>
+	</div>
+
+  <div class="input-group col-md-5 pull-left">
+  <input type="text" id="search_text" name="search_text" placeholder="请输入分类名称" class="form-control">
+  <span class="input-group-btn">
+    <button class="btn btn-primary" id="btn_search" type="button" >
+    <span class="glyphicon glyphicon-search"></span> 点击搜索</button>
+  </span>
+  </div>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>分类名称</th>
+              <th>上级分类</th>
+              <th>创作显示</th>
+              <th>阅读显示</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">作品分类详情</h4>
+      </div>
+      <div class="modal-body">
+      	<form class="form-horizontal">
+      		<input type="hidden" value="0" id="hid_id" name="hid_id" />
+			<div class="form-group" id="form_type">
+				<label class="col-md-3 control-label">一级分类：</label>
+				<div class="col-md-9 pull-left">
+					<div class="input-group col-md-3 pull-left">
+						<select class="selectpicker" data-live-search="true" id="sel_type" name="sel_type"></select>
+					</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_contact">
+				<label class="col-md-3 control-label">作品分类名称：</label>
+				<div class="col-md-6 pull-left">
+					<input type="text" class="form-control" id="classify_name" name="classify_name" value="" placeholder="请输入作品分类名称" onblur="update_status()">
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_create">
+				<label class="col-md-3 control-label">创作显示：</label>
+					<div class="col-md-3 form-inline">
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="rdo_create" id="rdo1" value="1" checked="checked">
+							单页</label>
+					</div>
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="rdo_create" id="rdo2" value="2">
+							双页</label>
+					</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_read">
+				<label class="col-md-3 control-label">阅读显示：</label>
+				<div class="col-md-3 form-inline">
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="rdo_read" id="rdo11" value="1" checked="checked">
+							单页</label>
+					</div>
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="rdo_read" id="rdo22" value="2">
+							双页</label>
+					</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+		</form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal">关闭</button>
+        <button class="btn btn-primary" id="btn_submit" onclick="submit_opus_type()" disabled="disabled">确认提交</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+{% endblock %}

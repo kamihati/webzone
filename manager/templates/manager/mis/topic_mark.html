@@ -1,0 +1,397 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% load staticfiles %}
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+{% endblock %}
+
+{% block footer %}
+<!-- Add fancyBox main JS and CSS files -->
+<script src="{% static 'fancyBox/jquery.fancybox.js' %}?v=2.1.5"></script>
+<link rel="stylesheet" href="{% static 'fancyBox/jquery.fancybox.css' %}?v=2.1.5" media="screen">
+
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+<style>
+.bootstrap-select { width:272px; }
+
+.fileinput-button {
+  position: relative;
+  overflow: hidden;
+}
+.fileinput-button input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  opacity: 0;
+  filter: alpha(opacit
+  y=0);
+  transform: translate(-300px, 0) scale(4);
+  font-size: 23px;
+  direction: ltr;
+  cursor: pointer;
+}
+</style>
+
+<script>
+	var old_classify_id = "";
+	
+	$(document).ready(function(){
+		init_select();
+		on_page(1);
+		$('.fancybox').fancybox({
+			padding: 3,
+
+			openEffect : 'elastic',
+			openSpeed  : 150,
+
+			closeEffect : 'elastic',
+			closeSpeed  : 150,
+
+			closeClick : true
+		});
+	});
+	
+	function init_select(){
+		$.post("/manager/mis/topic_template_list/", function(data){
+			var array_list = JSON.parse(data);
+			for (var i=0; i<array_list.length; i++){
+				$("#sel_topic").append("<option value='" + array_list[i]["id"] + "'>" + array_list[i]["title"] + "</option>");
+				var d = array_list[i]["row_num"] + "," + array_list[i]["col_num"];
+				$("#sel_topic2").append("<option d='" + d + "' value='" + array_list[i]["id"] + "'>" + array_list[i]["title"] + "</option>");
+			}
+			$('.selectpicker').selectpicker();
+			$('.selectpicker').selectpicker('refresh');
+		});
+	}
+	
+	function change_select(obj){
+		var d = $(obj.selectedOptions).attr('d');
+		var row_col = d.split(',');
+		$("#row_num").val(row_col[0]);
+		$("#col_num").val(row_col[1]);
+		update_status();
+	}
+	
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		
+		var display_page_count = 15;
+		var middle_page = parseInt(display_page_count/2);
+		var start_page = 1;
+		if (page_index > middle_page){
+			start_page = page_index - middle_page;
+		}
+		var end_page = start_page + display_page_count - 1;
+		if (end_page > page_count){
+			end_page = page_count;
+			start_page = page_count - display_page_count + 1;
+			if (start_page <= 0){
+				start_page = 1;
+			}
+		}
+		
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">首页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(1)\">首页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">尾页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + page_count + ")\">尾页</a></li>";
+		}
+		for (var i = start_page; i<=end_page; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		var search_text = $("#search_text").val();
+		var sel_topic = $("#sel_topic option:selected").val();
+		$.post("/manager/mis/topic_mark_list/", {"page_index":page_index, "search_text":search_text, "sel_topic":sel_topic}, function(data){
+			var json_data = JSON.parse(data);
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td><a href='#' onclick='update_mark(" + array_list[i]["id"] + ")'>" + array_list[i]["title"] + "</a></td><td>";
+				newRow += array_list[i]["template_name"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["template_id"] + "</td><td>";
+				newRow += array_list[i]["row_num"] + "</td><td>";
+				newRow += array_list[i]["col_num"] + "</td><td>";
+				if (array_list[i]["url"].length>0){
+					newRow += "<a class='fancybox' href='" + array_list[i]["url"] + "' target='_blank'>点击查看</a></td></tr>";
+				} else {
+					newRow += "无图</td></tr>";
+				}
+				//newRow += "<button class='btn btn-warning btn-xs' onclick='delete_opus_size(" + array_list[i]["id"] + ")'>点击删除</button></td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+	
+	
+	function submit_mark(){
+		var hid_id = $("#hid_id").val();
+		var title = $("#title").val();
+		var parent_id = parseInt($("#sel_topic2").val());
+		
+		var hid_res_path = $("#hid_res_path").val();
+		
+		$.post("/manager/mis/topic_mark/", {"hid_id":hid_id, "title":title, "parent_id":parent_id,"hid_res_path":hid_res_path}, function(data){
+			if (data == "ok"){
+				alert("提交成功！");
+				window.location.reload();
+			} else {
+				alert(data);
+			}
+		});
+	}
+	
+	function update_status(){
+		try{
+			var title = $("#title").val();
+			var parent_id = parseInt($("#sel_topic2").val());
+			var hid_res_path = $("#hid_res_path").val();
+			
+			if (title.length > 0 && parent_id > 0 && hid_res_path.length>0){
+				$("#btn_submit").attr("disabled",false);
+			} else {
+				$("#btn_submit").attr("disabled",true);
+			}
+		} catch (expection){
+			$("#btn_submit").attr("disabled",true);
+		}
+	}
+	
+	function new_mark(){
+		$("#hid_id").val("0");
+		$("#title").val("");
+		$("#row_num").val("");
+		$("#col_num").val("");
+		$("#hid_res_path").val("");
+		$("#sel_topic2").val("0");
+		$('.selectpicker').selectpicker('refresh');
+		
+		$("#btn_submit").attr("disabled",true);
+		$("#a_ajax_img").attr("href", "");
+		$("#a_ajax_img").hide();
+			
+		$("#myModal").modal("show");
+	}
+	
+	function update_mark(id){
+		$("#hid_id").val(id);
+		
+		var td_list = $("#tr"+id).find('td');
+		$("#title").val($(td_list[0]).find('a').html());
+		$("#row_num").val(td_list[3].innerHTML);
+		$("#col_num").val(td_list[4].innerHTML);
+		$("#sel_topic2").val(td_list[2].innerHTML);
+		$('.selectpicker').selectpicker('refresh');
+		if (td_list[3].innerHTML != "无图"){
+			$("#btn_submit").attr("disabled",false);
+			$("#a_ajax_img").attr("href", $(td_list[5]).find('a').attr('href'));
+			$("#hid_res_path").val($(td_list[5]).find('a').attr('href'));
+			$("#a_ajax_img").show();
+		} else {
+			$("#btn_submit").attr("disabled",true);
+			$("#a_ajax_img").attr("href", "");
+			$("#hid_res_path").val("");
+			$("#a_ajax_img").hide();
+		}
+
+		$("#myModal").modal("show");
+	}
+	
+	function delete_template(id){
+		if (confirm("你真的确定要删除吗?") == true){
+			$.post("/manager/delete_opus_size/", {"id":id}, function(data){
+				var json_data = JSON.parse(data);
+				if (json_data.code == 1){
+					alert(json_data.data);
+					window.location.reload();
+				} else {
+					alert(json_data.data);
+				}
+			});
+		}
+	}
+	
+	function check_img(obj){
+		var filename = obj.value;
+		//检查文件类型
+		var exName = filename.substr(filename.lastIndexOf(".")+1).toUpperCase()    
+		if(exName=="JPG"||exName=="JPEG"||exName=="PNG"||exName=="BMP"||exName=="GIF"||exName=="SWF"){
+			//ajax 上传图片
+			upload_image();
+		} else {
+			alert("只能上传图片文件(*.jpg|*.jpeg|*.png|*.bmp|*.gif|*.swf)");
+		}
+	}
+	
+	function upload_image(){
+		$("#loading").show();
+		$.ajaxFileUpload({
+			url:"/manager/ajax_upload_img/",
+			secureuri:false,
+			fileElementId:"asset_file",
+			dataType: 'text',
+			success: function (data, status){
+				var json_data = JSON.parse(data); 
+				if (json_data.code == 1){
+					$("#a_ajax_img").attr("href", "/media/" + json_data.data.path);
+					$("#a_ajax_img").show();
+					$("#hid_res_path").val(json_data.data.path);
+					update_status();
+				} else {
+					alert(json_data.data);
+				}
+				$("#loading").hide();
+			},
+			error: function (data, status, e)
+			{
+				alert(e);
+				$("#loading").hide();
+			}
+		});
+	}
+
+    $('#btn_search').click(
+            function()
+            {
+                on_page(1);
+            }
+    );
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-2 pull-left">
+		<button class="btn btn-danger" onclick="new_mark()">点击添加话题标签</button>
+	</div>
+	<div class="input-group col-md-3 pull-left">
+	    <select class="selectpicker" id="sel_topic" name="sel_topic" class="form-control">
+	    	<option value='0'>请选择所属模板</option>
+		</select>
+	</div>
+	
+	<div class="input-group col-md-5 pull-left">
+	<input type="text" id="search_text" name="search_text" placeholder="请输入话题标签名称" class="form-control">
+	<span class="input-group-btn">
+	  <button class="btn btn-primary" id="btn_search" type="button" onclick="on_page(1)">
+	  <span class="glyphicon glyphicon-search"></span> 点击搜索</button>
+	</span>
+	</div>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>话题标签名称</th>
+              <th>所属模板</th>
+              <th>行</th>
+              <th>列</th>
+              <th>标签图片</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">话题标签详情</h4>
+      </div>
+      <div class="modal-body">
+      	<form class="form-horizontal" >
+      		<input type="hidden" value="0" id="hid_id" />
+			<div class="form-group" id="form_district">
+				<label class="col-md-3 control-label">选择话题模板：</label>
+				<div class="col-md-9 pull-left">
+					<select class="selectpicker" id="sel_topic2" name="sel_topic2" class="form-control" onchange="change_select(this)">
+						<option value='0'>请选择所属模板</option>
+					</select>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_district">
+				<label class="col-md-3 control-label">标签名称：</label>
+				<div class="col-md-9 pull-left">
+					<input type="text" class="form-control" value="" id="title" style="width:260px" onblur="update_status()"/>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group">
+				<label class="col-md-3 control-label">话题标签图片：</label>
+				<input type="hidden" value="" id="hid_res_path" name="hid_res_path" />
+				<div class="col-md-9">
+					<span class="btn btn-primary fileinput-button">
+		                <i class="icon-plus icon-white"></i>
+		                <span>上传话题标签图片...</span>
+		                <input class="input-file" type="file" id="asset_file" name="asset_file" accept="image/*" onchange="check_img(this)">
+		            </span>
+		            <img id="loading" src="{% static 'images/loading.gif' %}" style="display:none;">
+		            <div class="btn-group">
+						<a class="fancybox btn btn-success" id="a_ajax_img" style="{% if not asset %}display: none{% endif %}" href="{% if asset %}{{MEDIA_URL}}{{ asset.res_path}}{% endif %}" target="_blank" ><span class="glyphicon glyphicon-picture"></span> 点击查看</a>
+					</div>
+				</div>
+			</div>
+			<div class="form-group" id="form_create">
+				<label class="col-md-3 control-label">行数：</label>
+				<div class="col-md-3 form-inline">
+				<div class="input-group">
+					<input type="text" class="form-control" id="row_num" readonly="readonly">
+					<div class="input-group-addon">行</div>
+				</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_create">
+				<label class="col-md-3 control-label">列数：</label>
+				<div class="col-md-3 form-inline">
+				<div class="input-group">
+					<input type="text" class="form-control" id="col_num" readonly="readonly">
+					<div class="input-group-addon">行</div>
+				</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+		</form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal">关闭</button>
+        <button class="btn btn-primary" id="btn_submit" onclick="submit_mark()" disabled="disabled">确认提交</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+{% endblock %}

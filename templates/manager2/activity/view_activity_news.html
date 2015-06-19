@@ -1,0 +1,51 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<style type="text/css">
+#divMain{
+	border:0;
+	margin:0;
+
+}
+#txtContent{ border:0;
+}
+</style>
+<script type="text/javascript">
+$(document).ready(function($){
+    //设置导航栏选中状态
+	$("#li_nav_activity").addClass("active");
+	$("#li_nav_activity_news").addClass("active");
+	
+	//根据活动背景参数显示样式
+	var image_path = '/media/{{ background.origin_path }}';
+	var image_position = '{{ background.position }}';
+	var position = image_position.split(",");
+	var pos_w = position[0] + "px";
+	var pos_h = position[1] + "px";
+	var pos_x = position[2] + "px";
+	var pos_y = position[3] + "px";
+	var pos_w_x = position[4] + "px";
+	var pos_h_y = position[5] + "px";
+	var pos = {};
+	pos['background-image'] = "url('" + image_path + "')";
+	pos['width'] = pos_w;
+	pos['height'] = pos_h;
+	$("#divMain").css(pos);
+	pos = {"width": pos_w_x, "height": pos_h_y, "margin-left": pos_x, "margin-top": pos_y};
+	$("#txtContent").css(pos);
+	//$("#txtContent").css("margin-left", pos_x).css("margin-top", pos_y);
+	if(parseInt(pos_h) > 550)
+   	    $(".right_hua").css("height", parseInt(pos_h) + 50);
+	else
+	    $(".right_hua").css("height", 550);
+});
+ 
+</script> 
+{% endblock %}
+{% block content %}
+<div class="right_hua">
+    <div id="divMain" class="activity_news_container">
+    	<textarea id="txtContent">{{ news.content|safe }}</textarea>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,116 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %}
+ 
+<script type="text/javascript">
+$(document).ready(function($){
+    //设置导航栏选中状态
+	$("#li_nav_admin").addClass("active");
+	$("#li_nav_admin_library").addClass("active");
+	
+	//生成分页代码
+	$(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+	
+	//切换机构
+	$("#slcLibrary").change(function(){
+		$("#hdLibrary").val(this.value);
+		search(1);
+	});
+	//切换机构状态
+	$("#slcLibraryStatus").change(function(){
+		$("#hdLibraryStatus").val(this.value);
+		search(1);
+	});
+	//机构状态值设置
+	$("#slcLibraryStatus").val("{{ library_status }}");
+});
+
+
+function search(page_index){
+	$("#hdPageIndex").val(page_index);
+	$("#submit").click();
+}
+
+//删除机构管理员
+function del_user(id){
+	if(!confirm("您确定要删除这个机构管理员么！")){
+		return;
+	}
+	$.post("/account/api_del_user/", {"id": id}, function(data){
+		if(data == "ok"){
+			alert("操作成功！");
+			location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+</script>
+<!--增加管理员02-->
+{% endblock %}
+
+{% block content %}
+
+<div class="right_hua">
+    <div class="cont_right_lc">
+    	<div class="cont_right_lcl">
+        	<form method="get" action="#">
+    		<a class="jg" href="/manager2/admin/library_edit/">新建机构</a>
+            <span>机构名称</span>
+            <input type="hidden" name="library" id="hdLibrary" value="{{ library_id }}" />
+            <input type="hidden" name="library_status" id="hdLibraryStatus" value="{{ library_status }}" />
+            <input type="text" value="{{ search_text }}" id="txtSearchText" name="search_text" class="sr" />
+            <button class="cx" onclick="search(1)">查询</button>
+            <input type="submit" id="submit" style="display:none;" />
+            <input type="hidden" id="hdPageIndex" name="page_index" value="1" />
+            </form>
+    	</div>
+        <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;" class="liuyan" >
+    		<tr style=" background:#8ac6ff; height:40px; font-size:14px; line-height:40px; color:#fff; ">
+                  <td width="100">ID</td>
+                  <td width="150">
+                  	<select class="lei" id="slcLibrary">
+                        <option value="">全部机构</option>
+                        {% for obj in library_list %}
+                        <option value="{{ obj.id }}" {% if library_id == obj.id %} selected="selected"{% endif %}>{{ obj.lib_name }}</option>
+                        {% endfor %}
+                    </select>
+                  </td>
+                  <td width="100">
+                  	<select class="lei" id="slcLibraryStatus">
+                      <option value="">全部状态</option>
+                      <option value="1">使用</option>
+                      <option value="0">试用</option>
+                      <option value="-1">禁用</option>
+                    </select>
+                  </td>
+                  <td width="100">管理员账号</td>
+                  <td width="100">姓名</td>
+                  <td width="100">开通时间</td>
+                  <td width="100">结束时间</td>
+                  <td width="250">操作</td>
+                </tr>
+            {% for obj in data_list %}
+    		<tr>
+    			<td>{{ obj.id }}</td>
+                <td>{{ obj.lib_name }}</td>
+                <td>{% if obj.status == 0 %}试用{% endif %}{% if obj.status == 1 %}使用{% endif %}{% if obj.status == 2 %}过期{% endif %}</td>
+
+                <td>{{ obj.username }}</td>
+                <td>{{ obj.realname }}</td>
+                <td>{{ obj.create_time }}</td>
+                <td>{{ obj.expire_time }}</td>
+                <td>
+                	<a href="/manager2/admin/library_edit/?id={{ obj.library_id }}" class="shan">维护机构信息</a>/
+                    <a href="/manager2/admin/library_admin/?id={{ obj.library_id }}" class="shan">普通管理员</a>/
+                    <a href="javascript:del_user({{ obj.id }})" class="shan">删除</a>
+                </td>
+    		</tr>
+            {% endfor %}
+        </table>
+        <div class="yema"></div>
+    </div>
+</div>
+{% endblock %}
+
+         

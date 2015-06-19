@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		<meta charset="UTF-8">
+		<title>{{ site_title }}</title>
+		{% load staticfiles %}
+		<!-- JavaScript -->
+		<script src="{% static 'js/jquery-1.10.2.min.js' %}"></script>
+		
+		<script src="{% static 'bootstrap-3.0.3/js/bootstrap.min.js' %}"></script>
+
+		<link rel="stylesheet" href="{% static 'bootstrap-3.0.3/css/bootstrap.min.css' %}">
+		<link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+		
+		<!--[if IE 7]>
+		<link rel="stylesheet" href="{% static 'css/font-awesome-ie7.min.css' %}">
+		<![endif]-->
+		<style>
+			body {
+				padding-top: 50px;
+			}
+		</style>
+		{% block header %}{% endblock %}
+	</head>
+
+	<body>
+		<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+					<a class="navbar-brand" href="#"><img src="{% static 'manager/img/logo.png' %}">{{ site_name }}<img src="{% static 'manager/img/line.png' %}">后台管理</a>
+				</div>
+				<div class="collapse navbar-collapse">
+					<ul class="nav navbar-nav" style="color: #fff; padding-left: 15px">
+						<li class="active"><a href="#">系统管理</a></li>
+        				<li><a href="#">会员管理</a></li>
+        				<li><a href="#">学习平台管理</a></li>
+        				<li><a href="#">创作平台管理</a></li>
+        				<li><a href="#">活动管理</a></li>
+						<li style="padding: 17px 0 0 28px">欢迎您:{{request.user.username}}，上次登录:{{request.session.last_login}}，上次IP:{{request.session.last_ip}}</li>
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						<li>
+							<a href="/manager/logout/">退出登录</a>
+						</li>
+					</ul>
+				</div><!--/.nav-collapse -->
+			</div>
+		</div>
+
+		<div class="container" style="padding-top: 10px">
+			<div class="row">
+				<div class="col-md-3">
+					<div class="panel-group" id="accordion">
+						{% if request.user.is_staff %}
+						<div class="panel {% if index == 1 %}panel-primary{% else %}panel-default{% endif%}">
+							<div class="panel-heading">
+								<h4 class="panel-title dropdown">
+									<a data-toggle="collapse" data-parent="#accordion" href="#collapseZero" class="collapsed"> 开馆&作品分类管理 </a>
+									<span class="caret"></span>
+								</h4>
+							</div>
+							<!-- List group -->
+							<div id="collapseZero" class="list-group panel-collapse {% if index == 1 %}in{% else %}collapse{% endif%}">
+								<a class="list-group-item {% if sub_index == 1 %}active{% endif%}" href="/manager/library/">图书馆管理</a>
+								<a class="list-group-item {% if sub_index == 2 %}active{% endif%}" href="/manager/lib_list/">浏览图书馆</a>  
+								<a class="list-group-item {% if sub_index == 3 %}active{% endif%}" href="/manager/opus_type/">作品分类管理</a>
+								<!--a class="list-group-item {% if sub_index == 4 %}active{% endif%}" href="/manager/opus_size/">作品版面/画布管理</a-->
+								<a class="list-group-item {% if sub_index == 5 %}active{% endif%}" href="/manager/page_size/">作品页尺寸管理</a>
+							</div>
+						</div>
+						{% endif %}
+						
+						<div class="panel {% if index == 2 %}panel-primary{% else %}panel-default{% endif%}">
+							<div class="panel-heading">
+								<h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapseOne"> 资源管理 </a></h4>
+							</div>
+							<div id="collapseOne" class="panel-collapse {% if index == 2 %}in{% else %}collapse{% endif%}">
+								<div class="panel-body">
+									<a class="btn btn-block {% if sub_index == 1 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/batch_asset/">批量上传素材</a>
+									<a class="btn btn-block {% if sub_index == 2 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/asset/">添加素材</a>
+									<a class="btn btn-block {% if sub_index == 3 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/asset_list/">浏览素材</a>
+									<a class="btn btn-block {% if sub_index == 4 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/template_list/">模板新增/管理</a>
+								</div>
+							</div>
+						</div>
+						
+						<div class="panel {% if index == 4 %}panel-primary{% else %}panel-default{% endif%}">
+							<div class="panel-heading">
+								<h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" class="collapsed"> 会员管理 </a></h4>
+							</div>
+							<div id="collapseThree" class="panel-collapse {% if index == 4 %}in{% else %}collapse{% endif%}">
+								<div class="panel-body">
+									<a class="btn btn-block {% if sub_index == 1 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/user_list/">会员列表</a>
+									<a class="btn btn-block {% if sub_index == 2 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/auditor_list/">审核员列表</a>
+								</div>
+							</div>
+						</div>
+						
+						<div class="panel {% if index == 5 %}panel-primary{% else %}panel-default{% endif%}">
+							<div class="panel-heading">
+								<h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapseFour" class="collapsed"> 消息管理 </a></h4>
+							</div>
+							<div id="collapseFour" class="panel-collapse {% if index == 5 %}in{% else %}collapse{% endif%}">
+								<div class="panel-body">
+									<a class="btn btn-block {% if sub_index == 1 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/notice/">发布消息</a>
+									<a class="btn btn-block {% if sub_index == 2 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/notice_list/">浏览消息</a> 
+								</div>
+							</div>
+						</div>
+						
+						<div class="panel {% if index == 6 %}panel-primary{% else %}panel-default{% endif%}">
+							<div class="panel-heading">
+								<h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapseFive" class="collapsed"> 作品管理 </a></h4>
+							</div>
+							<div id="collapseFive" class="panel-collapse {% if index == 6 %}in{% else %}collapse{% endif%}">
+								<div class="panel-body">
+									<a class="btn btn-block {% if sub_index == 1 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/opus_list/">待审核作品列表</a>
+									<a class="btn btn-block {% if sub_index == 2 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/opus_list/?status=2">已发表作品列表</a>
+									<a class="btn btn-block {% if sub_index == 3 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/opus_list/?status=0">创作中作品列表</a> 
+								</div>
+							</div>
+						</div>
+						
+						<div class="panel {% if index == 7 %}panel-primary{% else %}panel-default{% endif%}">
+							<div class="panel-heading">
+								<h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapseSix" class="collapsed"> 故事大王大赛 </a></h4>
+							</div>
+							<div id="collapseSix" class="panel-collapse {% if index == 7 %}in{% else %}collapse{% endif%}">
+								<div class="panel-body">
+									<a class="btn btn-block {% if sub_index == 1 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/story_unit/">报送单位管理</a>
+									<a class="btn btn-block {% if sub_index == 2 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/story_opus/">选手作品管理</a>
+									<a class="btn btn-block {% if sub_index == 3 %}btn-primary{% else %}btn-info{% endif%}" href="/manager/story_list/">选手作品列表</a> 
+								</div>
+							</div>
+						</div>
+						
+					</div>
+				</div>
+				<div class="col-md-9">
+					<!--div class="container"-->
+						<!--div class="row">
+							<ol class="breadcrumb">
+								<li>
+									<a href="#">Home</a>
+								</li>
+								<li>
+									<a href="#">Library</a>
+								</li>
+								<li class="active">
+									Data
+								</li>
+							</ol>
+						</div-->
+						<div class="row">
+							{% block content %}{% endblock %}
+						</div>
+					<!--/div-->
+				</div>
+			</div>
+		</div>
+	</body>
+	{% block footer %}{% endblock %}
+</html>

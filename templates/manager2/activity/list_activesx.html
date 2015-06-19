@@ -1,0 +1,487 @@
+﻿{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<style type="text/css">
+#ulGroupList li{ margin-top:5px; }
+#ulGroupList li span{ margin-right:10px; font-size:15px;  }
+#ulGroupList li a{ color:red; margin-right:5px;}
+}
+
+</style>
+<script type="text/javascript">
+$(document).ready(function($){
+	//设置导航栏选中状态
+	$("#li_nav_activity").addClass("active");
+	$("#li_nav_activity_create").addClass("active");
+ 	
+	//根据当前活动的举办方式决定页面控件的显示
+	{% if activity.place_type == 'place' %}
+	$("tr[class='wl']").hide();
+	{% else %}
+	// 初始化当前活动的分组信息
+	reset_group_list();
+	{% endif %}
+	
+	
+	//控制系列活动的选择模块是否显示
+	$("input[name=series_type]").click(function(){
+        if($("#series_type_2").attr("checked")){
+			$("#tr_series").hide();
+			$("input[name=series_list]").attr("checked", false);
+		}else{
+			$("#tr_series").show();
+		}
+	});
+	
+	
+	
+	//修改活动信息的时候初始化页面数据
+	{% if activity %}
+	
+		//系列活动或专题活动
+		{% if activity.series_id == 0 %}
+		$("#series_type_2").attr("checked", "checked");
+		{% endif %}
+	
+		//如果是现场活动
+		{% if activity.place_type == 'place' %}
+		
+		//选中现场活动radio
+		$("#place_type_2").attr("checked", "checked");
+		//显示现场活动专有控件
+		$("tr[class=xc]").show();
+		//隐藏网络活动专有控件
+		$("tr[class=net]").hide();
+		{% else %}
+		//选中网络活动radio
+		$("#place_type_1").attr("checked", "checked");
+		$("tr[class=xc]").hide();
+		$("tr[class=net]").show();
+		{% endif %}
+		
+		//设置活动作品类型
+		$("input[name=fruit_type][value='{{ activity.fruit_type }}']").attr("checked", "checked");
+
+		//投稿作品限数
+		{% if activity.submit_fruit_count > 1 %}
+		$("#fruit_count_2").attr("checked", "checked");
+		{% endif %}
+		
+		//网络活动限定
+		{% if activity.place_type == 'net' %}
+		     //活动范围
+			{% if activity.scope_list == '0' %}
+			$("#scope_list_0").attr("checked", "checked");
+			{% endif %}
+			
+			//评选方式
+			{% if activity.vote_type == 1 %}
+			$("#vote_type_1").attr("checked", "checked");
+			{% endif %}
+			{% if activity.vote_type == 2 %}
+			$("#vote_type_2").attr("checked", "checked");
+			$("#trVoteStartTime").hide();
+			$("#trVoteEndTime").hide();
+			$("#trVoteStep").hide();
+			{% endif %}
+			
+			//投票频率
+			$("input[name=vote_step]").each(function(index, element) {
+                if(this.value == "{{ activity.vote_step }}"){
+					$(this).attr("checked", "checked");
+				}
+            });
+			
+		{% endif %}
+		
+		{% if activity.annex %}
+		$("#ajax_img_annex").attr("href", "/media/{{ activity.annex }}");
+		$("#ajax_img_annex").show();
+		{% endif %}
+		
+		{% if activity.cover %}
+		$("#ajax_img_cover").attr("href", "/media/{{ activity.cover }}");
+		$("#ajax_img_cover").show();
+		{% endif %}
+	{% else %}
+	
+	$("tr[class=xc]").hide();
+	
+	{% endif %}
+	
+	
+	//设置显示现场活动空间或网络活动控件
+	$("input[name=place_type]").click(function(){
+		if($("#place_type_1").attr("checked")){
+			$("tr[class=xc]").hide();
+			$("tr[class=net]").show();
+			if($("#vote_type_2").attr("checked")){
+			    $("#trVoteStartTime").hide();
+				$("#trVoteEndTime").hide();
+				$("#trVoteStep").hide();	
+			}
+		}else{
+			$("tr[class=xc]").show();
+			$("tr[class=net]").hide();
+		}
+	});
+	 
+	
+	//评选方式影响投票时间
+	$("input[name=vote_type]").click(function(){
+		if($("input[name=vote_type]:checked").val() != "1"){
+			$("#trVoteStartTime").hide();
+			$("#trVoteEndTime").hide();
+			$("#trVoteStep").hide();
+		}else{
+			$("#trVoteStartTime").show();
+			$("#trVoteEndTime").show();
+			$("#trVoteStep").show();
+		}
+		
+	});
+	
+});
+
+
+//显示系列活动编辑窗口
+function show_edit_series(){
+	$('.theme-popover-mask').show();
+	$('.theme-popover-mask').height($(document).height());
+	$('.theme-popover13').slideDown(200);
+}
+
+//关闭活动系列编辑窗口
+function close_edit_series(){
+	$('.theme-popover-mask').hide();
+	$('.theme-popover13').slideUp(200);
+	$("#txtSeriesTitle").val("");
+	$("#ajax_img_series_cover").hide();
+	$("#ajax_img_series_cover").attr("href", "");
+}
+
+//编辑系列活动
+function edit_series(){
+	var title = $.trim($("#txtSeriesTitle").val()).replace('请输入系列活动名称', '');
+	if(title == ""){
+		alert("标题不能为空！");
+		return;
+	}
+	var origin_path = $("#hdSeriesCover").val();
+	if(origin_path == ""){
+		alert("海报图不能为空！");
+		return;
+	}
+    $.post("/activity/activity_series_edit/", {"title": title, "origin_path": origin_path}, function(data){
+		if(data == "ok"){
+			alert("操作成功！");
+			show_series_list();
+			close_edit_series();
+			
+		}else{
+			alert(data);
+		}
+	});
+}
+
+
+//刷新活动系列的列表
+function show_series_list(){
+	$.get("/activity/activity_series_list/", function(data){
+		var data_list = JSON.parse(data);
+		var html = "";
+		for(var i=0; i<data_list.length; i++){
+			var checked = "";
+			if(data_list[i]['id'] == '{{ activity.series_id }}'){
+				checked = "checked";
+			}
+			html += '<input type="radio" ' + checked + ' value="' + data_list[i]['id'] + '" name="series_list" id="series_list_' + data_list[i]['id'] + '" class="fx" />';
+			html += '<label for="series_list_' + data_list[i]['id'] +'">' + data_list[i]['title'] + '</label>';
+		}
+		$("#series_content").empty().html(html);
+	});
+}
+
+
+//保存本页活动数据
+function save_step2(){
+	var param = {};
+	var id = "{{ activity.id }}";
+	param['id'] = id;
+	//开始报名时间
+	var signUpBeginTime = $("#txtSignUpBeginTime").val();
+	if(signUpBeginTime == ""){
+		alert("开始报名时间不能为空！");
+		return;
+	}
+	
+	var signUpEndTime = $("#txtSignUpEndTime").val();
+	if(signUpEndTime == ""){
+		alert("报名结束时间不能为空！");
+		return;
+	}
+	if(signUpBeginTime > signUpEndTime){
+		alert("报名开始时间不能晚于报名结束时间！");
+		return;
+	}
+	param['sign_up_start_time'] = signUpBeginTime;
+	param['sign_up_end_time'] = signUpEndTime;
+	
+	//报名资料选项
+	var activity_option = "";
+	$("input[name=sign_up_option]:checked").each(function(){
+		activity_option += ',' + $(this).val();
+	});
+	if(activity_option != ""){
+		activity_option = activity_option.substr(1);
+	}
+	if(activity_option == ""){
+		alert("请选择用户需要填写的报名信息！");
+		return;
+	}
+	param['activity_option'] = activity_option;
+	
+	{% if activity.place_type == 'net' %}
+	//作品提交开始时间
+	var submitBeginTime = $('#txtSubmitStartTime').val();
+	if(submitBeginTime == ""){
+		alert("开始投稿时间不能为空！");
+		return;
+	}
+	
+	//作品提交结束时间
+	var submitEndTime = $("#txtSubmitEndTime").val();
+	if(submitEndTime == ""){
+		alert("结束投稿时间不能为空！");
+		return;
+	}
+	if(submitBeginTime > submitEndTime){
+		alert("投稿开始时间不能晚于投稿结束时间！");
+		return;
+	}
+	param['submit_start_time'] = submitBeginTime;
+	param['submit_end_time'] = submitEndTime;
+	{% endif %}
+	
+	
+	//取活动所需作品类型
+	var fruit_type = $("input[name=fruit_type]:checked").val();
+	param['fruit_type'] = fruit_type;
+	
+	$.post("/activity/api_edit_step2/", param, function(data){
+		var data = data.split(":");
+		if(data[0] == "ok"){
+			alert("编辑完成！"); 
+		}else if(data[0] == '1'){
+			alert("编辑成功。点击确认进入活动预告编辑界面。。。");
+			location.href = "/?opus_type=59&activity_id=" + data[1] + "#/studio/";
+		}else if(data[0] == "-1"){
+			alert('参数错误');
+		}
+	});
+}
+
+
+
+
+//编辑活动分组信息
+function edit_group(){
+	var group_name = $.trim($("#txtGroupName").val());
+	if(group_name == ""){
+		alert("分组名称不能为空！");
+		return;
+	}
+	var id = $("#hdGroupId").val();
+	var param = {};
+	param['activity_id'] = '{{ activity.id }}';
+	if(param['activity'] == ''){
+		alert("活动id不存在！");
+		return;
+	}
+	param['group_name'] = group_name;
+	if(id != ""){
+		param["id"] = id;
+	}
+	$.post("/activity/api_edit_activity_group/", param, function(data){
+		if(data == "0"){
+			$("#hdGroupId").val("");
+			$("#txtGroupName").val("");
+			reset_group_list();
+		}else if(data == "-1"){
+			alert("名称重复！");
+		}else if(data == "-2"){
+			alert("此标题的活动已存在！");
+		}
+	});
+}
+
+//设置修改分组名称的控件内容
+function set_edit_group(id, name){
+	$("#txtGroupName").val(name);
+	$("#hdGroupId").val(id);
+}
+
+//清空分组信息的编辑区控件
+function clear_edit_group(){
+	$("#txtGroupName").val("");
+	$("#hdGroupId").val("");
+}
+
+//更新活动分组分组信息中的数据
+function reset_group_list(){
+	$.get("/activity/api_get_activity_group/", {"activity_id": "{{ activity.id }}"}, function(data){
+		var html = "";
+        var data_list = JSON.parse(data).data;
+		for(var i=0; i<data_list.length; i++){
+			html += "<li id='liGroupItem_" + data_list[i]['id'] + "'>";
+			html += '<span id="span_group_name_' + data_list[i]['id'] + '">' + data_list[i]['group_name'] + '</span>';
+			html += '<a class="shan" href="javascript:set_edit_group(' + data_list[i]['id'] + ',\'' + data_list[i]['group_name'] + '\')">修改</a>';
+			html += '<a class="shan" href="javascript:delete_group(' + data_list[i]['id'] + ')">删除</a></li>';
+			html += "</li>";
+		}
+		$("#ulGroupList").html(html);
+		
+	});
+}
+
+//删除活动分组。
+function delete_group(id){
+	if(!confirm("您确定要删除这个分组吗？"))
+		return;
+	$.post("/activity/api_delete_activity_group/", {"group_id": id}, function(data){
+		if(data == "ok"){
+			$("#liGroupItem_" + id).remove();
+		}else if(data == "-1"){
+			alert("活动开始进行以后不能删除分组。以免分组内的作品丢失。");
+		}else{
+			alert(data);
+		}
+	});	
+}
+
+
+</script> 
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+  <div class="cont_right_lc">
+    <div class="tit">第二步：报名设置</div>
+    <div style="margin-left:100px;">
+      <table cellpadding="0" cellspacing="5" class="xinxi" >
+        <tr>
+          <td width="100"></td>
+          <td width="200" class="ziliao">开始报名时间：</td>
+          <td><input type="datetime-local" id="txtSignUpBeginTime" class="Wdate" value="{{ sign_up_begin_time }}" style="width:200px"/></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr>
+          <td width="100" ></td>
+          <td width="200" class="ziliao">结束报名时间：</td>
+          <td><input type="datetime-local" id="txtSignUpEndTime" class="Wdate" value="{{ sign_up_end_time }}" style="width:200px"/></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr>
+        <tr>
+            <td width="100"></td>
+            <td width="200" class="ziliao">用户需要填写的报名信息：</td>
+            <td><div class="xinjian">
+                <input id="ckbAuthorName" type="checkbox" checked="checked" name="sign_up_option" value="need_author_name" class="fx" />
+                <label for="ckbAuthorName">作者姓名</label>
+                <input id="ckbAuthorAge" type="checkbox" checked="checked" name="sign_up_option"  value="need_author_age" class="fx" />
+                <label for="ckbAuthorAge">作者年龄</label>
+                <input id="ckbSex" type="checkbox" checked="checked" name="sign_up_option" value="need_author_sex" class="fx" />
+                <label for="ckbSex">作者性别</label>
+                <input id="ckbSchool" type="checkbox" checked="checked" name="sign_up_option" value="need_author_school" class="fx" />
+                <label for="ckbSchool">学校</label>
+                <input id="ckbEmail" type="checkbox" checked="checked" name="sign_up_option" value="need_author_email" class="fx" />
+                <label for="ckbEmail">E-mail</label>
+                <input id="ckbTelphone" type="checkbox" checked="checked" name="sign_up_option" value="need_author_telephone" class="fx" />
+                <label for="ckbTelphone">电话</label>
+                <input id="ckbAddress" type="checkbox" checked="checked" name="sign_up_option" value="need_author_address" class="fx" />
+                <label for="ckbAddress">地址</label>
+                <input id="ckbAuthorBrief" type="checkbox" checked="checked" name="sign_up_option" value="need_author_brief" class="fx" />
+                <label for="ckbAuthorBrief">作者简介</label>
+              </div></td>
+            <td></td>
+          </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr class="wl">
+            <td width="100"></td>
+            <td width="200" class="ziliao">开始投稿时间：</td>
+            <td><input type="datetime-local" id="txtSubmitStartTime" value="{{ submit_start_time }}" class="Wdate" style="width:200px"/></td>
+            <td></td>
+          </tr>
+          <tr class="wl">
+            <td colspan="5" height="5"></td>
+          </tr>
+          <tr class="wl">
+            <td width="100"></td>
+            <td width="200" class="ziliao">结束投稿时间：</td>
+            <td><input type="datetime-local" id="txtSubmitEndTime" value="{{ submit_end_time }}" class="Wdate" style="width:200px"/></td>
+            <td></td>
+          </tr>
+          <tr class="wl">
+            <td colspan="5" height="5"></td>
+          </tr>
+        <tr class="wl">
+            <td width="100"></td>
+            <td width="200" class="ziliao">作品类型：</td>
+            <td><input type="radio" name="fruit_type" checked="checked" id="fruit_type1" value="3" class="fx" />
+              <label for="fruit_type1">图片</label>
+              <input type="radio" name="fruit_type" id="fruit_type2" value="4" class="fx" />
+              <label for="fruit_type2">视频</label>
+              <input type="radio" name="fruit_type" id="fruit_type3" value="6" class="fx" />
+              <label for="fruit_type3">音频</label>
+              <input type="radio" name="fruit_type" id="fruit_type4" value="2" class="fx" />
+              <label for="fruit_type4">多媒体图书</label></td>
+            <td></td>
+          </tr>
+          <tr class="wl">
+            <td colspan="5" height="5"></td>
+          </tr>
+        <tr class="wl">
+          <td width="100"></td>
+          <td width="200" class="ziliao">设置活动作品分组：</td>
+          <td colspan="2"><input type="text" id="txtGroupName" size="9" /><input type="button" class="ti" onClick="edit_group()" id="btnEditGroupName" value="确认" />
+          <input type="button" onclick="clear_edit_group()" class="ti" value="清除" />
+ 
+            &nbsp;（可以根据地区年龄进行分组）
+            <input type="hidden" id="hdGroupId" value="" />
+              <br />
+              <ul id="ulGroupList">
+                {% for obj in groups %}
+                <li id="liGroupItem_{{ obj.id }}"> <span id="span_group_name_{{ obj.id }}">{{ obj.group_name }} </span> <a class="shan" href="javascript:set_edit_group({{ obj.id }}, '{{ obj.group_name }}')">修改</a> <a class="shan" href="javascript:delete_group({{ obj.id }})">删除</a> </li>
+                {% endfor %}
+              </ul>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="5" height="30"></td>
+        </tr>
+        <tr>
+          <td></td>
+               <td></td>
+                   
+          <td colspan="3" height="5">
+          	<input class="btn btn-primary que" type="button" onClick="save_step2()" name="submit" value=" 确定 " />  
+            <input class="btn btn-primary qux" type="button" onClick="javascript:history.back()" value=" 后退 " />
+          </td>
+        </tr>
+        <tr>
+          <td colspan="5" height="30"></td>
+        </tr>
+        <tr>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends 'manager/base.html' %}
+
+{% block footer %}
+<script>
+ var search_text = "";
+ var search_type = "";
+
+	$(document).ready(function(){
+		on_page(1);
+	});
+	
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		
+		var display_page_count = 15;
+		var middle_page = parseInt(display_page_count/2);
+		var start_page = 1;
+		if (page_index > middle_page){
+			start_page = page_index - middle_page;
+		}
+		var end_page = start_page + display_page_count - 1;
+		if (end_page > page_count){
+			end_page = page_count;
+			start_page = page_count - display_page_count + 1;
+			if (start_page <= 0){
+				start_page = 1;
+			}
+		}
+		
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">首页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(1)\">首页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">尾页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + page_count + ")\">尾页</a></li>";
+		}
+		for (var i = start_page; i<=end_page; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+        search_text = $('#search_text').val().trim();
+        search_type = $('#search_tyow').val();
+		$.post("/manager/mis/s_log_user/", {"page_index":page_index,'search_text':search_text,'search_type':search_type}, function(data){
+			try{
+				var json_data = JSON.parse(data);
+			} catch (exception){
+				window.location.reload();
+			}
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr><td>" + array_list[i]["username"] + "</td><td>";
+				newRow += array_list[i]["ip"] + "</td><td>";
+				newRow += array_list[i]["content"] + "</td><td>";
+				newRow += array_list[i]["platform"] + "</td><td>";
+				newRow += array_list[i]["action_time"] + "</td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+  $('#btn_search').click(
+          function()
+          {
+              search_text = $('#search_text').val().trim();
+              search_type = $('#search_type').val();
+              $.post("/manager/mis/s_log_user/", {"page_index":1,'search_text':search_text,'search_type':search_type}, function(data){
+                  try{
+                      var json_data = JSON.parse(data);
+                  } catch (exception){
+                      window.location.reload();
+                  }
+                  $("#table1 tbody tr").remove();
+                  var array_list = json_data.data;
+                  for (var i=0; i<array_list.length; i++){
+                      var newRow = "<tr><td>" + array_list[i]["username"] + "</td><td>";
+                      newRow += array_list[i]["ip"] + "</td><td>";
+                      newRow += array_list[i]["content"] + "</td><td>";
+                      newRow += array_list[i]["platform"] + "</td><td>";
+                      newRow += array_list[i]["action_time"] + "</td></tr>";
+                      $("#table1 tbody").append(newRow);
+                  }
+                  update_pagination(json_data.page_index, json_data.page_count);
+              });
+          }
+  );
+</script>
+{% endblock %}
+
+{% block content %}
+
+    <div class="row" style="margin-left: 1px; margin-bottom: 15px">
+
+
+            <div class="input-group col-md-5 pull-left" >
+                <label>请选择搜索类型</label>
+
+                <select id="search_type"  class="selectpicker">
+
+                    <option class="search_type" value="1" selected="true">按账号</option>
+                    <option class="search_type" value="2">按IP地址</option>
+
+                </select>
+
+
+            </div>
+
+
+            <div class="input-group col-md-5 pull-left">
+
+                <input type="text" id="search_text" name="search_text" placeholder="请输入搜索项" class="form-control">
+             <span class="input-group-btn">
+             <button class="btn btn-primary" id="btn_search" type="button">
+                 <span class="glyphicon glyphicon-search"></span> 点击搜索</button>
+             </span>
+            </div>
+
+    </div>
+<div class="table-responsive">
+
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>账号</th>
+              <th>IP</th>
+              <th>操作</th>
+              <th>平台</th>
+              <th>时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+
+{% endblock %}

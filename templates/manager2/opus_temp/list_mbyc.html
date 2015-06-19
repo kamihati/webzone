@@ -1,0 +1,191 @@
+﻿{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<script type="text/javascript">
+$(document).ready(function($){
+	//设置导航栏选中状态
+	$("#li_nav_template").addClass("active");
+	$("#li_nav_template_list_mbyc").addClass("active");
+	
+	//设置搜索关键字文本框默认字
+    set_input_default('txtSearchText', '请输入模板名称');
+	
+	//设置分页代码
+    $(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+
+	$('.theme-login13').click(function(){
+		$('.theme-popover-mask').show();
+		$('.theme-popover-mask').height($(document).height());
+		$('.theme-popover13').slideDown(200);
+	})
+	$('.theme-poptit13 .close').click(function(){
+		$('.theme-popover-mask').hide();
+		$('.theme-popover13').slideUp(200);
+	})
+	
+	
+	{% if class1_id %} 
+    set_class2({{ class1_id }});
+	{% endif %}
+	
+	//更换门类
+	$("#slcClass1").change(function(){
+		$("#txtSearchText").val("");
+	    $("#hdClass1").val(this.value);
+		$("#hdClass2").val("");
+		search(1);
+	});
+	
+	//更换子类
+	$("#slcClass2").change(function(){
+		$("#txtSearchText").val("");
+		$("#hdClass2").val(this.value);
+		search(1);
+	});
+
+});
+
+
+//设置子类的显示内容
+function set_class2(parent_id){
+	$.get('/widget/api_get_opus_type/', {'parent_id': parent_id}, function(data){
+		var data_list = JSON.parse(data);
+		var html = "<option value='' selected='selected'>子类</option>";
+		var id_list = [];
+		var class2_id = '{{ class2_id|safe }}';
+		
+		for(var i=0; i<data_list.length; i++){
+			html += '<option value="' + data_list[i].id.toString() + '"' ;
+			if(data_list[i].id.toString() == class2_id){
+				html += ' selected="selected" ';
+			}
+			html += ' >' + data_list[i].name + '</option>';
+		}
+		if(html != ""){
+			$("#slcClass2").html(html);
+		}
+	});
+}
+
+
+
+function search(page_index){
+	$("#hdPageIndex").val(page_index);
+	$("#txtSearchText").val($("#txtSearchText").val().replace("请输入模板名称", ""));
+	$("#submit").click();
+}
+
+
+//设置模板推荐状态
+//id: id
+//status: 推荐状态。0为不推荐。1为推荐
+function set_top(id, status){
+	if($("#zd" + id + "_" + status).attr("checked") == "checked")
+		return false;
+	$.post('/diy/api_update_zone_asset_top/', {'id': id, 'top': status}, function(data){
+			if(data == 'fail'){
+				alert('操作失败。请与管理员联系。');
+			}else if(data == 'ok'){
+				$("#zd" + id + "_" + status).attr("checked", true);
+			}
+		});
+}
+</script> 
+{% endblock %}
+
+{% block content %} 
+<!--模板信息修改开始-->
+<div class="theme-popover-mask13"></div>
+<div class="theme-popover13">
+  <div class="theme-poptit13"> <a href="javascript:;" title="关闭" class="close">×</a>
+    <h3></h3>
+  </div>
+  <div class="theme-popbod13 dform">
+    <form class="theme-signin13 xinxi2" name="loginform" action="" method="post">
+      <table cellpadding="0" cellspacing="10" class="xinxi1">
+        <tr>
+          <td  style=" text-align:right;"> 门类：</td>
+          <td style=" text-align:left;"><select name="门类" class="xz">
+              <option value="门类">门类</option>
+              <option value="表情1">表情1</option>
+              <option value="画框">画框</option>
+            </select></td>
+        </tr>
+        <tr>
+        <tr style="display:none;">
+          <td  style=" text-align:right;"> 子类：</td>
+          <td style=" text-align:left;"><select name="子类" class="xz">
+              <option value="子类">子类</option>
+              <option value="表情1">表情1</option>
+              <option value="画框">画框</option>
+            </select></td>
+        </tr>
+        <tr>
+          <td style=" text-align:right;"> 标题：</td>
+          <td style=" text-align:left;"><input type="text" class="icx" value="请输入表情名称" /></td>
+        </tr>
+      </table>
+      <input class="btn btn-primary que" type="submit" name="submit" value=" 确定 " />
+      <input class="btn btn-primary qux" type="submit" name="submit" value=" 取消 " />
+    </form>
+  </div>
+</div>
+<!--模板信息修改结束-->
+
+<div class="right_hua">
+<div class="cont_right_lc">
+  <div class="cont_right_lczc" id="con_n_1">
+    <div class="flei">
+    	<form action="#" method="get">
+            <input type="text" id="txtSearchText" class="icx" name="key" value="{{ key|default:'请输入模板名称' }}" />
+            <button class="ti" onclick="search(1)" type="button">查&nbsp;询</button>
+            <input type="hidden" id="hdPageIndex" value="1" name="page_index" />
+            <input type="hidden" id="hdClass1" value="{{ class1_id }}" name="class1" />
+            <input type="hidden" id="hdClass2" value="{{ class2_id }}" name="class2" />
+            <input type="submit" id="submit" style="display: none;" />
+        </form>
+    </div>
+    <div class="cont_right_lczcc">
+      <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+        <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+          <td width="260">标题</td>
+          <td width="100">
+          	<select class="lei" id="slcClass1">
+                <option value="">门类</option>
+                {% for obj in class1_list %}
+                <option value="{{ obj.id }}" {% if class1_id == obj.id %} selected="selected"{% endif %}>{{ obj.name }}</option>
+                {% endfor %}
+            </select>
+          </td>
+          <td width="100" style="display:none;">
+          	<select class="lei" id="slcClass2">
+                <option value="">作品子类</option>
+            </select>
+          </td>
+          <td width="100">创建类型</td>
+          <td width="100">引用次数</td>
+          <td width="200">创建时间</td>
+          <td width="120">推荐</td>
+          <td width="120"> 操作</td>
+        </tr>
+        {% for obj in data_list %}
+        <tr>
+          <td><a href="/manager/opus/?id={{ obj.opus_id }}" target="_blank">{{ obj.res_title }}</a></td>
+          <td>{{ obj.class1_name }}</td>
+          <td style="display:none;">{{ obj.class2_name }}</td>
+          <td>{% if obj.create_type == 1 %}单页{% else %}双页{% endif %}</td>
+          <td>{{ obj.ref_times }}</td>
+          <td>{{ obj.create_time }}</td>
+          <td>
+          	<input type="radio" value="1" {% if obj.is_recommend == 1 %} checked="checked"{% endif %} id="zd{{obj.id}}_1" name="zd{{ obj.id }}" onMouseDown="set_top({{ obj.id }}, 1)"  />  是
+                    <input type="radio" value="0" {% if obj.is_recommend == 0 %} checked="checked"{% endif %} id="zd{{obj.id}}_0" name="zd{{ obj.id }}" onMouseDown="set_top({{ obj.id }}, 0)" /> 否
+          </td>
+          <td><a  class="shan theme-login13">修改</a></td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div class="yema"></div>
+  </div>
+</div>
+{% endblock %}

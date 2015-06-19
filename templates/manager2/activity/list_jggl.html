@@ -1,0 +1,119 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<!--修改密码开始--> 
+<script type="text/javascript">
+$(document).ready(function($){
+    //设置导航栏选中状态
+	$("#li_nav_activity").addClass("active");
+	$("#li_nav_activity_news").addClass("active");
+	
+	//生成分页代码
+    $(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+	
+	//设置搜索关键字文本框默认字
+    set_input_default('txtSearchText', '请输入关键词');
+	
+	{% if library_id != 0 %}
+	$("#slcLibrary").val('{{ library_id }}');
+	$("#slcLibrary").change();
+	{% endif %}
+});
+
+function del_obj(id){
+	if(!confirm("您确定要删除吗？"))
+		return;
+	$.post("/activity/del_news/", {"id": id}, function(data){
+		if(data == "ok"){
+			alert("删除成功！");
+			location.reload();
+		}else{
+		     
+		}
+	});
+}
+
+//选择机构时改变活动列表
+function show_activity(){
+	var lib_id = $("#slcLibrary").val();
+	if(lib_id == ""){
+		$("#slcActivity").html("");
+	}else{
+		$.get("/activity/get_activity_by_library/", {"library_id": lib_id}, function(data){
+		 
+			var activitys = JSON.parse(data);
+			var html = "<option value='0'></option>";
+			for(var i=0; i<activitys.length; i++){
+				html += '<option value="' + activitys[i]['id'] + '" ';
+				html += '>' + activitys[i]['name'] + '</option>';
+			}
+			$("#slcActivity").empty().html(html);
+			$("#slcActivity").val("{{ activity_id }}");
+		});
+	}
+}
+
+//查询话题
+function search(page_index){
+	var search_text = $.trim($("#txtSearchText").val());
+	if(search_text == "请输入关键词")
+		$("#txtSearchText").val("");
+	$("#hdPageIndex").val(page_index);
+	$("#submit").click();
+}
+
+//查看发布过的播报货活动结果
+function view_content(id){
+	
+}
+</script> 
+{% endblock %}
+{% block content %}
+<div class="right_hua">
+    <div class="cont_right_lc">
+        <div class="cont_right_lcl">
+        	<form method="get" action="#">
+            <a class="jg theme-login13"  href="/manager2/activity/news_edit/?news_type=1">新建新闻播报</a>
+            <a class="jg theme-login13"  href="/manager2/activity/news_edit/?news_type=2">新建活动结果</a>
+            <select name="library" id="slcLibrary" onchange="show_activity()" class="xz">
+            	<option value="0"></option>
+            	{% for obj in library_list %}
+                <option value="{{ obj.id }}">{{ obj.lib_name }}</option>
+                {% endfor %}
+            </select>
+            <select name="activity" id="slcActivity" class="xz"></select>
+            <input type="text"  name="search_text" id="txtSearchText" value="{{ search_text|default:'请输入关键词' }}" class=" yl"/>
+            <input type="hidden" name="page_index" id="hdPageIndex" value="" />
+            <input type="submit" id="submit" style="display:none;"  />
+            <button class="cx" type="button" onclick="search(1)">查询</button>
+            </form>
+        </div>
+        <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+            <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+                <td width="300">主办机构</td>
+                <td width="300">名称</td>
+                <td width="100">类型</td>
+                <td width="120">所属活动</td>
+                <td width="120">创建时间</td>
+                <td width="250">操作</td>
+            </tr>
+            {% for obj in data_list %}
+            <tr>
+                <td>{{ obj.lib_name }}</td>
+                <td>{{ obj.title }}</td>
+                <td>{% if obj.news_type == 1 %}新闻播报{% else %}活动结果{% endif %}</td>
+                <td>{{ obj.activity_name }}</td>
+                <td>{{ obj.create_time }}</td>
+                <td>
+                	<a class="shan" href="/manager2/activity/news_view/?id={{ obj.id }}">查看</a>/
+                    <a class="shan" href="/manager2/activity/news_edit/?id={{ obj.id }}">修改</a>/
+                    <a class="shan" href="javascript:del_obj({{ obj.id }})">删除</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <div class="yema"></div>
+    </div>
+</div>
+
+{% endblock %} 

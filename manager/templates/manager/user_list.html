@@ -1,0 +1,215 @@
+{% extends 'manager/base.html' %}
+
+
+{% block header %}
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+<!-- Add fancyBox main JS and CSS files -->
+<script src="{% static 'fancyBox/jquery.fancybox.js' %}?v=2.1.5"></script>
+<link rel="stylesheet" href="{% static 'fancyBox/jquery.fancybox.css' %}?v=2.1.5" media="screen">
+<script>
+	$(document).ready(function(){
+		$('.fancybox').fancybox({
+			padding: 3,
+
+			openEffect : 'elastic',
+			openSpeed  : 150,
+
+			closeEffect : 'elastic',
+			closeSpeed  : 150,
+
+			closeClick : true
+		});
+		
+		{% if request.user.is_supper %}
+			update_select();
+		{% else %}
+			$("#sel_library").append("<option value='{{request.user.library_id}}'>{{request.user.library_id}}</option>");
+			$("#div_select").hide();
+			$('.selectpicker').selectpicker();
+			on_page(1);
+		{% endif %}
+	});
+	
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		
+		var display_page_count = 15;
+		var middle_page = parseInt(display_page_count/2);
+		var start_page = 1;
+		if (page_index > middle_page){
+			start_page = page_index - middle_page;
+		}
+		var end_page = start_page + display_page_count - 1;
+		if (end_page > page_count){
+			end_page = page_count;
+			start_page = page_count - display_page_count + 1;
+			if (start_page <= 0){
+				start_page = 1;
+			}
+		}
+		
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">首页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(1)\">首页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">尾页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + page_count + ")\">尾页</a></li>";
+		}
+		for (var i = start_page; i<=end_page; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		var library_id = $("#sel_library option:selected").val();
+		var search_type = $("#search_type option:selected").val();
+		var search_text = $("#search_text").val();
+		
+		$.post("/manager/user_list/", {"page_index":page_index, "library_id":library_id, "search_type":search_type, "search_text":search_text}, function(data){
+			var json_data = JSON.parse(data);
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				// if (array_list[i]["is_active"] == 1){
+					// var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td><a href='/manager/user/?id=" + array_list[i]["id"]  + "'>" + array_list[i]["username"] + "</a></td><td>";
+				// } else {
+					// var newRow = "<tr class='danger' id='tr"+ array_list[i]["id"] + "'><td><a href='/manager/user/?id=" + array_list[i]["id"]  + "'>" + array_list[i]["username"] + "</a></td><td>";
+				// }
+				if (array_list[i]["is_active"] == 1){
+					var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td>" + array_list[i]["username"] + "</a></td><td>";
+				} else {
+					var newRow = "<tr class='danger' id='tr"+ array_list[i]["id"] + "'><td>" + array_list[i]["username"] + "</a></td><td>";
+				}
+				newRow += array_list[i]["id"] + "</td><td>";
+				newRow += array_list[i]["nickname"] + "</td><td>";
+				newRow += array_list[i]["telephone"] + "</td><td>";
+				newRow += array_list[i]["qq"] + "</td><td>";
+				newRow += array_list[i]["email"] + "</td><td>";
+				if (array_list[i]["avatar_img"].length > 0){
+					newRow += "<a class='fancybox' href='" + array_list[i]["avatar_img"] + "' target='_blank'>点击查看大图</a></td><td>";
+				} else {
+					newRow += "无图</td><td>";
+				}
+				newRow += array_list[i]["date_joined"] + "</td><td>";
+				if (array_list[i]["is_active"] == 1){
+					newRow += "<button class='btn btn-danger btn-xs' onclick='change_status(this, " + array_list[i]["id"] + ", 0)'>封号</button></td></tr>";
+				} else {
+					newRow += "<button class='btn btn-success btn-xs' onclick='change_status(this, " + array_list[i]["id"] + ", 1)'>解除封号</button></td></tr>";
+				}
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+	
+	{% if request.user.is_staff %}
+	function update_select(){
+		$.post("/manager/get_library_list/", function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				$("#sel_library").append("<option value='0'>公共图书馆</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_library").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				$('.selectpicker').selectpicker();
+				on_page(1);
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	{% endif %}
+	
+	function search(){
+		on_page(1);
+	}
+	
+	function change_status(obj, uid, status){
+		if (confirm("你真的确定要执行该操作吗?") == true){
+			$.post("/manager/change_user_active/", {"uid":uid, "status":status}, function(data){
+				if (data == "ok"){
+					$("#tr"+uid).toggleClass("danger");
+					if (status == 1){
+						$(obj).html("封号");
+						$(obj).removeClass("btn-success").addClass("btn-danger");
+						$(obj).attr("onclick", "change_status(this, " + uid + ", 0)");
+					} else {
+						$(obj).html("解除封号");
+						$(obj).removeClass("btn-danger").addClass("btn-success");
+						$(obj).attr("onclick", "change_status(this, " + uid + ", 1)");
+					}
+				} else {
+					alert(data);
+				}
+			});
+		}
+	}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-3 pull-left" id="div_select">
+	    <select class="selectpicker show-menu-arrow show-tick" data-live-search="true" id="sel_library">
+		</select>
+	</div>
+	<div class="input-group col-md-1 pull-left">
+	    <select class="selectpicker show-menu-arrow show-tick" id="search_type">
+	    	<option value="1">按UID搜索</option>
+	    	<option value="2" selected>按用户名搜索</option>
+	    	<option value="3">按呢称搜索</option>
+		</select>
+	</div>
+  <div class="input-group col-md-5 pull-left">
+  <input type="text" id="search_text" name="search_text" placeholder="请输入搜索项" class="form-control">
+  <span class="input-group-btn">
+    <button class="btn btn-primary" id="btn_search" type="button" onclick="search()">
+    <span class="glyphicon glyphicon-search"></span> 点击搜索</button>
+  </span>
+  </div>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>用户名</th>
+              <th>UID</th>
+              <th>呢称</th>
+              <th>联系电话</th>
+              <th>QQ</th>
+              <th>email</th>
+              <th>个人头像</th>
+              <th>加入时间</th>
+              <th>控制</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+{% endblock %}

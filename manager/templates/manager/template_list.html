@@ -1,0 +1,525 @@
+{% extends 'manager/base.html' %}
+
+
+{% block header %}
+{% load staticfiles %}
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+{% endblock %}
+
+{% block footer %}
+<!-- Add fancyBox main JS and CSS files -->
+<script src="{% static 'fancyBox/jquery.fancybox.js' %}?v=2.1.5"></script>
+<link rel="stylesheet" href="{% static 'fancyBox/jquery.fancybox.css' %}?v=2.1.5" media="screen">
+
+<style>
+.fileinput-button {
+  position: relative;
+  overflow: hidden;
+}
+.fileinput-button input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  opacity: 0;
+  filter: alpha(opacit
+  y=0);
+  transform: translate(-300px, 0) scale(4);
+  font-size: 23px;
+  direction: ltr;
+  cursor: pointer;
+}
+</style>
+
+<script>
+	var old_class_id = "";
+	$(document).ready(function(){
+		$('.fancybox').fancybox({
+			padding: 3,
+
+			openEffect : 'elastic',
+			openSpeed  : 150,
+
+			closeEffect : 'elastic',
+			closeSpeed  : 150,
+
+			closeClick : true
+		});
+		
+		{% if request.user.is_staff %}
+			update_select();
+		{% else %}
+			$("#sel_library").append("<option value='{{request.user.library_id}}'>{{request.user.library_id}}</option>");
+			$("#div_select").hide();
+			$('.selectpicker').selectpicker();
+			$('.selectpicker').selectpicker('refresh');
+			on_page(1);
+		{% endif %}
+		
+		init_opus_type();
+		init_size_list();
+	});
+	
+	function init_size_list(){
+		$.post("/manager/page_size_list/", function(data){
+			var json_data = JSON.parse(data).data;
+			$("#sel_size").append("<option value='0'>请选择作品版面类型</option>");
+			for (var i=0; i<json_data.length; i++){
+				$("#sel_size").append("<option value='" + json_data[i]["id"] + "'>" + json_data[i]["nickname"] + "</option>");
+			}
+			$('.selectpicker').selectpicker();
+			$('.selectpicker').selectpicker('refresh');
+		});
+	}
+	
+	function init_opus_type(){
+		$.post("/manager/get_opus_type_list/", function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				$("#sel_1st").append("<option value='0'>请选择作品分类</option>");
+				$("#sel_1st2").append("<option value='0'>请选择作品分类</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_1st").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+					$("#sel_1st2").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				$('.selectpicker').selectpicker();
+				$('.selectpicker').selectpicker('refresh');
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	function update_2nd(){
+		document.getElementById("sel_2nd").options.length = 0;
+		$("#sel_2nd").append("<option value='0'>请选择作品分类</option>");
+		var parent_id = $("#sel_1st").val();
+		if (parent_id == "0"){
+			$('.selectpicker').selectpicker('refresh');
+			return;
+		}
+		$.post("/manager/get_opus_type_list/", {"id":parent_id}, function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_2nd").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				$('.selectpicker').selectpicker('refresh');
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	function update_2nd2(){
+		document.getElementById("sel_2nd2").options.length = 0;
+		$("#sel_2nd2").append("<option value='0'>请选择作品分类</option>");
+		var parent_id = $("#sel_1st2").val();
+		if (parent_id == "0"){
+			$('.selectpicker').selectpicker('refresh');
+			return;
+		}
+		$.post("/manager/get_opus_type_list/", {"id":parent_id}, function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_2nd2").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				if (old_class_id.length>0){
+					$("#sel_2nd2").val(old_class_id);
+				}
+				$('.selectpicker').selectpicker('refresh');
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">上一页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index - 1) + ")\">上一页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">下一页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index + 1) + ")\">下一页</a></li>";
+		}
+		for (var i = 1; i <= page_count; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		var library_id = $("#sel_library option:selected").val();
+		var search_text = $("#search_text").val();
+		var type_id = $("#sel_1st option:selected").val();
+		var class_id = $("#sel_2nd option:selected").val();
+		$.post("/manager/template_list/", {"page_index":page_index, "library_id":library_id, "search_text":search_text, "type_id":type_id, "class_id":class_id}, function(data){
+			try{
+				var json_data = JSON.parse(data);
+			} catch (exception){
+				window.location.reload();
+			}
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td><a href='#' onclick='update_templaet(" + array_list[i]["id"]  + ")'>" + array_list[i]["title"] + "</a></td><td>";
+				newRow += "<a href='/manager/template/?id=" + array_list[i]["id"]  + "'>共" + array_list[i]["page_count"] + "页</a></td><td>";
+				newRow += array_list[i]["ref_times"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["type_id"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["class_id"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["res_path"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["size_id"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["create_type"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["read_type"] + "</td><td>";
+				newRow += array_list[i]["type_name"] + "</td><td>";
+				newRow += array_list[i]["class_name"] + "</td><td>";
+				newRow += array_list[i]["width"] + "</td><td>";
+				newRow += array_list[i]["height"] + "</td><td>";
+				newRow += array_list[i]["create_name"] + "</td><td>";
+				newRow += array_list[i]["read_name"] + "</td><td>";
+				newRow += "<a class='fancybox' href='" + array_list[i]["url"] + "' target='_blank'>点击查看</a></td><td>";
+				newRow += "<button class='btn btn-warning btn-xs' onclick='delete_asset(" + array_list[i]["id"] + ")'>点击删除</button></td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+	
+	{% if request.user.is_staff %}
+	function update_select(){
+		$.post("/manager/get_library_list/", function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				$("#sel_library").append("<option value='0'>公共图书馆</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_library").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				$('.selectpicker').selectpicker();
+				on_page(1);
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	{% endif %}
+	
+	function search(){
+		on_page(1);
+	}
+	
+	function delete_asset(asset_id){
+		if (confirm("你真的确定要删除吗?") == true){
+			$.post("/manager/delete_asset/", {"id":asset_id}, function(data){
+				if (data == "ok"){
+					$("#tr"+asset_id).hide();
+				} else {
+					alert(data);
+				}
+			});
+		}
+	}
+	
+	function new_template(){
+		$("#hid_id").val("0");
+		$("#title").val("");
+		$("#hid_res_path").val("");
+		$("#sel_1st2").val("0");
+		$("#sel_1st2").change();
+		$("#sel_size").val("0");
+		$('.selectpicker').selectpicker('refresh');
+		old_class_id = "";
+		$("#a_ajax_img").hide();
+		$("#myModal").modal("show");
+	}
+	
+	function update_templaet(id){
+		var type_id = $("#sel_1st2").val();
+		var class_id = $("#sel_2nd2").val();
+		var hid_res_path = $("#hid_res_path").val();
+		
+		var size_id = $("#sel_size").val();
+		var rdo_create = $("input[name=rdo_create]:checked").val();
+		var rdo_read = $("input[name=rdo_read]:checked").val();
+		
+		var td_list = $("#tr"+id).find('td');
+		$("#hid_id").val(id);
+		$("#title").val($(td_list[0]).find('a').html());
+		$("#sel_1st2").val(td_list[3].innerHTML);
+		$("#sel_1st2").change();
+		old_class_id = td_list[4].innerHTML;
+		$("#sel_2nd2").val(old_class_id);
+		$("#hid_res_path").val(td_list[5].innerHTML);
+		$("#sel_size").val(td_list[6].innerHTML);
+		
+		if (td_list[7].innerHTML == "1"){
+			document.getElementById("rdo1").checked = true;
+			document.getElementById("rdo2").checked = false;
+		} else {
+			document.getElementById("rdo1").checked = false;
+			document.getElementById("rdo2").checked = true;
+		}
+		if (td_list[8].innerHTML == "1"){
+			document.getElementById("rdo11").checked = true;
+			document.getElementById("rdo22").checked = false;
+		} else {
+			document.getElementById("rdo11").checked = false;
+			document.getElementById("rdo22").checked = true;
+		}
+		$('.selectpicker').selectpicker('refresh');
+		$("#a_ajax_img").attr("href", $(td_list[15]).find('a').attr('href'));
+		$("#a_ajax_img").show();
+
+		$("#btn_submit").attr("disabled",false);
+		$("#myModal").modal("show");
+	}
+	
+	function check_img(obj){
+		var filename = obj.value;
+		//检查文件类型
+		var exName = filename.substr(filename.lastIndexOf(".")+1).toUpperCase()    
+		if(exName=="JPG"||exName=="JPEG"||exName=="PNG"||exName=="BMP"||exName=="GIF"||exName=="SWF"){
+			//ajax 上传图片
+			upload_image();
+		} else {
+			alert("只能上传图片文件(*.jpg|*.jpeg|*.png|*.bmp|*.gif|*.swf)");
+		}
+	}
+	
+	function upload_image(){
+		$("#loading").show();
+		$.ajaxFileUpload({
+			url:"/manager/ajax_upload_img/",
+			secureuri:false,
+			fileElementId:"asset_file",
+			dataType: 'text',
+			success: function (data, status){
+				var json_data = JSON.parse(data); 
+				if (json_data.code == 1){
+					$("#a_ajax_img").attr("href", "/media/" + json_data.data.path);
+					$("#a_ajax_img").show();
+					$("#hid_res_path").val(json_data.data.path);
+					if ($("#title").val().length == 0){
+						$("#title").val(json_data.data.filename);
+					}
+					update_status();
+				} else {
+					alert(json_data.data);
+				}
+				$("#loading").hide();
+			},
+			error: function (data, status, e)
+			{
+				alert(e);
+				$("#loading").hide();
+			}
+		});
+	}
+	
+	function update_status(){
+		var title = $("#title").val();
+		var type_id = $("#sel_1st2").val();
+		var class_id = $("#sel_2nd2").val();
+		var hid_res_path = $("#hid_res_path").val();
+		
+		var size_id = $("#sel_size").val();
+		
+		if (size_id != "0" && type_id != "0" && class_id != "0" && title.length>0 && hid_res_path.length>0){
+			$("#btn_submit").attr("disabled",false);
+		} else {
+			$("#btn_submit").attr("disabled",true);
+		}
+	}
+	
+	function submit_page_size(){
+		var hid_id = $("#hid_id").val();
+		var title = $("#title").val();
+		var type_id = $("#sel_1st2").val();
+		var class_id = $("#sel_2nd2").val();
+		var hid_res_path = $("#hid_res_path").val();
+		
+		var size_id = $("#sel_size").val();
+		var rdo_create = $("input[name=rdo_create]:checked").val();
+		var rdo_read = $("input[name=rdo_read]:checked").val();
+		
+		var dict_data = {"hid_id":hid_id,"title":title,"type_id":type_id,"class_id":class_id,"hid_res_path":hid_res_path};
+		dict_data["size_id"] = size_id;
+		dict_data["rdo_create"] = rdo_create;
+		dict_data["rdo_read"] = rdo_read;
+		$.post("/manager/template_asset/", dict_data, function(data){
+			if (data=="ok"){
+				window.location.reload();
+			} else {
+				alert(data);
+			}
+		});
+	}
+</script>
+{% endblock %}
+
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-1 pull-left">
+		<button class="btn btn-danger" onclick="new_template()">新增模板</button>
+	</div>
+	<div class="input-group col-md-3 pull-left" id="div_select">
+	    <select class="selectpicker show-menu-arrow show-tick" data-live-search="true" id="sel_library">
+		</select>
+	</div>
+	<div class="input-group col-md-1 pull-left">
+	    <select class="selectpicker" id="sel_1st" onchange="update_2nd()"></select>
+	    <select class="selectpicker" id="sel_2nd">
+			<option value='0'>请选择作品分类</option>
+		</select>
+	</div>
+  <div class="input-group col-md-4 pull-left">
+  <input type="text" id="search_text" name="search_text" placeholder="请输入标题进行搜索" class="form-control">
+  <span class="input-group-btn">
+    <button class="btn btn-primary" id="btn_search" type="button" onclick="search()">
+    <span class="glyphicon glyphicon-search"></span> 点击搜索</button>
+  </span>
+  </div>
+</div>
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>标题</th>
+              <th>总页数</th>
+              <th>引用次数</th>
+              <th>类型</th>
+              <th>子类型</th>
+              <th>宽</th>
+              <th>高</th>
+              <th>创建</th>
+              <th>阅读</th>
+              <th>模板封面</th>
+              <th>删除</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">模板信息管理</h4>
+      </div>
+      <div class="modal-body">
+      	<form class="form-horizontal" >
+      		<input type="hidden" value="0" id="hid_id" />
+			<div class="form-group" id="form_district">
+				<label class="col-md-3 control-label">模板标题：</label>
+				<div class="col-md-9 pull-left">
+					<input type="text" class="form-control" id="title" style="width:260px" onblur="update_status()"/>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_contact">
+				<label class="col-md-3 control-label">作品类型：</label>
+				<div class="col-md-9 pull-left">
+					<div class="input-group col-md-3 pull-left">
+						<select class="selectpicker" id="sel_1st2" onchange="update_2nd2()"></select>
+					</div>
+					<div class="input-group col-md-3 pull-left">
+						<select class="selectpicker" id="sel_2nd2" onchange="update_status()">
+							<option value='0'>请选择作品分类</option>
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-md-3 control-label">文件：</label>
+				<input type="hidden" value="" id="hid_res_path" name="hid_res_path" />
+				<div class="col-md-6">
+					<span class="btn btn-primary fileinput-button">
+		                <i class="icon-plus icon-white"></i>
+		                <span>上传资源图片...</span>
+		                <input class="input-file" type="file" id="asset_file" name="asset_file" accept="image/*" onchange="check_img(this)">
+		            </span>
+		            <img id="loading" src="{% static 'images/loading.gif' %}" style="display:none;">
+		            <div class="btn-group">
+						<a class="fancybox btn btn-success" id="a_ajax_img" style="{% if not asset %}display: none{% endif %}" href="{% if asset %}{{MEDIA_URL}}{{ asset.res_path}}{% endif %}" target="_blank" ><span class="glyphicon glyphicon-picture"></span> 点击查看</a>
+					</div>
+				</div>
+			</div>
+			<div class="form-group" id="form_create">
+				<label class="col-md-3 control-label">模板尺寸：</label>
+					<div class="col-md-3 form-inline">
+						<select class="selectpicker" id="sel_size" onchange="update_status()"></select>
+					</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_read">
+				<label class="col-md-3 control-label">创作显示：</label>
+				<div class="col-md-3 form-inline">
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="rdo_create" id="rdo1" value="1" checked="checked">
+							单页</label>
+					</div>
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="rdo_create" id="rdo2" value="2">
+							双页</label>
+					</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_read">
+				<label class="col-md-3 control-label">阅读显示：</label>
+				<div class="col-md-3 form-inline">
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="rdo_read" id="rdo11" value="1" checked="checked">
+							单页</label>
+					</div>
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="rdo_read" id="rdo22" value="2">
+							双页</label>
+					</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+		</form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal">关闭</button>
+        <button class="btn btn-primary" id="btn_submit" onclick="submit_page_size()" disabled="disabled">确认提交</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+{% endblock %}

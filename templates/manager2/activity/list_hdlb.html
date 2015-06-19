@@ -1,0 +1,458 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+{% load staticfiles %} 
+<!--导入ajax文件上传的资源--> 
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<style type="text/css">
+#series_content{ margin:10px; height:130px; overflow:auto;}
+#series_content li{
+	float:left;
+}
+</style>
+<script type="text/javascript">
+$(function(){
+	//生成分页代码
+    $(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+
+	//设置搜索关键字文本框默认字
+    set_input_default('txtSearchText', '请输入活动名称');
+	
+	//设置导航栏选中状态
+	$("#li_nav_activity").addClass("active");
+	$("#li_nav_activity_list").addClass("active");
+    
+	//系列活动封面图上传
+	$("#fileSeriesCoverImg").change(function(){
+        check_img(document.getElementById('fileSeriesCoverImg'), ['JPG', 'JPEG', 'PNG', 'BMP'], 'hdSeriesCover', 'ajax_img_series_cover', 'loadingSeriesCoverImg');
+	});
+	 
+
+	$('.theme-login16').click(function(){
+		$('.theme-popover16').slideDown(200);
+	})
+	
+	$("#slcLibrary").val("{{ library_id }}");
+	$("#slcPlaceType").val("{{ place_type }}");
+	$("#slcStatus").val("{{ search_status }}");
+	
+    // 显示系列活动列表
+	show_series_list();
+	
+	//切换机构
+	$("#slcLibrary").change(function(){
+		$("#txtSearchText").val("");
+		$("#hdLibrary").val(this.value);
+		search(1);
+	});
+	
+	//切换活动方式
+	$("#slcPlaceType").change(function(){
+		$("#txtSearchText").val("");
+		$("#hdPlace").val(this.value);
+		search(1);
+	});
+	
+	//切换活动状态
+	$("#slcStatus").change(function(){
+		$("#txtSearchText").val("");
+		$("#hdStatus").val(this.value);
+		search(1);
+	});
+	
+	//切换系列活动
+	$("#slcSeries").change(function(){
+		$("#txtSearchText").val("");
+		$("#hdSeriesId").val(this.value);
+		search(1);
+	});
+	
+	//切换作品类型
+	$("#slcFruitType").change(function(){
+		$("#txtSearchText").val("");
+		$("#hdFruitType").val(this.value);
+		search(1);
+	});
+	
+});
+
+//设置form表单中的页码
+function search(page_index){
+    $("#hdPageIndex").val(page_index);
+	$("#txtSearchText").val($("#txtSearchText").val().replace("请输入活动名称", ""));
+	$("#submit").click();	
+}
+
+//设置活动推荐状态
+//id: 活动id
+//status: 置顶状态。0为不置顶。1为置顶 
+function set_top(){
+	var id = $("#hdActivityTop").val();
+	var ele_id = "rdoTj_1_" + id;
+	var status = $("input[name=top_index]:checked").val();
+	$.post('/activity/update_activity_top/', {'id': id, 'status': status}, function(data){
+		if(data == 'fail'){
+			alert('操作失败。请与管理员联系。');
+		}else if(data == 'ok'){
+		 
+			//$("#" + ele_id).attr("checked", true);
+			location.reload();
+		}
+	});
+}
+
+//取消活动的置顶状态
+function cancel_top(id){
+	var ele_id = "rdoTj_0_" + id;
+	if($("#" + ele_id).attr("checked") == "checked")
+		return false;
+	$.post('/activity/update_activity_top/', {'id': id, 'status': 0}, function(data){
+		if(data == 'fail'){
+			alert('操作失败。请与管理员联系。');
+		}else if(data == 'ok'){
+			$("#" + ele_id).attr("checked", true);
+		}
+	});
+}
+
+
+//删除活动
+function del_activity(id){
+	if(!confirm("您确定要删除活动么？"))
+		return false;
+	$.post("/activity/delete_activity/", {"id": id}, function(data){
+		if(data == "ok"){
+			alert("删除成功！");
+			location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+
+
+//显示选择系列活动的弹窗
+function show_select_series(id){
+	$("#hdActivityId").val(id);
+	$('.theme-popover-mask').show();
+	$('.theme-popover-mask').height($(document).height());
+	$('.theme-popover15').slideDown(200);
+}
+
+
+//隐藏选择系列活动的弹窗
+function hide_select_series(){
+	$("#hdActivityId").val("");
+	$('.theme-popover-mask').hide();
+	$('.theme-popover15').slideUp(200);	
+}
+
+//初始化系列选择列表
+function show_series_list(){
+	$.get("/activity/activity_series_list/", function(data){
+		var data_list = JSON.parse(data);
+		var html = "";
+		for(var i=0; i<data_list.length; i++){
+			html += "<li>";
+			html += '<input type="radio" value="' + data_list[i]['id'] + '" name="series_list" id="series_list_' + data_list[i]['id'] + '" class="fx" />';
+			html += '<label for="series_list_' + data_list[i]['id'] +'">' + data_list[i]['title'] + '</label>';
+			html += "</li>";
+		}
+		$("#series_content").empty().html(html);
+	});
+}
+
+
+//点击系列活动
+function query_series(id){
+	$("#hdSeriesId").val(id);
+	search(1);
+}
+
+//转换系列活动
+function change_series(){
+	var activity_id = $("#hdActivityId").val();
+	if(activity_id == ""){
+		alert("参数错误！");
+		return;
+	}
+	if($("input[name=series_list]:checked").length == 0){
+		alert("未选择系列活动！");
+		return;
+	}
+	var series_id = $("input[name=series_list]:checked").val()
+	$.post("/activity/change_activity_series/", {"id": activity_id, 'series_id': series_id}, function(data){
+		if(data == "ok"){
+			alert("转换成功！");
+			location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+
+
+//编辑系列活动
+function edit_series(){
+	var title = $.trim($("#txtSeriesTitle").val()).replace('请输入系列活动名称', '');
+	if(title == ""){
+		alert("标题不能为空！");
+		return;
+	}
+	var origin_path = $("#hdSeriesCover").val();
+	if(origin_path == ""){
+		alert("封面图不能为空！");
+		return;
+	}
+    $.post("/activity/activity_series_edit/", {"title": title, "origin_path": origin_path}, function(data){
+		if(data == "ok"){
+			alert("添加成功！");
+			show_series_list();
+			close_edit_series();
+			
+		}else{
+			alert(data);
+		}
+	});
+	
+}
+
+//关闭活动系列编辑窗口
+function close_edit_series(){
+	$('.theme-popover-mask').hide();
+	$('.theme-popover16').slideUp(200);
+	$("#txtSeriesTitle").val("");
+	$("#ajax_img_series_cover").hide();
+	$("#ajax_img_series_cover").attr("href", "");
+}
+
+//显示活动排序设置窗口
+function show_top_index(id, top_index){
+	$("#hdActivityTop").val(id);
+	$("input[name=top_index]").removeAttr("checked");
+	$("input[name=top_index][value=" + top_index + "]").attr("checked", "checked");
+	$('.theme-popover-mask').show();
+	$('.theme-popover-mask').height($(document).height());
+	$('.theme-popover27').slideDown(200);
+}
+
+//隐藏活动排序设置窗口
+function hide_top_index(){
+	$("input[name=top_index]").removeAttr("checked");
+	$('.theme-popover-mask').hide();
+	$('.theme-popover27').slideUp(200);	
+}
+
+
+</script> 
+
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+  <div class="cont_right_lc">
+    <div class="cont_right_lcl">
+      <form method="get" action="#">
+        <a class="jg" href="/manager2/activity/edit_step_1/">创建活动</a>
+        <input type="hidden" id="hdLibrary" name="library" value="{{ library_id }}" />
+        <input type="hidden" id="hdPlace" name="place_type" value="{{ place_type }}" />
+        <input type="hidden" id="hdStatus" name="activity_status" value="{{ search_status }}" />
+        <input type="text" value="{{ search_text|default:'请输入活动名称' }}" name="search_text" id="txtSearchText" class=" yl"/>
+        <input class="cx" type="button" value="搜索" onclick="search(1)" />
+        <input class="cx" type="submit" id="submit" style="display:none" />
+        <input type="hidden" name="page_index" value="1" id="hdPageIndex" />
+        <input type="hidden" name="series_id" value="{{ series_id }}" id="hdSeriesId" />
+        <input type="hidden" name="fruit_type" value="{{ fruit_type }}" id="hdFruitType" />
+      </form>
+    </div>
+    <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+      <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+        <td width="300">活动名称</td>
+        <td width="300"><select id="slcLibrary" class="lei">
+            <option value="">全部机构</option>
+            
+                        {% for obj in library_list %}
+                        
+            <option value="{{ obj.id }}" {% if library_id == obj.id %} selected="selected"{% endif %}>
+            {{ obj.lib_name }}
+            </option>
+            
+                        {% endfor %}
+                    
+          </select></td>
+        <td width="250"><select class="lei" id="slcSeries">
+            <option value="">系列活动</option>
+            
+                        {% for obj in series_list %}
+                        
+            <option value="{{ obj.id }}" {% if series_id == obj.id %} selected="selected"{% endif %}>
+            {{ obj.title }}
+            </option>
+            
+                        {% endfor %}
+                    
+          </select></td>
+        <td width="250"><select class="lei" id="slcPlaceType">
+            <option value="" selected="selected">活动方式</option>
+            <option value="net" {% if place_type == 'net' %} selected="selected"{% endif %}>
+            网络活动
+            </option>
+            <option value="place" {% if place_type == 'place' %} selected="selected"{% endif %}>
+            现场活动
+            </option>
+          </select></td>
+        <td width="120"><select class="lei" id="slcStatus">
+            <option value="">活动状态</option>
+            <option value="0">预告中</option>
+            <option value="1">进行中</option>
+            <option value="2">已结束</option>
+          </select></td>
+        <td><select class="lei" id="slcFruitType">
+            <option value="">作品类型</option>
+            
+                         {% for obj in type_list %}
+                         
+            <option value="{{ obj.0 }}" {% if fruit_type == obj.0 %} selected="selected"{% endif %}>
+            {{ obj.1 }}
+            </option>
+            
+                         {% endfor %}
+                    
+          </select></td>
+        <td width="120">报名人数</td>
+        <td width="120">参加人数</td>
+        <td width="250">推荐</td>
+        <td width="250">操作</td>
+      </tr>
+      {% for obj in data_list %}
+      <tr>
+        <td><a href="/manager2/activity/info/?id={{ obj.id }}">{{ obj.title }}</a></td>
+        <td>{{ obj.lib_name }}</td>
+        <td>{% if obj.series_id == 0 %}专题活动{% else %}<a class="shan theme-login13" href="javascript:query_series({{ obj.series_id }});">{{ obj.series_title }}</a>{% endif %}</td>
+        <td>{% if obj.place_type == 'net' %}网络{% else %}现场{% endif %}</td>
+        <td>{% if obj.status == -1 %}已删除{% endif %}{% if obj.status == 0 %}预告中{% endif %}{% if obj.status == 1 %}进行中{% endif %}{% if obj.status == 2 %}已结束{% endif %} </td>
+        <td> {% if obj.fruit_type == 0 %}未知类型{% endif %}
+          {% if obj.fruit_type == 1 %}新闻播报{% endif %}
+          {% if obj.fruit_type == 2 %}个人创作{% endif %}
+          {% if obj.fruit_type == 3 %}图片{% endif %}
+          {% if obj.fruit_type == 4 %}视频{% endif %}
+          {% if obj.fruit_type == 5 %}特殊{% endif %}
+          {% if obj.fruit_type == 6 %}音乐{% endif %} </td>
+        <td><a href="/manager2/activity/sign_up_member_list/?id={{ obj.id }}">{{ obj.sign_up_member_count }}</a></td>
+        <td><a href="/manager2/activity/join_member_list/?id={{ obj.id }}">{{ obj.join_member_count }}</a></td>
+        <td><input id="rdoTj_1_{{ obj.id }}" type="radio" {% if obj.is_top != 0 %} checked="checked"{% endif %} name="tj_{{ obj.id }}" onmousedown="show_top_index({{ obj.id }}, {{ obj.is_top }})"/>
+          <label for="rdoTj_1_{{ obj.id }}">是</label>
+          <input id="rdoTj_0_{{ obj.id }}" type="radio" {% if obj.is_top == 0 %} checked="checked"{% endif %} name="tj_{{ obj.id }}" onmousedown="cancel_top({{ obj.id }})"/>
+          <label for="rdoTj_0_{{ obj.id }}">否</label></td>
+        <td><a class="shan" href="/manager2/activity/edit_step_1/?id={{ obj.id }}">修改</a>/<a href="javascript:del_activity({{ obj.id }})" class="shan">删除</a>{% if obj.series_id == 0 %}/<a class="shan theme-login15" href="javascript:show_select_series({{ obj.id }});">转为系列活动</a>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div class="yema"></div>
+  </div>
+</div>
+
+<!--新建系列活动开始-->
+<div class="theme-popover16">
+  <div class="theme-poptit16"> <a href="javascript:close_edit_series();" title="关闭" class="close">×</a>
+    <h3></h3>
+  </div>
+  <div class="theme-popbod16 dform">
+    <table cellpadding="0" cellspacing="10" class="xinxi1">
+      <tr>
+        <td style=" text-align:right;"> 系列活动名称：</td>
+        <td style=" text-align:left;"><input type="text" class="icx" id="txtSeriesTitle" value="" /></td>
+      </tr>
+      <tr>
+        <td style=" text-align:right;">封面：</td>
+        <td style=" text-align:left;"><input type="file" accept="image/*" id="fileSeriesCoverImg" name="origin" style="display: none;" />
+          <button class="jg" type="button" onclick="javascript:$('#fileSeriesCoverImg').click()">上传+</button>
+          <a id="ajax_img_series_cover" style="display:none;" class="shan" target="_blank">查看</a> <img id="loadingSeriesCoverImg" src="{% static 'images/loading.gif' %}" style="display:none;">
+          <input id="hdSeriesCover" type="hidden" value="" /></td>
+      </tr>
+    </table>
+    <input class="btn btn-primary que" type="button" onclick="edit_series()" value=" 确定 " />
+    <input class="btn btn-primary qux" type="button" onclick="close_edit_series()" value=" 取消 " />
+  </div>
+</div>
+<!--新建系列活动结束结束--> 
+<!--系列活动选择开始-->
+<div class="theme-popover-mask"></div>
+<div class="theme-popover15">
+  <div class="theme-poptit15"> <a href="javascript:hide_select_series();" title="关闭" class="close">×</a>
+    <h3></h3>
+  </div>
+  <div class="theme-popbod15 dform">
+    <ul id="series_content">
+    </ul>
+    <a class="btn btn-primary que theme-login16"  href="javascript:;">新建</a>
+    <input type="hidden" id="hdActivityId" />
+    <input class="btn btn-primary que" type="button" onclick="change_series()" name="submit" value=" 确定 " />
+    <input class="btn btn-primary qux" type="button" onclick="hide_select_series()" name="submit" value=" 取消 " />
+  </div>
+</div>
+<!--系列活动选择结束--> 
+
+<!--修改位置开始-->
+<div class="theme-popover-mask"></div>
+<div class="theme-popover27">
+  <div class="theme-poptit27"> <a href="javascript:hide_top_index();" title="关闭" class="close">×</a>
+    <h3></h3>
+  </div>
+  <div class="theme-popbod dform">
+    <form class="theme-signin27"  name="loginform" action="" method="post">
+      <div class="xuze"><span>
+      	<input type="hidden" id="hdActivityTop"  />
+        <input type="radio" value="1" name="top_index" />
+        1</span><span>
+        <input type="radio" value="2" name="top_index" />
+        2</span><span>
+        <input type="radio" value="3" name="top_index" />
+        3</span><span>
+        <input type="radio" value="4" name="top_index" />
+        4</span><span>
+        <input type="radio" value="5" name="top_index" />
+        5</span><span>
+        <input type="radio" value="6" name="top_index" />
+        6</span><span>
+        <input type="radio" value="7" name="top_index" />
+        7</span><span>
+        <input type="radio" value="8" name="top_index" />
+        8</span><span>
+        <input type="radio" value="9" name="top_index" />
+        9</span><span>
+        <input type="radio" value="10" name="top_index" />
+        10</span><span>
+        <input type="radio" value="11" name="top_index" />
+        11</span><span>
+        <input type="radio" value="12" name="top_index" />
+        12</span><span>
+        <input type="radio" value="13" name="top_index" />
+        13</span><span>
+        <input type="radio" value="14" name="top_index" />
+        14</span><span>
+        <input type="radio" value="15" name="top_index" />
+        15</span><span>
+        <input type="radio" value="16" name="top_index" />
+        16</span><span>
+        <input type="radio" value="17" name="top_index" />
+        17</span><span>
+        <input type="radio" value="18" name="top_index" />
+        18</span><span>
+        <input type="radio" value="19" name="top_index" />
+        19</span><span>
+        <input type="radio" value="20" name="top_index" />
+        20</span><span>
+        <input type="radio" value="21" name="top_index" />
+        21</span> </div>
+      <div class="anniu">
+        <input class="btn btn-primary que" type="button" onclick="set_top()" value=" 确定 " />
+        <input class="btn btn-primary qux" type="button" onclick="hide_top_index()" value=" 取消 " />
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+<!--修改位置结束--> 
+
+{% endblock %} 

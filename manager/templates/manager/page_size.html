@@ -1,0 +1,458 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% load staticfiles %}
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+{% endblock %}
+
+{% block footer %}
+<!-- Add fancyBox main JS and CSS files -->
+<script src="{% static 'fancyBox/jquery.fancybox.js' %}?v=2.1.5"></script>
+<link rel="stylesheet" href="{% static 'fancyBox/jquery.fancybox.css' %}?v=2.1.5" media="screen">
+
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+<style>
+.bootstrap-select { width:272px; }
+
+.fileinput-button {
+  position: relative;
+  overflow: hidden;
+}
+.fileinput-button input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  opacity: 0;
+  filter: alpha(opacit
+  y=0);
+  transform: translate(-300px, 0) scale(4);
+  font-size: 23px;
+  direction: ltr;
+  cursor: pointer;
+}
+</style>
+
+<script>
+	var old_classify_id = "";
+	
+	$(document).ready(function(){
+		on_page(1);
+		$('.fancybox').fancybox({
+			padding: 3,
+
+			openEffect : 'elastic',
+			openSpeed  : 150,
+
+			closeEffect : 'elastic',
+			closeSpeed  : 150,
+
+			closeClick : true
+		});
+	});
+	
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">上一页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index - 1) + ")\">上一页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">下一页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index + 1) + ")\">下一页</a></li>";
+		}
+		for (var i = 1; i <= page_count; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		var search_text = $("#search_text").val();
+		$.post("/manager/page_size_list/", {"page_index":page_index, "search_text":search_text}, function(data){
+			var json_data = JSON.parse(data);
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr id='tr"+ array_list[i]["id"] + "'><td><a href='#' onclick='update_page_size(" + array_list[i]["id"] + ")'>" + array_list[i]["name"] + "</a></td><td>";
+				newRow += array_list[i]["create_type"] + "</td><td>";
+				newRow += array_list[i]["read_type"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["create_type_id"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["read_type_id"] + "</td><td>";
+				newRow += array_list[i]["screen_width"] + "</td><td>";
+				newRow += array_list[i]["screen_height"] + "</td><td>";
+				newRow += array_list[i]["print_width"] + "</td><td>";
+				newRow += array_list[i]["print_height"] + "</td><td>";
+				newRow += array_list[i]["origin_width"] + "</td><td>";
+				newRow += array_list[i]["origin_height"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["res_path"] + "</td><td>";
+				if (array_list[i]["img_small_path"].length>0){
+					newRow += "<a class='fancybox' href='" + array_list[i]["img_small_path"] + "' target='_blank'>点击查看</a></td></tr>";
+				} else {
+					newRow += "无图</td></tr>";
+				}
+				//newRow += "<button class='btn btn-warning btn-xs' onclick='delete_opus_size(" + array_list[i]["id"] + ")'>点击删除</button></td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+	
+	
+	function submit_size(){
+		var hid_id = $("#hid_id").val();
+		var name = $("#name").val();
+		var screen_w = parseInt($("#screen_w").val());
+		var screen_h = parseInt($("#screen_h").val());
+		var print_w = parseFloat($("#print_w").val());
+		var print_h = parseFloat($("#print_h").val());
+		var origin_w = parseInt($("#origin_w").val());
+		var origin_h = parseInt($("#origin_h").val());
+		
+		var cho_create = $("input[name=cho_create]:checked").val();
+		var cho_read = $("input[name=cho_read]:checked").val();
+		var hid_res_path = $("#hid_res_path").val();
+		
+		$.post("/manager/page_size/", {"hid_id":hid_id, "name":name, "screen_w":screen_w,"screen_h":screen_h,"print_w":print_w, "print_h":print_h,"origin_w":origin_w,"origin_h":origin_h,"cho_create":cho_create,"cho_read":cho_read,"hid_res_path":hid_res_path}, function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				alert(json_data.data);
+				window.location.reload();
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function update_status(){
+		try{
+			var name = $("#name").val();
+			var screen_w = parseInt($("#screen_w").val());
+			var screen_h = parseInt($("#screen_h").val());
+			var print_w = parseFloat($("#print_w").val());
+			var print_h = parseFloat($("#print_h").val());
+			var origin_w = parseInt($("#origin_w").val());
+			var origin_h = parseInt($("#origin_h").val());
+			
+			var cho_create = $("input[name=cho_create]:checked").val();
+			var cho_read = $("input[name=cho_read]:checked").val();
+		
+			var hid_res_path = $("#hid_res_path").val();
+			
+			if (cho_create > 0 && cho_read > 0 && hid_res_path.length>0){
+				$("#btn_submit").attr("disabled",false);
+			} else {
+				$("#btn_submit").attr("disabled",true);
+			}
+		} catch (expection){
+			$("#btn_submit").attr("disabled",true);
+		}
+	}
+	
+	function new_page_size(){
+		$("#hid_id").val("0");
+		$("#name").val("测试版面");
+		$("#screen_w").val("");
+		$("#screen_h").val("");
+		$("#print_w").val("");
+		$("#print_h").val("");
+		$("#origin_w").val("");
+		$("#origin_h").val("");
+		document.getElementById("cho1").checked = false;
+		document.getElementById("cho2").checked = false;
+		document.getElementById("cho11").checked = false;
+		document.getElementById("cho22").checked = false;
+		
+		$("#btn_submit").attr("disabled",true);
+		$("#a_ajax_img").attr("href", "");
+		$("#a_ajax_img").hide();
+			
+		$("#myModal").modal("show");
+	}
+	
+	function update_page_size(id){
+		$("#hid_id").val(id);
+		
+		var td_list = $("#tr"+id).find('td');
+		$("#name").val($(td_list[0]).find('a').html());
+		$("#screen_w").val(td_list[5].innerHTML);
+		$("#screen_h").val(td_list[6].innerHTML);
+		$("#print_w").val(td_list[7].innerHTML);
+		$("#print_h").val(td_list[8].innerHTML);
+		$("#origin_w").val(td_list[9].innerHTML);
+		$("#origin_h").val(td_list[10].innerHTML);
+		$("#hid_res_path").val(td_list[11].innerHTML);
+		if (td_list[12].innerHTML != "无图"){
+			$("#btn_submit").attr("disabled",false);
+			$("#a_ajax_img").attr("href", $(td_list[12]).find('a').attr('href'));
+			$("#a_ajax_img").show();
+		} else {
+			$("#btn_submit").attr("disabled",true);
+			$("#a_ajax_img").attr("href", "");
+			$("#a_ajax_img").hide();
+		}
+		
+		if (td_list[3].innerHTML == "1"){
+			document.getElementById("cho1").checked = true;
+			document.getElementById("cho2").checked = false;
+		} else {
+			document.getElementById("cho1").checked = false;
+			document.getElementById("cho2").checked = true;
+		}
+		if (td_list[4].innerHTML == "1"){
+			document.getElementById("cho11").checked = true;
+			document.getElementById("cho22").checked = false;
+		} else {
+			document.getElementById("cho11").checked = false;
+			document.getElementById("cho22").checked = true;
+		}
+		
+		$("#myModal").modal("show");
+	}
+	
+	function delete_opus_size(id){
+		if (confirm("你真的确定要删除吗?") == true){
+			$.post("/manager/delete_opus_size/", {"id":id}, function(data){
+				var json_data = JSON.parse(data);
+				if (json_data.code == 1){
+					alert(json_data.data);
+					window.location.reload();
+				} else {
+					alert(json_data.data);
+				}
+			});
+		}
+	}
+	
+	function check_img(obj){
+		var filename = obj.value;
+		//检查文件类型
+		var exName = filename.substr(filename.lastIndexOf(".")+1).toUpperCase()    
+		if(exName=="JPG"||exName=="JPEG"||exName=="PNG"||exName=="BMP"||exName=="GIF"||exName=="SWF"){
+			//ajax 上传图片
+			upload_image();
+		} else {
+			alert("只能上传图片文件(*.jpg|*.jpeg|*.png|*.bmp|*.gif|*.swf)");
+		}
+	}
+	
+	function upload_image(){
+		$("#loading").show();
+		$.ajaxFileUpload({
+			url:"/manager/ajax_upload_img/",
+			secureuri:false,
+			fileElementId:"asset_file",
+			dataType: 'text',
+			success: function (data, status){
+				var json_data = JSON.parse(data); 
+				if (json_data.code == 1){
+					$("#a_ajax_img").attr("href", "/media/" + json_data.data.path);
+					$("#a_ajax_img").show();
+					$("#hid_res_path").val(json_data.data.path);
+					update_status();
+				} else {
+					alert(json_data.data);
+				}
+				$("#loading").hide();
+			},
+			error: function (data, status, e)
+			{
+				alert(e);
+				$("#loading").hide();
+			}
+		});
+	}
+
+    $('#btn_search').click(
+            function()
+            {
+                on_page(1);
+            }
+    );
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-2 pull-left">
+		<button class="btn btn-danger" onclick="new_page_size()">点击添加作品尺寸</button>
+	</div>
+
+  <div class="input-group col-md-5 pull-left">
+  <input type="text" id="search_text" name="search_text" placeholder="请输入搜索项" class="form-control">
+  <span class="input-group-btn">
+    <button class="btn btn-primary" id="btn_search" type="button" >
+    <span class="glyphicon glyphicon-search"></span> 点击搜索</button>
+  </span>
+  </div>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>分类名称</th>
+              <th>创作</th>
+              <th>阅读</th>
+              <th>屏幕宽px</th>
+              <th>屏幕高px</th>
+              <th>印刷宽cm</th>
+              <th>印刷高cm</th>
+              <th>原图宽px</th>
+              <th>原图高px</th>
+              <th>图片路径</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">作品分类版面/画布资料</h4>
+      </div>
+      <div class="modal-body">
+      	<form class="form-horizontal" >
+      		<input type="hidden" value="0" id="hid_id" />
+			<div class="form-group" id="form_district">
+				<label class="col-md-3 control-label">页尺寸名称：</label>
+				<div class="col-md-9 pull-left">
+					<input type="text" class="form-control" value="测试版面" id="name" style="width:260px" onblur="update_status()"/>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_contact">
+				<label class="col-md-3 control-label">屏幕宽：</label>
+				<div class="col-md-3 pull-left">
+					<div class="input-group">
+						<input type="text" class="form-control" id="screen_w" onblur="update_status()">
+						<div class="input-group-addon">px</div>
+					</div>
+				</div>
+				<div class="col-md-2 form-inline">
+					<label class="control-label">屏幕高：</label>
+				</div>
+				<div class="col-md-3 form-inline">
+					<div class="input-group">
+						<input type="text" class="form-control" id="screen_h" onblur="update_status()">
+						<div class="input-group-addon">px</div>
+					</div>
+				</div>
+			</div>
+			<div class="form-group" id="form_contact">
+				<label class="col-md-3 control-label">印刷宽：</label>
+				<div class="col-md-3 pull-left">
+					<div class="input-group">
+						<input type="text" class="form-control" id="print_w" onblur="update_status()">
+						<div class="input-group-addon">cm</div>
+					</div>
+				</div>
+				<div class="col-md-2 form-inline">
+					<label class="control-label">印刷高：</label>
+				</div>
+				<div class="col-md-3 form-inline">
+					<div class="input-group">
+						<input type="text" class="form-control" id="print_h" onblur="update_status()">
+						<div class="input-group-addon">cm</div>
+					</div>
+				</div>
+			</div>
+			<div class="form-group" id="form_contact">
+				<label class="col-md-3 control-label">原图宽：</label>
+				<div class="col-md-3 pull-left">
+					<div class="input-group">
+						<input type="text" class="form-control" id="origin_w" onblur="update_status()">
+						<div class="input-group-addon">px</div>
+					</div>
+				</div>
+				<div class="col-md-2 form-inline">
+					<label class="control-label">原图高：</label>
+				</div>
+				<div class="col-md-3 form-inline">
+					<div class="input-group">
+						<input type="text" class="form-control" id="origin_h" onblur="update_status()">
+						<div class="input-group-addon">px</div>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-md-3 control-label">文件：</label>
+				<input type="hidden" value="" id="hid_res_path" name="hid_res_path" />
+				<div class="col-md-6">
+					<span class="btn btn-primary fileinput-button">
+		                <i class="icon-plus icon-white"></i>
+		                <span>上传资源图片...</span>
+		                <input class="input-file" type="file" id="asset_file" name="asset_file" accept="image/*" onchange="check_img(this)">
+		            </span>
+		            <img id="loading" src="{% static 'images/loading.gif' %}" style="display:none;">
+		            <div class="btn-group">
+						<a class="fancybox btn btn-success" id="a_ajax_img" style="{% if not asset %}display: none{% endif %}" href="{% if asset %}{{MEDIA_URL}}{{ asset.res_path}}{% endif %}" target="_blank" ><span class="glyphicon glyphicon-picture"></span> 点击查看</a>
+					</div>
+				</div>
+			</div>
+			<div class="form-group" id="form_create">
+				<label class="col-md-3 control-label">创作显示：</label>
+					<div class="col-md-3 form-inline">
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="cho_create" id="cho1" value="1" onclick="update_status()">
+							单页</label>
+					</div>
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="cho_create" id="cho2" value="2" onclick="update_status()">
+							双页</label>
+					</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="form_read">
+				<label class="col-md-3 control-label">阅读显示：</label>
+				<div class="col-md-3 form-inline">
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="cho_read" id="cho11" value="1" onclick="update_status()">
+							单页</label>
+					</div>
+					<div class="radio-inline">
+						<label>
+							<input type="radio" name="cho_read" id="cho22" value="2" onclick="update_status()">
+							双页</label>
+					</div>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+		</form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal">关闭</button>
+        <button class="btn btn-primary" id="btn_submit" onclick="submit_size()" disabled="disabled">确认提交</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+{% endblock %}

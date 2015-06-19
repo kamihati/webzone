@@ -1,0 +1,218 @@
+﻿{% extends 'manager2/base.html' %}
+
+{% block header %} 
+
+<!--修改尺寸开始--> 
+<script type="text/javascript">
+$(document).ready(function($){
+	//设置导航栏选中状态
+	$("#li_nav_template").addClass("active");
+	$("#li_nav_template_list_mbcc").addClass("active");
+
+	$('.theme-login21').click(function(){
+		$('.theme-popover-mask').show();
+		$('.theme-popover-mask').height($(document).height());
+		$('.theme-popover21').slideDown(200);
+	})
+	$('.theme-poptit21 .close').click(function(){
+		$('.theme-popover-mask').hide();
+		$('.theme-popover21').slideUp(200);
+	})
+
+});
+</script> 
+<!--修改尺寸结束--> 
+{% endblock %}
+
+{% block content %} 
+
+<!--编辑尺寸开始-->
+<div class="theme-popover-mask"></div>
+<div class="theme-popover21">
+  <div class="theme-poptit21"> <a href="javascript:;" title="关闭" class="close">×</a>
+    <h3></h3>
+  </div>
+  <div class="theme-popbod21 dform">
+    <form class="theme-signin21 " name="loginform" action="" method="post">
+      <table cellpadding="0" cellspacing="10" class="xinxi2">
+        <tr>
+          <td style=" text-align:left;">&nbsp;&nbsp;&nbsp;&nbsp;标题:
+            <input type="text" class="icx"  /></td>
+            </td>
+        </tr>
+        <tr>
+          <td style=" text-align:left;">&nbsp;&nbsp;屏幕宽:
+            <input type="text" class="gd"  />
+            &nbsp;px &nbsp;&nbsp;&nbsp; 印刷宽:
+            <input type="text" class="gd"/>
+            &nbsp;cm &nbsp;&nbsp;&nbsp;原图宽:
+            <input type="text" class="gd" />
+            &nbsp;px</td>
+            </td>
+        </tr>
+        <tr>
+          <td colspan="3" style=" text-align:left;">&nbsp;&nbsp;屏幕高:
+            <input type="text" class="gd"/>
+            &nbsp;px &nbsp;&nbsp;&nbsp; 印刷高:
+            <input type="text" class="gd"/>
+            &nbsp;cm &nbsp;&nbsp;&nbsp;原图高:
+            <input type="text" class="gd"/>
+            &nbsp;px</td>
+            </td>
+        </tr>
+        <tr>
+          <td colspan="3" style=" text-align:left;">创作显示：
+            <input type="radio" name="13"/>
+            单页
+            <input type="radio" name="13"/>
+            双页&nbsp;&nbsp;&nbsp;</td>
+            </td>
+        </tr>
+        <tr>
+          <td colspan="3" style=" text-align:left;">&nbsp;&nbsp;&nbsp;&nbsp;封面：<a href="" class="jg">上传+</a></td>
+            </td>
+        </tr>
+      </table>
+      <input class="btn btn-primary que" type="submit" name="submit" value=" 确定 " />
+      <input class="btn btn-primary qux" type="submit" name="submit" value=" 取消 " />
+    </form>
+  </div>
+</div>
+
+
+
+<div class="right_hua">
+  <div class="cont_right_lc">
+    <div class="cont_right_lcl">
+      <button class="jg theme-login21" href="javascript:;">新建作品尺寸</button>
+      &nbsp;&nbsp;
+      <input type="text" class="icx" value="请输入素材名称" />
+      <button  class="cx">查&nbsp;询</button>
+    </div>
+    <table cellpadding="0" cellspacing="0" style="border:solid #eee; border-width:1px 0px 0px 1px;"  class="liuyan" >
+      <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#cfe8ff; ">
+        <td width="200">标题</td>
+        <td width="150">创作</td>
+        <td width="150">屏幕高</td>
+        <td width="150">屏幕宽</td>
+        <td width="150">印刷高</td>
+        <td width="150">印刷宽</td>
+        <td width="150">创建时间</td>
+        <td width="150"><button class="shan">查看</button></td>
+        <td width="150">操作</td>
+      </tr>
+      <tr>
+        <td>河南少儿图书馆员</td>
+        <td>单页</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>2014-12-12</td>
+        <td><a class="shan" href="">查看</a></td>
+        <td><a class="shan theme-login21" href="javascript:;">修改</a>/<a class="shan" href="">删除</a></td>
+      </tr>
+      <tr>
+        <td>河南少儿图书馆员</td>
+        <td>单页</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>2014-12-12</td>
+        <td><a class="shan" href="">查看</a></td>
+        <td><a class="shan theme-login21" href="javascript:;">修改</a>/<a class="shan" href="">删除</a></td>
+      </tr>
+      <tr>
+        <td>河南少儿图书馆员</td>
+        <td>单页</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>2014-12-12</td>
+        <td><a class="shan" href="">查看</a></td>
+        <td><a class="shan theme-login21" href="javascript:;">修改</a>/<a class="shan" href="">删除</a></td>
+      </tr>
+      <tr>
+        <td>河南少儿图书馆员</td>
+        <td>单页</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>2014-12-12</td>
+        <td><a class="shan" href="">查看</a></td>
+        <td><a class="shan theme-login21" href="javascript:;">修改</a>/<a class="shan" href="">删除</a></td>
+      </tr>
+      <tr>
+        <td>河南少儿图书馆员</td>
+        <td>单页</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>2014-12-12</td>
+        <td><a class="shan" href="">查看</a></td>
+        <td><a class="shan theme-login21" href="javascript:;">修改</a>/<a class="shan" href="">删除</a></td>
+      </tr>
+      <tr>
+        <td>河南少儿图书馆员</td>
+        <td>单页</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>2014-12-12</td>
+        <td><a class="shan" href="">查看</a></td>
+        <td><a class="shan theme-login21" href="javascript:;">修改</a>/<a class="shan" href="">删除</a></td>
+      </tr>
+      <tr>
+        <td>河南少儿图书馆员</td>
+        <td>单页</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>2014-12-12</td>
+        <td><a class="shan" href="">查看</a></td>
+        <td><a class="shan theme-login21" href="javascript:;">修改</a>/<a class="shan" href="">删除</a></td>
+      </tr>
+      <tr>
+        <td>河南少儿图书馆员</td>
+        <td>单页</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>2014-12-12</td>
+        <td><a class="shan" href="">查看</a></td>
+        <td><a class="shan theme-login21" href="javascript:;">修改</a>/<a class="shan" href="">删除</a></td>
+      </tr>
+      <tr>
+        <td>河南少儿图书馆员</td>
+        <td>单页</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>2014-12-12</td>
+        <td><a class="shan" href="">查看</a></td>
+        <td><a class="shan theme-login21" href="javascript:;">修改</a>/<a class="shan" href="">删除</a></td>
+      </tr>
+      <tr>
+        <td>河南少儿图书馆员</td>
+        <td>单页</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>100</td>
+        <td>2014-12-12</td>
+        <td><a class="shan" href="">查看</a></td>
+        <td><a class="shan theme-login21" href="javascript:;">修改</a>/<a class="shan" href="">删除</a></td>
+      </tr>
+    </table>
+    <div class="yema"> </div>
+  </div>
+</div>
+{% endblock %}

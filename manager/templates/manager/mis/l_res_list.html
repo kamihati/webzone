@@ -1,0 +1,136 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+<link rel="stylesheet" href="{% static 'zTree_v3/css/zTreeStyle/zTreeStyle.css' %}">
+<!-- JavaScript -->
+<script src="{% static 'zTree_v3/js/jquery.ztree.core-3.5.min.js' %}"></script>
+<script src="{% static 'zTree_v3/js/jquery.ztree.excheck-3.5.min.js' %}"></script>
+{% endblock %}
+
+{% block footer %}
+<script>
+	var setting = {
+		check: {
+			enable: true,
+			nocheckInherit: false
+		},
+		data: {
+			simpleData: {
+				enable: true
+			}
+		},
+		callback: {
+			onCheck: onCheck
+		}
+	};
+	function onCheck(e, treeId, treeNode) {
+		update_status();
+	}
+			
+	var zNodes = {% autoescape off %}{{ znodes }}{% endautoescape %};
+
+	
+	function update_lib_list(){
+		$.post("/manager/get_library_list/", function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				$("#sel_library").append("<option value='0'>－－请选择机构并更新－－</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_library").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				
+				$('.selectpicker').selectpicker();
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	$(document).ready(function(){
+		update_lib_list();
+		$.fn.zTree.init($("#ztree"), setting, zNodes);
+	});
+	
+	function update_3qdou_limit(){
+		$("#btn-submit").button('loadding');
+		$("#btn-submit").attr('disabled', true);
+		var auth_list = get_check_list();
+		var lib_id = $("#sel_library").val();
+		
+		if (lib_id != 0 && auth_list.length > 0){
+			$.post("/manager/mis/l_res_list/", {"lib_id":lib_id, "auth_list":auth_list}, function(data){
+				if (data=="ok"){	
+					alert("学习平台权限更新成功。");
+				} else {
+					alert(data);
+				}
+				$("#btn-submit").button('complete');
+			});
+		}
+	}
+	
+	function get_check_list(){
+		var treeObj = $.fn.zTree.getZTreeObj("ztree");
+		var nodes = treeObj.getCheckedNodes(true);
+		var code_list = "";	
+		for (var i=0; i< nodes.length; i++){
+			code_list += code_list.length>0 ? "," + nodes[i].id : nodes[i].id;
+		}
+		return code_list;
+	}
+	
+	function check_all(){
+		$.fn.zTree.getZTreeObj("ztree").checkAllNodes(true);
+	}
+	function uncheck_all(){
+		$.fn.zTree.getZTreeObj("ztree").checkAllNodes(false);
+	}
+	
+	function update_library(lib_id){
+		$("#btn-submit").button('reset');
+		if (lib_id != "0"){
+			$.post("/manager/mis/l_auth_list/", {"lib_id":lib_id}, function(data){
+				update_check(data);
+			});
+		} else {
+			uncheck_all();
+		}
+	}
+	
+	function update_check(check_list){
+		var c_list = check_list.split(',');
+		
+		var treeObj = $.fn.zTree.getZTreeObj("ztree");
+		treeObj.checkAllNodes(false);
+		for (var i=0; i<c_list.length; i++){
+			var node = treeObj.getNodeByParam("id", c_list[i], null);
+			treeObj.checkNode(node, true, true, null);
+		}
+		$("#btn_save").removeClass("disabled");
+	}
+</script>
+{% endblock %}	
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="col-md-3">
+		<button class="btn btn-link" onclick="check_all()">全选</button>
+		<button class="btn btn-link" onclick="uncheck_all()">全不选</button>
+	</div>
+	<div class="input-group col-md-3 pull-left" id="div_library">
+	    <select class="selectpicker show-menu-arrow show-tick" id="sel_library" onchange="update_library(this.value)">
+		</select>
+	</div>
+	<div class="input-group col-md-2 pull-left">
+		<button class="btn btn-danger" id="btn-submit" onclick="update_3qdou_limit()" data-loadding-text="正在提交..." data-complete-text="更新完毕">更新机构学习资源权限</button>
+	</div>
+</div>
+
+<div class="row">
+	<ul id="ztree" class="ztree"></ul>
+</div>
+{% endblock %}

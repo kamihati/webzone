@@ -1,0 +1,276 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<!--link rel="stylesheet" src="{% static 'manager/css/default.css' %}"-->
+
+<!-- Add fancyBox main JS and CSS files -->
+<script src="{% static 'fancyBox/jquery.fancybox.js' %}?v=2.1.5"></script>
+<link rel="stylesheet" href="{% static 'fancyBox/jquery.fancybox.css' %}?v=2.1.5" media="screen">
+
+<style>
+.fileinput-button {
+  position: relative;
+  overflow: hidden;
+}
+.fileinput-button input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  opacity: 0;
+  filter: alpha(opacit
+  y=0);
+  transform: translate(-300px, 0) scale(4);
+  font-size: 23px;
+  direction: ltr;
+  cursor: pointer;
+}
+</style>
+
+<script>
+	var res_type_id = "0";
+	var page_type_id = "0";
+	var layout_type_id = "0";
+	var file_count = 0;
+	
+	$(document).ready(function(){
+		$('.fancybox').fancybox({
+			padding: 3,
+
+			openEffect : 'elastic',
+			openSpeed  : 150,
+
+			closeEffect : 'elastic',
+			closeSpeed  : 150,
+
+			closeClick : true
+		});
+	});
+	
+	function check_img(obj){
+		if(obj.files.length>0){
+			$("#loading").show();
+			$.ajaxFileUpload({
+				url:"/manager/batch_upload_img/",
+				secureuri:false,
+				fileElementId:'asset_file',
+				dataType: 'text',
+				success: function (data, status){
+					var json_data = JSON.parse(data); 
+					var file_html = "";
+					if (json_data.code == 1){
+						file_count = json_data.data.length;
+						for(var i=0; i<file_count; i++){
+							var file_data = json_data.data[i];
+							var file_index = i+1;
+							file_html += '<div class="form-group form-inline file-list" id="file_list' + file_index + '">';
+							file_html += '<label class="col-md-2 control-label">图片文件' + file_index + '</label>';
+							file_html += '<div class="col-md-10">';
+							file_html += '<div class="btn-group">';
+							file_html += '<a class="fancybox btn btn-success" id="a_ajax_img" href="';
+							file_html += '/media/' + file_data.path;
+							file_html += '" target="_blank" ><span class="glyphicon glyphicon-picture"></span> 点击查看</a>';
+							file_html += '</div>&nbsp;&nbsp;&nbsp;&nbsp;';
+							file_html += '<input type="hidden" value="' + file_data.path + '" id="hid_res_path" />';
+							file_html += '<input type="text" class="form-control" id="title" value="' + file_data.filename + '" style="width:260px">';
+							file_html += '</div>';
+							file_html += '</div>';
+						}
+						$("#file_list").html(file_html);
+						$("#loading").hide();
+						update_status();
+					} else {
+						alert(json_data.data);
+					}
+				},
+				error: function (data, status, e)
+				{
+					alert(e);
+					$("#loading").hide();
+				}
+			});
+		}	// endif 
+	}
+	
+	function update_res_type(type_id){
+		res_type_id = type_id;
+		update_status();
+	}
+	
+	function update_page_type(type_id){
+		page_type_id = type_id;
+	}
+	
+	function update_layout_type(type_id){
+		layout_type_id = type_id;
+	}
+	
+	function update_status(){
+		if (file_count > 0 && res_type_id != "0" && $("#sel_style").val() != "0"){
+			$("#btn_submit").removeClass("disabled");
+		}
+	}
+	
+	var clock_timer = 0;
+	var iID = null;
+	function batch_upload(){
+		$("#btn_submit").addClass("disabled");
+		for (var i=1; i<=file_count; i++){
+			var title = $('#file_list' + i + ' #title').val()
+			var hid_res_path = $('#file_list' + i + ' #hid_res_path').val()
+			$.post("/manager/asset/", {"div_id":i, "rdo_type":res_type_id, "page_type_id":page_type_id, "layout_type_id":layout_type_id, "sel_style": $("#sel_style").val(), "title":title, "hid_res_path":hid_res_path}, function(data){
+				var json_data = JSON.parse(data);
+				if (json_data.code == 1){
+					$("#div_msg").show();
+					$('#file_list' + json_data.data).remove();
+					file_count = 0;
+					
+					clock_timer = 3
+					iID = setInterval(update_timer, 1000);
+				} else {
+					alert(json_data.data);					
+				}
+			});
+		}
+	}
+	
+	function update_timer(){
+		clock_timer -= 1;
+		$("#span_timer").html(clock_timer);
+		if (clock_timer <= 0){
+			clearInterval(iID);
+			iID = null;
+			$("#div_msg").hide();
+		}
+	}
+</script>
+{% endblock %}
+
+{% block content %}
+
+{% if result == "ok" %}
+<div style="text-align: center">
+	<span class="inline"><img src="{% static 'images/success.gif' %}"><h3>信息提交成功</h3></span>
+		<hr />
+		<a href="/manager/asset_list/" class="btn btn-large btn-success offset2">查看</a>
+		<a href="/manager/asset/" class="btn btn-large btn-primary offset1">再次录入>></a>
+</div>
+{% else %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-2 pull-left">
+		<a class="btn btn-danger" href="/manager/asset_list/">返回公共素材列表</a>
+	</div>
+</div>
+
+	<form class="form-horizontal well" role="form" method="post" enctype="multipart/form-data">
+		<input type="hidden" value="{% if asset %}{{ asset.res_path }}{% endif %}" id="hid_res_path" name="hid_res_path" />
+		<input type="hidden" value="{% if asset %}{{ asset.mask_path }}{% endif %}" id="hid_mask_path" name="hid_mask_path" />
+		
+		<div class="form-group">
+			<label class="col-md-2 control-label">资源类型</label>
+			<div class="col-md-8">
+				<!--(1,u"背景"),(2,u"装饰"),(3,u"画框"),(4,u"模板"),(5,u"声音"),(6,u"视频"),(7,u"图片")-->
+				<div class="radio-inline">
+					<label for="rdo1">
+						<input type="radio" name="rdo_type" id="rdo1" value="1" onclick="update_res_type(this.value)" {% if asset and asset.res_type == 1 %}checked{% endif %}>
+						背景</label>
+				</div>
+				<div class="radio-inline">
+					<label for="rdo2">
+						<input type="radio" name="rdo_type" id="rdo2" value="2" onclick="update_res_type(this.value)" {% if asset and asset.res_type == 2 %}checked{% endif %}>
+						装饰</label>
+				</div>
+				<div class="radio-inline">
+					<label for="rdo7">
+						<input type="radio" name="rdo_type" id="rdo7" value="7" onclick="update_res_type(this.value)" {% if asset and asset.res_type == 7 %}checked{% endif %}>
+						图片</label>
+				</div>
+			</div>
+		</div>
+		<div class="form-group" id="div_style">
+			<label class="col-md-2 control-label">资源风格</label>
+			<div class="col-md-3">
+				<!--((1,u"复古"),(2,u"简约"),(3,u"非主流"),(4,u"可爱"),(5,u"手绘"),(6,u"中国风"),(7,u"现代"),(8,u"小清新"),(9,u"卡通"),(10,u"插画"))-->
+				<select id="sel_style" name="sel_style" class="form-control" onclick="update_status()">
+					<option value="0"></option>
+					<option value="1" {% if asset and asset.res_style == 1 %}selected{% endif %}>复古</option>
+					<option value="2" {% if asset and asset.res_style == 2 %}selected{% endif %}>简约</option>
+					<option value="4" {% if asset and asset.res_style == 4 %}selected{% endif %}>可爱</option>
+					<option value="5" {% if asset and asset.res_style == 5 %}selected{% endif %}>手绘</option>
+					<option value="6" {% if asset and asset.res_style == 6 %}selected{% endif %}>中国风</option>
+					<option value="9" {% if asset and asset.res_style == 9 %}selected{% endif %}>卡通</option>
+					<option value="12" {% if asset and asset.res_style == 12 %}selected{% endif %}>节日</option>
+				</select>
+			</div>
+			<div class="col-md-4">
+				<span class="btn btn-primary fileinput-button">
+	                <i class="icon-plus icon-white"></i>
+	                <span>点击批量上传图片...</span>
+	                <input class="input-file" type="file" id="asset_file" name="asset_file" accept="image/*" onchange="check_img(this)" multiple="multiple">
+	            </span>
+	            <img id="loading" src="{% static 'images/loading.gif' %}" style="display: none">
+			</div>
+		</div>
+		<div class="form-group" id="form_page_type">
+			<label class="col-md-2 control-label">单双页：</label>
+			<div class="col-md-8 form-inline">
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_page" id="rdo21" value="1" onclick="update_page_type(this.value)">
+						单页</label>
+				</div>
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_page" id="rdo22" value="2" onclick="update_page_type(this.value)">
+						双页</label>
+				</div>
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_page" id="rdo23" value="0" onclick="update_page_type(this.value)" checked="checked">
+						不限</label>
+				</div>
+			</div>
+		</div>
+		<div class="form-group" id="form_page_type">
+			<label class="col-md-2 control-label">版式：</label>
+			<div class="col-md-8 form-inline">
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_layout" id="rdo231" value="1" onclick="update_layout_type(this.value)">
+						横版</label>
+				</div>
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_layout" id="rdo32" value="2" onclick="update_layout_type(this.value)">
+						竖版</label>
+				</div>
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="rdo_layout" id="rdo33" value="0" onclick="update_layout_type(this.value)"checked="checked">
+						不限</label>
+				</div>
+			</div>
+		</div>
+		
+		<div id="file_list">
+		</div>
+		<div class="alert alert-success col-md-offset-2" id="div_msg" style="display: none">
+			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+	        <strong>恭喜!</strong>  图片批量上传成功!&nbsp;&nbsp;<span id="span_timer">3</span>秒后自动隐藏
+	      </div>
+		<div class="form-group">
+			<div class="col-md-offset-2 col-md-6">
+				<div class="btn-group">
+				    <button type="button" class="btn btn-primary disabled" id="btn_submit" onclick="batch_upload()">
+				    <span class="glyphicon glyphicon-save"></span>　批量加入资源库</button>
+				</div>
+			</div>
+		</div>
+	</form>
+{% endif %}
+{% endblock %}

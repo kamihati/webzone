@@ -1,0 +1,404 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'bootstrap-select/bootstrap-select.css' %}">
+<script src="{% static 'bootstrap-select/bootstrap-select.js' %}"></script>
+{% endblock %}
+
+{% block footer %}
+<script>
+	function update_lib_list(){
+		$.post("/manager/get_library_list/", function(data){
+			var json_data = JSON.parse(data);
+			if (json_data.code == 1){
+				var lib_list = json_data.data;
+				$("#sel_library").append("<option value='0'>公共图书馆</option>");
+				$("#sel_library2").append("<option value='0'>公共图书馆</option>");
+				for (var i=0; i<lib_list.length; i++){
+					$("#sel_library").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+					$("#sel_library2").append("<option value='" + lib_list[i]["id"] + "'>" + lib_list[i]["name"] + "</option>");
+				}
+				{% if request.user.library_id %}
+				$("#sel_library").val({{request.user.library_id}});
+				$("#sel_library2").val({{request.user.library_id}});
+				$("#sel_library").attr("disabled", true);
+				$("#sel_library2").attr("disabled", true);
+				{% endif %}
+				
+				$('.selectpicker').selectpicker();
+				$('.selectpicker').selectpicker('refresh');
+			} else {
+				alert(json_data.data);
+			}
+		});
+	}
+	
+	function update_role_list(){
+		$.post("/manager/mis/can_role_list/", function(data){
+			var json_data = JSON.parse(data);
+			for (var i=0; i<json_data.length; i++){
+				$("#sel_role").append("<option value='" + json_data[i]["id"] + "'>" + json_data[i]["name"] + "</option>");
+				$("#sel_role2").append("<option value='" + json_data[i]["id"] + "'>" + json_data[i]["name"] + "</option>");
+			}
+			$('.selectpicker').selectpicker();
+			$('.selectpicker').selectpicker('refresh');
+		});
+	}
+	
+	$(document).ready(function(){
+		update_lib_list();
+		update_role_list();
+		on_page(1);
+	});
+	
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">上一页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index - 1) + ")\">上一页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">下一页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + (page_index + 1) + ")\">下一页</a></li>";
+		}
+		for (var i = 1; i <= page_count; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		var search_text = $("#search_text").val();
+		$.post("/manager/mis/s_auth_m/", {"page_index":page_index, "search_text": search_text}, function(data){
+			try{
+				var json_data = JSON.parse(data);
+			} catch (exception){
+				window.location.reload();
+			}
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr id='tr" + array_list[i]["uid"] + "'><td><a href='#' onclick='edit_manager(" + array_list[i]["uid"]  + ")'>" + array_list[i]["username"] + "</a></td><td style='display:none'>";
+				newRow += array_list[i]["nickname"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["realname"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["telephone"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["gid"] + "</td><td style='display:none'>";
+				newRow += array_list[i]["lib_id"] + "</td><td>";
+				newRow += array_list[i]["lib_name"] + "</td><td>";
+				newRow += array_list[i]["g_name"] + "</td><td>";
+				newRow += array_list[i]["last_login"] + "</td><td>";
+				newRow += array_list[i]["last_ip"] + "</td><td>";
+				newRow += "<button class='btn btn-danger btn-xs' onclick='reset_pass(" + array_list[i]["uid"] + ")'>重置密码</button></td><td>";
+				if (array_list[i]["is_active"] == 1){
+					newRow += "<button class='btn btn-danger btn-xs' onclick='change_status(this, " + array_list[i]["uid"] + ", 0)'>封号</button></td></tr>";
+				} else {
+					newRow += "<button class='btn btn-success btn-xs' onclick='change_status(this, " + array_list[i]["uid"] + ", 1)'>解除封号</button></td></tr>";
+				}
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+	
+	function change_status(obj, uid, status){
+		if (confirm("你真的确定要执行该操作吗?") == true){
+			$.post("/manager/change_user_active/", {"uid":uid, "status":status}, function(data){
+				if (data == "ok"){
+					$("#tr"+uid).toggleClass("danger");
+					if (status == 1){
+						$(obj).html("封号");
+						$(obj).removeClass("btn-success").addClass("btn-danger");
+						$(obj).attr("onclick", "change_status(this, " + uid + ", 0)");
+					} else {
+						$(obj).html("解除封号");
+						$(obj).removeClass("btn-danger").addClass("btn-success");
+						$(obj).attr("onclick", "change_status(this, " + uid + ", 1)");
+					}
+				} else {
+					alert(data);
+				}
+			});
+		}
+	}
+	
+	var is_username_valid = false;
+	var is_nickname_valid = false;
+	var is_password_valid = false;
+		
+	function check_username(obj){
+		var username = obj.value;
+		$.post("/manager/check_new_username/", {"username":username}, function(data){
+			if (data == "ok"){
+				$("#form_username").removeClass("has-error").addClass("has-success");
+				$("#form_username").find("p").html("");
+				is_username_valid = true;
+				update_status();
+			} else {
+				$("#form_username").removeClass("has-success").addClass("has-error");
+				$("#form_username").find("p").html(data);
+				is_username_valid = false;
+			}
+		});
+	}
+	function check_nickname(obj){
+		var nickname = obj.value;
+		$.post("/manager/check_new_nickname/", {"nickname":nickname}, function(data){
+			if (data == "ok"){
+				$("#form_nickname").removeClass("has-error").addClass("has-success");
+				$("#form_nickname").find("p").html("");
+				is_nickname_valid = true;
+				update_status();
+			} else {
+				$("#form_nickname").removeClass("has-success").addClass("has-error");
+				$("#form_nickname").find("p").html(data);
+				is_nickname_valid = false;
+			}
+		});
+	}
+	function check_password(obj){
+		var password = obj.value;
+		$.post("/manager/check_password/", {"password":password}, function(data){
+			if (data == "ok"){
+				$("#form_password").removeClass("has-error").addClass("has-success");
+				$("#form_password").find("p").html("");
+				is_password_valid = true;
+				update_status();
+			} else {
+				$("#form_password").removeClass("has-success").addClass("has-error");
+				$("#form_password").find("p").html(data);
+				is_password_valid = false;
+			}
+		});
+	}
+	function check_password2(obj){
+		var password2 = obj.value;
+		var password = $("#password").val();
+		if (password == password2){
+			$("#form_password").removeClass("has-error").addClass("has-success");
+			$("#form_password").find("p").html("");
+			is_password_valid = true;
+			update_status();
+		} else {
+			$("#form_password").removeClass("has-success").addClass("has-error");
+			$("#form_password").find("p").html("两次输入密码不一致");
+			is_password_valid = false;
+		}
+	}
+	
+	function update_status(){
+		var username = $("#username").val();
+		var nickname = $("#nickname").val();
+		
+		if (is_username_valid && is_nickname_valid && is_password_valid && $("#password").val()==$("#password2").val()){
+			$("#btn_submit").attr("disabled",false);
+		} else {
+			$("#btn_submit").attr("disabled",true);
+		}
+	}
+	
+	function new_manager(){
+		$("#sel_library2").attr("disabled", false);
+		$('.selectpicker').selectpicker('refresh');
+		
+		var username = $("#username").val("");
+		var nickname = $("#nickname").val("");
+		var realname = $("#realname").val("");
+		var telephone = $("#telephone").val("");
+		var password = $("#password").val("");
+		var password = $("#password2").val("");
+		
+		$("#btn_submit").attr("disabled",true);
+		$("#myModal").modal("show");
+	}
+	
+	function edit_manager(uid){
+		var td_list = $("#tr"+uid).find('td');
+		$("#hid_id").val(uid);
+		$("#username").val($(td_list[0]).find('a').html());
+		$("#nickname").val(td_list[1].innerHTML);
+		$("#realname").val(td_list[2].innerHTML);
+		$("#telephone").val(td_list[3].innerHTML);
+		$("#sel_role2").val(td_list[4].innerHTML);
+		$("#sel_library2").val(td_list[5].innerHTML);
+		
+		$("#sel_library2").attr("disabled", true);
+		$('.selectpicker').selectpicker('refresh');
+		
+		$("#username").attr("disabled", true);
+		$("#nickname").attr("disabled", true);
+		$("#form_password").hide();
+		$("#password").val("");
+		$("#password2").val("");
+		
+		$("#btn_submit").attr("disabled",false);
+		is_username_valid = true;
+		is_nickname_valid = true;
+		is_password_valid = true;
+		
+		$("#myModal").modal("show");
+	}
+	
+	function update_manager(){
+		var hid_id = $("#hid_id").val();
+		
+		var username = $("#username").val();
+		var nickname = $("#nickname").val();
+		var realname = $("#realname").val();
+		var telephone = $("#telephone").val();
+		var password = $("#password").val();
+		
+		var lib_id = $("#sel_library2").val();
+		var role_id = $("#sel_role2").val();
+		
+		if (is_username_valid && is_nickname_valid && is_password_valid && $("#password").val()==$("#password2").val()){
+			$.post("/manager/mis/s_auth_a/", {"hid_id":hid_id, "username":username, "nickname":nickname, "realname":realname, "telephone":telephone, "password":password, "lib_id":lib_id, "role_id":role_id}, function(data){
+				if (data=="ok"){
+					window.location.reload();
+				} else {
+					alert(data);
+				}
+			});
+		}
+	}
+	
+	function reset_pass(uid){
+		if (confirm("你真的确定要执行该操作吗?") == true){
+			$.post("/manager/mis/s_auth_pass/", {"uid":uid}, function(data){
+				alert(data);
+			});
+		}
+	}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-left: 1px; margin-bottom: 15px">
+	<div class="input-group col-md-2 pull-left">
+		<button class="btn btn-danger" onclick="new_manager()">点击新增管理员</button>
+	</div>
+	
+	<div class="input-group col-md-3 pull-left" id="div_library" {% if request.user.library_id %}style="display: none"{% endif %}>
+	    <select class="selectpicker show-menu-arrow show-tick" id="sel_library">
+		</select>
+	</div>
+	<div class="input-group col-md-3 pull-left">
+	    <select class="selectpicker show-menu-arrow show-tick" id="sel_role">
+		</select>
+	</div>
+  <div class="input-group col-md-4 pull-left">
+	  <input type="text" id="search_text" name="search_text" placeholder="请输入账号名进行搜索" class="form-control">
+	  <span class="input-group-btn">
+	    <button class="btn btn-primary" id="btn_search" type="button" onclick="on_page(1)">
+	    <span class="glyphicon glyphicon-search"></span> 点击搜索</button>
+	  </span>
+  </div>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-condensed" id="table1">
+		<thead>
+            <tr>
+              <th>账号</th>
+              <th>所属机构</th>
+              <th>角色</th>
+              <th>上次登录</th>
+              <th>上次IP</th>
+              <th>重置密码</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr></tr>
+          </tbody>
+	</table>
+</div>
+
+<ul class="pagination">
+</ul>
+
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">管理员信息管理</h4>
+      </div>
+      <div class="modal-body">
+      	<form class="form-horizontal" >
+      		<input type="hidden" value="0" id="hid_id" />
+			<div class="form-group" id="form_username">
+				<label class="col-md-3 control-label">账号名称：</label>
+				<div class="col-md-4 pull-left">
+					<input type="text" class="form-control" id="username" style="width:160px" onblur="check_username(this)"/>
+				</div>
+				<p class="col-md-3 help-block"></p>
+			</div>
+			<div class="form-group" id="div_library2" {% if request.user.library_id %}style="display: none"{% endif %}>
+				<label class="col-md-3 control-label">所属图书馆：</label>
+				<div class="col-md-2 pull-left">
+					<select class="selectpicker" id="sel_library2" onchange="update_status()"></select>
+				</div>
+			</div>
+			<div class="form-group" id="form_role">
+				<label class="col-md-3 control-label">所属角色：</label>
+				<div class="col-md-3 pull-left">
+					<select class="selectpicker" id="sel_role2" onchange="update_status()"></select>
+				</div>
+			</div>
+			
+			<div class="form-group" id="form_nickname">
+				<label class="col-md-3 control-label">呢称：</label>
+				<div class="col-md-3">
+					<input type="text" class="form-control" id="nickname" name="nickname" onblur="check_nickname(this)" placeholder="请输入呢称">
+				</div>
+			</div>
+			<div class="form-group" id="form_nickname">
+				<label class="col-md-3 control-label">电话：</label>
+				<div class="col-md-3">
+					<input type="text" class="form-control" id="telephone" name="telephone" placeholder="请输入电话">
+				</div>
+			</div>
+			<div class="form-group" id="form_realname">
+				<label class="col-md-3 control-label">真实姓名：</label>
+				<div class="col-md-3">
+					<input type="text" class="form-control" id="realname" name="realname" placeholder="请输入真实姓名">
+				</div>
+			</div>
+			<div class="form-group" id="form_password">
+				<label class="col-md-3 control-label">密码：</label>
+				<div class="col-md-3">
+					<input type="password" class="form-control" id="password" name="password"onblur="check_password(this)" placeholder="请输入账号密码">
+				</div>
+				<label class="col-md-2 control-label">确认密码</label>
+				<div class="col-md-3">
+					<input type="password" class="form-control" id="password2" name="password2"onblur="check_password2(this)" placeholder="请再次输入密码">
+				</div>
+				<p class="help-block"></p>
+			</div>
+		</form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal">关闭</button>
+        <button class="btn btn-primary" id="btn_submit" onclick="update_manager()" disabled="disabled">确认提交</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+{% endblock %}

@@ -1,0 +1,295 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %}
+<style type="text/css">
+div.men2 ul li input[type=text]{
+	width:130px;
+	 
+}
+</style>
+<script type="text/javascript">
+    $(function(){
+		//设置导航栏选中状态
+		$("#li_nav_resource").addClass("active");
+		$("#li_nav_resource_type_manage").addClass("active");	
+		
+		//设置几个文本框的默认文字
+		set_input_default('txtCommonResType', '输入素材类型');
+		set_input_default('txtCommonResStyle', '输入素材风格');
+		set_input_default('txtPersonResType', '输入素材类型');
+		set_input_default('txtPersonResStyle', '输入素材风格');
+	});
+	
+    <!--tab切换开始。切换显示个人或公共素材分类-->    
+	function setTab(name, cursel, n){
+	
+		for(i=1;i<=n;i++){
+	
+			var menu=document.getElementById(name+i);
+	
+			var con=document.getElementById("con_"+name+"_"+i);
+	
+			menu.className=i==cursel?"hover":"";
+	
+			con.style.display=i==cursel?"block":"none";
+		}
+	}
+	
+	/*创建公共素材分类*/
+	function create_common_res_type(){
+		var name = $.trim($("#txtCommonResType").val().replace("输入素材类型", ""));
+		if(name == ""){
+			alert("名称不能为空");
+			return false;
+			}
+		$.post("/resource/ajax_create_type/", {"name": name, "type": 1}, function(data){
+			if(data == "ok"){
+				alert("创建成功！");
+				location.href = location.href;
+			}else if(data == "-1"){
+			}else if(data == "-2"){
+				alert("名称重复！");
+			}else if(data == "-3"){
+				alert("名称不能超过六个字！");
+			}else alert(data);
+		});
+	}
+	
+	/*创建公共素材风格*/
+	function create_common_res_style(){
+		var name = $.trim($("#txtCommonResStyle").val().replace("输入素材风格", ""));
+		if(name == ""){
+			alert("名称不能为空");
+			return false;
+			}
+		$.post("/resource/ajax_create_style/", {"name": name, "type": 1}, function(data){
+			if(data == "ok"){
+				alert("创建成功！");
+				location.href = location.href;
+			}else if(data == "-1"){
+			}else if(data == "-2"){
+				alert("名称重复！");
+			}else if(data == "-3"){
+				alert("名称不能超过六个字！");
+			}else alert(data);
+		});
+	}
+	
+	
+	/*创建个人素材分类*/
+	function create_person_res_type(){
+		var name = $.trim($("#txtPersonResType").val());
+		if(name == ""){
+			alert("名称不能为空");
+			return false;
+			}
+		$.post("/resource/ajax_create_type_person/", {"name": name}, function(data){
+			if(data == "ok"){
+				alert("创建成功！");
+				location.href = location.href;
+			}else if(data == "-1"){
+			}else if(data == "-2"){
+				alert("名称重复！");
+			}else if(data == "-3"){
+				alert("名称不能超过六个字！");
+			}else alert(data);
+		});
+	}
+
+	/*修改公共素材分类*/
+	function alter_common_res_type(id){
+		var name = $.trim($("#txtCommonTypeName" + id).val());
+		if(name == ""){
+			alert("名称不能为空！");
+			return;
+		}
+		$.post("/resource/ajax_alter_type/", {"id": id, "name": name}, function(data){
+			if(data == "ok"){
+				alert("修改成功！");
+				location.href = location.href;
+			}else if(data == "-2"){
+				alert("名称已存在！");
+			}else if(data == "-1"){
+				alert("参数错误！");
+			}else if(data == "-3"){
+				alert("名称不能超过六个字！");
+			}else{
+				alert(data);
+			}
+		});
+	}
+
+    /*修改个人素材分类*/
+	function alter_person_res_type(id){
+		var name = $.trim($("#txtPersonTypeName" + id).val());
+		if(name == ""){
+			alert("名称不能为空！");
+			return;
+		}
+		$.post("/resource/ajax_alter_type_person/", {"id": id, "name": name}, function(data){
+			if(data == "ok"){
+				alert("修改成功！");
+				location.href = location.href;
+			}else if(data == "-2"){
+				alert("名称已存在！");
+			}else if(data == "-1"){
+				alert("参数错误！");
+			}else if(data == "-3"){
+				alert("名称不能超过六个字！");
+			}else{
+				alert(data);
+			}
+		});
+	}
+	
+	/*修改公共素材风格*/
+	function alter_common_res_style(id){
+		var name = $.trim($("#txtCommonStyleName" + id).val());
+		if(name == ""){
+			alert("名称不能为空！");
+			return;
+		}
+		$.post("/resource/ajax_alter_style/", {"id": id, "name": name}, function(data){
+			if(data == "ok"){
+				alert("修改成功！");
+				location.href = location.href;
+			}else if(data == "-2"){
+				alert("名称已存在！");
+			}else if(data == "-1"){
+				alert("参数错误！");
+			}else if(data == "-3"){
+				alert("名称不能超过六个字！");
+			}else{
+				alert(data);
+			}
+		});
+	}
+	
+	//删除素材类型
+	function drop_res_type(id){
+		if(!confirm("您确定要删除这个素材类型吗？"))
+			return;
+		$.post("/resource/drop_type/", {"id": id}, function(data){
+			if(data == "ok"){
+				alert("删除成功");
+				location.href = location.href;
+			}else if(data == "fail"){
+				
+			}else{
+				alert(data);
+			}
+		});
+	}
+
+    ///删除个人素菜类型
+    function drop_res_type_person(id){
+        if(!confirm("您确定要删除这个素材类型吗？"))
+			return;
+		$.post("/resource/drop_type_person/", {"id": id}, function(data){
+			if(data == "ok"){
+				alert("删除成功");
+				location.href = location.href;
+			}else if(data == "fail"){
+
+			}else{
+				alert(data);
+			}
+		});
+    }
+	
+	//删除素材风格
+	function drop_res_style(id){
+		if(!confirm("您确定要删除这个素材风格吗？"))
+			return;
+		$.post("/resource/drop_style/", {"id": id}, function(data){
+			if(data == "ok"){
+				alert("删除成功");
+				location.href = location.href;
+			}else if(data == "fail"){
+				
+			}else {
+				alert(data);
+			}
+		});
+	}
+	
+	//显示编辑栏
+	function show_edit(id, li_name){
+		$("#li" + li_name + "_" + id + "_e").show();
+		$("#li" + li_name + "_" + id + "_v").hide();
+	}
+	
+	//隐藏编辑栏
+	function hide_edit(id, li_name){
+		$("#li" + li_name + "_" + id + "_e").hide();
+		$("#li" + li_name + "_" + id + "_v").show();
+	}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+	<div class="su_t">
+    	<a  class="jg hover" id="q1" onClick="setTab('q',1,2)">公共素材分类管理</a>
+        <a  class="jg" id="q2" onClick="setTab('q',2,2)">个人素材分类管理</a>
+    </div>
+    <div class="cont_right_lc" id="con_q_1">
+        <div class="men2">
+        	<input type="text" id="txtCommonResType" value="输入素材类型" style="width:180px;"/><button onClick="create_common_res_type()" class="jg">新建</button>
+         	<ul>
+            	<li class="n1"><span class="m1">素材类型</span><p class="m2">操作</p></li>
+                {% for obj in common_types %}
+             	<li id="liCommonTypeName_{{obj.id}}_v">
+                    <span>{{ obj.name }}</span>
+                    <p><a class="shan" onClick="show_edit({{ obj.id }}, 'CommonTypeName')">修改</a>/<a onClick="drop_res_type({{ obj.id }})" class="shan">删除</a></p>
+                </li>
+                <li id="liCommonTypeName_{{obj.id}}_e" style="display:none;">
+                    <span><input type="text" value="{{ obj.name }}" id="txtCommonTypeName{{obj.id}}" /></span>
+                    <p><a class="shan" onClick="alter_common_res_type({{ obj.id }})">修改</a>/<a class="shan" onClick="hide_edit({{ obj.id }}, 'CommonTypeName')">取消</a></p>
+                </li>
+                {% endfor %}
+         		<div class="clear"></div>
+         	</ul>
+        </div>
+        <div class="men2">
+        	<input type="text" id="txtCommonResStyle" value="输入素材风格" style="width:180px;"/><button onClick="create_common_res_style()" class="jg">新建</button>
+         	<ul>
+         		<li class="n1"><span class="m1">素材风格</span><p class="m2">操作</p></li>
+                {% for obj in common_styles %}
+         		<li id="liCommonStyleName_{{obj.id}}_v">
+                	<span>{{ obj.name }}</span>
+                    <p><a class="shan" onClick="show_edit({{ obj.id }}, 'CommonStyleName')">修改</a>/<a onClick="drop_res_style({{ obj.id }})" class="shan">删除</a></p>
+                </li>
+                <li id="liCommonStyleName_{{obj.id}}_e" style="display:none;">
+                    <span><input type="text" value="{{ obj.name }}" id="txtCommonStyleName{{obj.id}}" /></span>
+                    <p><a class="shan" onClick="alter_common_res_style({{ obj.id }})">修改</a>/<a class="shan" onClick="hide_edit({{ obj.id }}, 'CommonStyleName')">取消</a></p>
+                </li>
+                {% endfor %}
+         		<div class="clear"></div>
+         	</ul>
+        </div>
+		<div class="clear"></div>
+	</div>
+	<div class="cont_right_lc" id="con_q_2" style="display:none;">
+        <div class="men2">
+         	<input type="text" id="txtPersonResType" value="输入素材类型" style="width:180px;"/>
+            <button onClick="create_person_res_type()" class="jg">新建</button>
+         	<ul>
+         		<li class="n1"><span class="m1">素材类型</span><p class="m2">操作</p></li>
+                {% for obj in person_types %}
+         		<li id="liPersonTypeName_{{obj.id}}_v">
+                    <span>{{ obj.name }}</span>
+                    <p><a class="shan" onClick="show_edit({{ obj.id }}, 'PersonTypeName')">修改</a>/<a onClick="drop_res_type_person({{ obj.id }})" class="shan">删除</a></p>
+                </li>
+                <li id="liPersonTypeName_{{obj.id}}_e" style="display:none;">
+                    <span><input type="text" value="{{ obj.name }}" id="txtPersonTypeName{{obj.id}}" /></span>
+                    <p><a class="shan" onClick="alter_person_res_type({{ obj.id }})">修改</a>/<a class="shan" onClick="hide_edit({{ obj.id }}, 'PersonTypeName')">取消</a></p>
+                </li>
+                {% endfor %}
+         		<div class="clear"></div>
+         	</ul>
+         </div>
+         <div class="clear"></div>
+     </div>
+</div>
+{% endblock %}

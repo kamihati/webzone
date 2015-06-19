@@ -1,0 +1,109 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+<style>
+	.page { padding:10px;border:1px solid #e3e3e3;border-radius:4px;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.05);box-shadow:inset 0 1px 1px rgba(0,0,0,.05) }
+</style>
+{% endblock %}
+
+{% block footer %}
+<script>
+	$(document).ready(function(){
+		on_page(1);
+	});
+	
+	function update_pagination(page_index, page_count) {
+		$(".pagination").html("");
+		if (page_count == 1) {
+			return;
+		}
+		
+		var display_page_count = 15;
+		var middle_page = parseInt(display_page_count/2);
+		var start_page = 1;
+		if (page_index > middle_page){
+			start_page = page_index - middle_page;
+		}
+		var end_page = start_page + display_page_count - 1;
+		if (end_page > page_count){
+			end_page = page_count;
+			start_page = page_count - display_page_count + 1;
+			if (start_page <= 0){
+				start_page = 1;
+			}
+		}
+		
+		var pagination_html = "";
+		var last_page = "";
+		var next_page = "";
+		if (page_index == 1) {
+			last_page = "<li class=\"disabled\"><a href=\"\">首页</a></li>";
+		} else {
+			last_page = "<li><a href=\"#\" onclick=\"on_page(1)\">首页</a></li>";
+		}
+		if (page_index == page_count) {
+			next_page = "<li class=\"disabled\"><a href=\"\">尾页</a></li>";
+		} else {
+			next_page = "<li><a href=\"#\" onclick=\"on_page(" + page_count + ")\">尾页</a></li>";
+		}
+		for (var i = start_page; i<=end_page; i++) {
+			if (i == page_index) {
+				pagination_html += "<li class=\"active\"><a href=\"\">" + i + "</a></li>";
+			} else {
+				pagination_html += "<li><a href=\"#\" onclick=\"on_page(" + i + ")\">" + i + "</a></li>";
+			}
+		}
+		$(".pagination").html(last_page + pagination_html + next_page);
+	}
+	
+	function on_page(page_index){
+		$.post("/manager/view_self_log/", {"page_index":page_index}, function(data){
+			try{
+				var json_data = JSON.parse(data);
+			} catch (exception){
+				window.location.reload();
+			}
+			$("#table1 tbody tr").remove();
+			var array_list = json_data.data;
+			for (var i=0; i<array_list.length; i++){
+				var newRow = "<tr><td>" + array_list[i]["username"] + "</td><td>";
+				newRow += array_list[i]["ip"] + "</td><td>";
+				newRow += array_list[i]["content"] + "</td><td>";
+				newRow += array_list[i]["action_time"] + "</td></tr>";
+				$("#table1 tbody").append(newRow);
+			}
+			update_pagination(json_data.page_index, json_data.page_count);
+		});
+	}
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="page">
+	<p class="lead" style="padding-top: 10px">欢迎您:{{request.user.username}}，上次登录:{{request.session.last_login}}，上次IP:{{request.session.last_ip}}</p>
+	<hr>
+	
+	<div class="table-responsive">
+		<table class="table table-bordered table-hover table-condensed" id="table1">
+			<thead>
+	            <tr>
+	              <th>账号</th>
+	              <th>IP</th>
+	              <th>操作</th>
+	              <th>时间</th>
+	            </tr>
+	          </thead>
+	          <tbody>
+	            <tr></tr>
+	          </tbody>
+		</table>
+	</div>
+	
+	<ul class="pagination" style="margin: 0px">
+	</ul>
+
+	<p class="text-muted text-right">© 河南识为软件科技有限公司(svvt.net)</p>
+</div>
+
+{% endblock %}

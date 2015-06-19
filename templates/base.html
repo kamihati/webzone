@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		<meta charset="UTF-8">
+		<title>{% block title %}{% endblock %}</title>
+		{% load staticfiles %}
+		<!-- JavaScript -->
+		<script src="{% static 'js/jquery-1.10.2.min.js' %}"></script>
+		<script src="{% static 'bootstrap-3.0.3/js/bootstrap.min.js' %}"></script>
+
+		<link rel="stylesheet" href="{% static 'bootstrap-3.0.3/css/bootstrap.min.css' %}">
+		<link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+		<!--[if IE 7]>
+		<link rel="stylesheet" href="{% static 'css/font-awesome-ie7.min.css' %}">
+		<![endif]-->
+		{% block header %}{% endblock %}
+	</head>
+
+	<body>
+		{% block content %}{% endblock %}
+	</body>
+</html>

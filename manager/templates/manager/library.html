@@ -1,0 +1,625 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<!--link rel="stylesheet" src="{% static 'manager/css/default.css' %}"-->
+
+<!-- Add fancyBox main JS and CSS files -->
+<script src="{% static 'fancyBox/jquery.fancybox.js' %}?v=2.1.5"></script>
+<script src="{% static 'bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js' %}"></script>
+<script src="{% static 'bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js' %}"></script>
+<link rel="stylesheet" href="{% static 'fancyBox/jquery.fancybox.css' %}?v=2.1.5" media="screen">
+<link rel="stylesheet" href="{% static 'bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css' %}?v=2.1.5" media="screen">
+
+<style>
+
+
+    .input-prepend
+    {
+        display: inline-block;
+        margin-bottom: 0;
+    }
+
+    .input-prepend .add-on, .input-append .add-on {
+        display: inline-block;
+        width: auto;
+        height:32px;
+        min-width: 18px;
+        padding: 4px 5px;
+        font-weight: normal;
+        line-height: 18px;
+        text-align: center;
+        text-shadow: 0 1px 0 white;
+        vertical-align: middle;
+        background-color: #EEE;
+        border: 1px solid #CCC;
+    }
+
+    .input-prepend .add-on{
+        -webkit-border-radius: 3px 0 0 3px;
+        -moz-border-radius: 3px 0 0 3px;
+        border-radius: 3px 0 0 3px;
+    }
+
+    .input-prepend .add-on, .input-prepend .btn {
+        margin-right: -1px;
+    }
+
+    .input-prepend input[type="text"]{
+        position: relative;
+        margin-bottom: 0;
+        vertical-align: middle;
+        background-color: white;
+        border: 1px solid #CCC;
+        -webkit-border-radius: 0 3px 3px 0;
+        -moz-border-radius: 0 3px 3px 0;
+        border-radius: 0 3px 3px 0;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+        -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+        -webkit-transition: border linear 0.2s, box-shadow linear 0.2s;
+        -moz-transition: border linear 0.2s, box-shadow linear 0.2s;
+        -ms-transition: border linear 0.2s, box-shadow linear 0.2s;
+        -o-transition: border linear 0.2s, box-shadow linear 0.2s;
+        transition: border linear 0.2s, box-shadow linear 0.2s;
+    }
+    .input-prepend input[type="text"]{
+        display: inline-block;
+        height: 32px;
+        padding: 4px;
+        margin-bottom: 0px;
+        font-size: 13px;
+        line-height: 14px;
+        color: #555;
+        width:200px;
+    }
+
+.fileinput-button {
+  position: relative;
+  overflow: hidden;
+}
+.fileinput-button input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  opacity: 0;
+  filter: alpha(opacit
+  y=0);
+  transform: translate(-300px, 0) scale(4);
+  font-size: 23px;
+  direction: ltr;
+  cursor: pointer;
+}
+</style>
+
+<script>
+
+
+$(document).click(
+        function()
+        {
+
+            var is_valid = is_username_valid
+                        && is_nickname_valid
+                        && is_password_valid
+                        &&is_host_valid
+                        &&is_lib_name_valid
+
+                        &&is_phone_valid
+                        &&is_address_vaild
+                        &&is_brief_vaild
+                        &&is_realname_vaild
+                        &&is_rpasswod_vaild;
+
+        if (is_valid)
+        {
+
+            $('#btn_submit').removeClass('disabled');
+        }
+        else
+        {
+
+
+
+            $('#btn_submit').addClass('disabled');
+        }
+
+{#            is_valid = is_valid && $("#hid_logo_path").val().length > 0 && $("#hid_swf_path").val().length > 0;#}
+{#            is_valid = is_valid && $("#lib_address").val().length > 0 && $("#brief").val().length > 0;#}
+        }
+);
+
+
+function check_realname(obj)
+{
+    if (obj.value == "")
+    {
+        $("#form_realname").find("p").html("真实姓名不能为空");
+        $("#form_realname").removeClass("has-success").addClass("has-error");
+        is_realname_vaild = false;
+    }
+    else
+    {
+
+        $("#form_realname").find("p").html("");
+        $("#form_realname").removeClass("has-error").addClass("has-success");
+        is_realname_vaild = true;
+    }
+}
+
+
+function check_phone_num(obj)
+{
+    var phone_num = obj.value;
+{#    var reg=new RegExp(/\d{3}-\d{8}|\d{4}-\d{7}/);#}
+    if (phone_num != "")
+    {
+        $("#form_phone").find("p").html("");
+        $("#form_phone").removeClass("has-error").addClass("has-success");
+        is_phone_valid = true;
+    }
+    else
+    {
+        $("#form_phone").find("p").html("电话号码不能为空");
+        $("#form_phone").removeClass("has-success").addClass("has-error");
+        is_phone_valid = false;
+
+    }
+}
+function check_address()
+{
+    if ( $('#lib_address').val().trim() == "")
+    {
+        is_address_vaild =false;
+        $('#address_id').find('p').html("地址不能为空请填写");
+        $('#address_id').removeClass("has-success").addClass("has-error");
+    }
+    else
+    {
+        is_address_vaild = true;
+        $('#address_id').find('p').html("");
+        $('#address_id').removeClass("has-error").addClass("has-success");
+    }
+}
+
+
+function check_brief()
+{
+    if ( $('#brief').val().trim() == "")
+    {
+        is_brief_vaild = false;
+        $('#brief_id').find('p').html("简介不能为空请填写");
+        $('#brief_id').removeClass("has-success").addClass("has-error");;
+    }
+    else
+    {
+        is_brief_vaild = true;
+        $('#brief_id').find('p').html("");
+        $('#brief_id').removeClass("has-error").addClass("has-success");
+    }
+}
+
+
+
+
+    $(document).ready(
+      function()
+      {
+          {% if not library %}
+              $('#realname').trigger('blur');
+
+          {% endif %}
+
+          $('#datetimepicker').datetimepicker({
+
+              format: 'yyyy-mm-dd',
+              language:'zh-CN',
+              'minView':4,
+              autoclose:true
+      }
+
+          );
+          {% if library %}
+          {% else %}
+              $('#btn_submit').addClass('disabled');
+          {% endif %}
+      }
+    );
+
+	var lib_id = {{lib_id}};
+	$(document).ready(function(){
+		$('.fancybox').fancybox({
+			padding: 3,
+
+			openEffect : 'elastic',
+			openSpeed  : 150,
+
+			closeEffect : 'elastic',
+			closeSpeed  : 150,
+
+			closeClick : true
+		});
+	});
+	
+	{% if library %}
+		var is_username_valid = true;
+		var is_nickname_valid = true;
+		var is_password_valid = true;
+		var is_host_valid = true;
+		var is_lib_name_valid = true;
+
+        var is_phone_valid = true;
+        var is_address_vaild= true;
+        var is_brief_vaild = true;
+        var is_realname_vaild = true;
+        var is_rpasswod_vaild = true;
+
+	{% else %}
+		var is_username_valid = false;
+		var is_nickname_valid = false;
+		var is_password_valid = false;
+		var is_host_valid = false;
+		var is_lib_name_valid = false;
+        var is_phone_valid = false;
+        var is_address_vaild= false;
+        var is_brief_vaild = false;
+        var is_realname_vaild = false;
+        var is_rpasswod_vaild = false
+	{% endif %}
+	
+	function check_username(obj){
+		var username = obj.value;
+		$.post("/manager/check_new_username/", {"username":username}, function(data){
+			if (data == "ok"){
+				$("#form_username").removeClass("has-error").addClass("has-success");
+				$("#form_username").find("p").html("");
+				is_username_valid = true;
+				update_status();
+			} else {
+				$("#form_username").removeClass("has-success").addClass("has-error");
+				$("#form_username").find("p").html(data);
+				is_username_valid = false;
+			}
+		});
+	}
+	function check_nickname(obj){
+		var nickname = obj.value;
+		$.post("/manager/check_new_nickname/", {"nickname":nickname}, function(data){
+			if (data == "ok"){
+				$("#form_nickname").removeClass("has-error").addClass("has-success");
+				$("#form_nickname").find("p").html("");
+				is_nickname_valid = true;
+				update_status();
+			} else {
+				$("#form_nickname").removeClass("has-success").addClass("has-error");
+				$("#form_nickname").find("p").html(data);
+				is_nickname_valid = false;
+			}
+		});
+	}
+	function check_password(obj){
+		var password = obj.value;
+		$.post("/manager/check_password/", {"password":password}, function(data){
+			if (data == "ok"){
+				$("#form_password").removeClass("has-error").addClass("has-success");
+				$("#form_password").find("p").html("");
+                is_password_valid = true;
+				update_status();
+			} else {
+				$("#form_password").removeClass("has-success").addClass("has-error");
+				$("#form_password").find("p").html(data);
+				is_password_valid = false;
+			}
+		});
+	}
+    $('#repeat_password').click(function()
+    {
+            $('#password').trigger('blur');
+    }
+            );
+
+	function check_password2(obj){
+
+		var password2 = obj.value;
+		var password = $("#password").val();
+		if (password == password2){
+			$("#repeat_password").removeClass("has-error").addClass("has-success");
+			$("#repeat_password").find("p").html("");
+			is_rpasswod_vaild= true;
+			update_status();
+		} else {
+			$("#repeat_password").removeClass("has-success").addClass("has-error");
+			$("#repeat_password").find("p").html("两次输入密码不一致");
+			is_rpasswod_vaild = false;
+		}
+	}
+	
+	function check_host(obj){
+		var host = obj.value;
+		$.post("/manager/check_host/", {"lib_id":lib_id, "host":host}, function(data){
+			if (data == "ok"){
+				$("#form_host").removeClass("has-error").addClass("has-success");
+				$("#form_host").find("p").html("");
+				is_host_valid = true;
+				update_status();
+			} else {
+				$("#form_host").removeClass("has-success").addClass("has-error");
+				$("#form_host").find("p").html(data);
+				is_host_valid = false;
+			}
+		});
+	}
+	function check_lib_name(obj){
+		var lib_name = obj.value;
+		$.post("/manager/check_lib_name/", {"lib_id":lib_id, "lib_name":lib_name}, function(data){
+			if (data == "ok"){
+				$("#form_lib_name").removeClass("has-error").addClass("has-success");
+				$("#form_lib_name").find("p").html("");
+				is_lib_name_valid = true;
+				update_status();
+			} else {
+				$("#form_lib_name").removeClass("has-success").addClass("has-error");
+				$("#form_lib_name").find("p").html(data);
+				is_lib_name_valid = false;
+			}
+		});
+	}
+	
+	function check_img(obj){
+		var filename = obj.value;
+		//检查文件类型
+		var exName = filename.substr(filename.lastIndexOf(".")+1).toUpperCase()    
+		if(exName=="JPG"||exName=="JPEG"||exName=="PNG"||exName=="BMP"||exName=="GIF"){
+			//ajax 上传图片
+			$("#loading").show();
+			$.ajaxFileUpload({
+				url:"/manager/ajax_upload_img/",
+				secureuri:false,
+				fileElementId:'logo_file',
+				dataType: 'text',
+				success: function (data, status){
+					var json_data = JSON.parse(data);
+					if (json_data.code == 1){
+						$("#a_ajax_img").attr("href", "/media/" + json_data.data.path);
+						$("#loading").hide();
+						$("#a_ajax_img").show();
+						$("#hid_logo_path").val(json_data.data.path);
+						update_status();
+					} else {
+					alert(json_data.data);
+				}
+				},
+				error: function (data, status, e)
+				{
+					alert(e);
+					$("#loading").hide();
+				}
+			});
+		} else {
+			alert("只能上传图片文件(*.jpg|*.jpeg|*.png|*.bmp|*.gif)");
+		}
+	}
+	
+	function check_swf(obj){
+		var filename = obj.value;
+		//检查文件类型
+		var exName = filename.substr(filename.lastIndexOf(".")+1).toUpperCase()    
+		if(exName=="SWF"){
+			//ajax 上传图片
+			$("#loading2").show();
+			$.ajaxFileUpload({
+				url:"/manager/ajax_upload_img/",
+				secureuri:false,
+				fileElementId:'flash_file',
+				dataType: 'text',
+				success: function (data, status){
+					var json_data = JSON.parse(data);
+					if (json_data.code == 1){
+						$("#a_ajax_img2").attr("href", "/media/" + json_data.data.path);
+						$("#loading2").hide();
+						$("#a_ajax_img2").show();
+						$("#hid_swf_path").val(json_data.data.path);
+						update_status();
+					} else {
+					alert(json_data.data);
+				}
+				},
+				error: function (data, status, e)
+				{
+					alert(e);
+					$("#loading").hide();
+				}
+			});
+		} else {
+			alert("只能上传图片文件(.swf)");
+		}
+	}
+	
+	function update_status(){
+{#		var is_valid = is_username_valid && is_nickname_valid && is_password_valid && is_host_valid && is_lib_name_valid;#}
+{#		#}
+{#		{% if not library %}#}
+{#		    is_valid = is_valid && $("#password").val().length>0;#}
+{#		{% endif %}#}
+{#		#}
+{#            is_valid = is_valid && $("#hid_logo_path").val().length > 0 && $("#hid_swf_path").val().length > 0;#}
+{#            is_valid = is_valid && $("#lib_address").val().length > 0 && $("#brief").val().length > 0;#}
+{#		if (is_valid){#}
+{#			$("#btn_submit").removeClass("disabled");#}
+{#		}#}
+	}
+
+
+
+</script>
+{% endblock %}
+
+{% block content %}
+
+{% if result == "ok" %}
+<div style="text-align: center">
+	<span class="inline"><img src="{% static 'images/success.gif' %}"><h3>信息提交成功</h3></span>
+		<hr />
+		<a href="/manager/lib_list/" class="btn btn-large btn-primary">返回机构/图书馆列表</a>
+		<a href="/manager/library/" class="btn btn-large btn-danger col-md-offset-1">新开机构/图书馆>></a>
+</div>
+{% else %}
+	<form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" onkeydown="if(event.keyCode==13){return false;}">
+		<input type="hidden" value="{% if library %}{{ library.logo_path }}{% endif %}" id="hid_logo_path" name="hid_logo_path" />
+		<input type="hidden" value="{% if library %}{{ library.swf_path }}{% endif %}" id="hid_swf_path" name="hid_swf_path" />
+
+		<div class="form-group" id="form_username">
+			<label class="col-md-2 control-label">机构管理员账号</label>
+			<div class="col-md-3">
+				<input type="text" class="form-control" id="username" name="username" {% if library %}value="{{ library.user.username }}" disabled="disabled"{% else %} onblur="check_username(this)" placeholder="请输入管理员账号"{% endif %}>
+			</div>
+			<label class="col-md-3 form-inline">
+				<label class="control_label">是否全局：</label>
+				<label class="radio-inline">是<input type="radio" name="rdo_global" id="rdo1" value="1" {% if library %}{% if library.is_global == 1%}checked="checked"{%endif%}{% else %}checked="checked"{%endif%}></label>
+				<label class="radio-inline">否<input type="radio" name="rdo_global" id="rdo2" value="0" {% if library %}{% if library.is_global == 0%}checked="checked"{%endif%}{%endif%}></label>
+			</label>
+			<p class="help-block"></p>
+		</div>
+		<div class="form-group" id="form_nickname">
+			<label class="col-md-2 control-label">昵称</label>
+			<div class="col-md-3">
+				<input type="text" class="form-control" id="nickname" name="nickname" {% if library %}value="{{ library.user.nickname }}" disabled="disabled"{% else %} onblur="check_nickname(this)" placeholder="请输入呢称"{% endif %}>
+			</div>
+		</div>
+		<div class="form-group" id="form_phone">
+			<label class="col-md-2 control-label">电话</label>
+			<div class="col-md-3">
+				<input onblur="check_phone_num(this)" type="text" class="form-control" id="telephone" name="telephone" {% if library %}value="{{ library.user.telephone }}" disabled="disabled"{% else %} placeholder="请输入电话"{% endif %}>
+			</div>
+        <p class="help-block"></p>
+		</div>
+		<div class="form-group" id="form_realname">
+			<label class="col-md-2 control-label">真实姓名</label>
+			<div class="col-md-3">
+				<input type="text" onblur="check_realname(this)" class="form-control" id="realname" name="realname" {% if library %}value="{{ library.user.realname }}" disabled="disabled"{% else %} placeholder="请输入真实姓名"{% endif %}>
+			</div>
+        <p class="help-block"></p>
+		</div>
+		{% if not library %}
+		<div class="form-group" id="form_password">
+			<label class="col-md-2 control-label">密码</label>
+			<div class="col-md-3">
+
+                <input type="password" class="form-control" id="password" name="password" onblur="check_password(this)" placeholder="请输入密码">
+
+			</div>
+            <p class="help-block"></p>
+
+		</div>
+
+            <div class="form-group" id="repeat_password">
+                <label class="col-md-2 control-label">确认密码</label>
+                <div class="col-md-3">
+                    <input type="password" class="form-control" id="password2" name="password2"onblur="check_password2(this)" placeholder="请再次输入密码">
+                </div>
+                <p class="help-block"></p>
+            </div>
+
+		{% endif %}
+		<div class="form-group" id="form_host">
+			<label class="col-md-2 control-label">自定义域名</label>
+			<div class="col-md-4">
+				<input type="text" class="form-control" id="host" name="host" {% if library %}value="{{ library.host }}" disabled="disabled"{% else %} onblur="check_host(this)" placeholder="请输入自定域名"{% endif %}>
+			</div>
+			<p class="help-block"></p>
+		</div>
+
+        {% if library %}
+            <div class="form-group" id="expire_time">
+                <label class="col-md-2 control-label">请选择过期日期</label>
+                <div class="input-append date col-md-4"  data-date=" {{ library.expire_time }} " data-date-format="yyyy-mm-dd">
+                    <input name="expire_time"   readonly="readonly" class="form-control" size="16" type="text"  value="{{ library.expire_time|date:"Y-m-d" }}" disabled="disabled" >
+
+                </div>
+            </div>
+        {% else %}
+        <div class="form-group" id="expire_time">
+            <label class="col-md-2 control-label">请选择过期日期</label>
+            <div class="input-prepend date col-md-4" id="datetimepicker" data-date="{% if library %} {{ library.expire_time }} {% endif %}" data-date-format="yyyy-mm-dd HH:m">
+                <input name="expire_time"   readonly="readonly" class="form-control"  type="text"  {% if library %}  value="{{ library.expire_time|date:"Y-m-d" }}" disabled="disabled" {% else %} value = "{{ date_now }}" {% endif %}>
+                   <span class="add-on"><i class="icon-th"></i></span>
+            </div>
+        </div>
+{% endif %}
+
+		<div class="form-group">
+			<label class="col-md-2 control-label">LOGO</label>
+			<div class="col-md-10">
+				<span class="btn btn-primary fileinput-button">
+	                <i class="icon-plus icon-white"></i>
+	                <span>上传LOGO源照片...</span>
+	                <input class="input-file" type="file" id="logo_file" name="logo_file" accept="image/*" onchange="check_img(this)">
+	            </span>
+	            <img id="loading" src="{% static 'images/loading.gif' %}" style="display:none;">
+            {% if library.logo_path %}
+				<a class="fancybox btn btn-success" id="a_ajax_img" style="{% if not library %}display: none{% endif %}" href="{% if library %}{{MEDIA_URL}}{{ library.logo_path}}{% endif %}" target="_blank" >点击查看</a>
+			{% else %}
+                <a class="fancybox btn btn-success" id="a_ajax_img" style="{% if not library %}display: none{% endif %}" href="#" target="_blank" >点击查看</a>
+
+            {% endif %}
+                </div>
+		</div>
+		
+		<div class="form-group">
+			<label class="col-md-2 control-label">swf资源</label>
+			<div class="col-md-10">
+				<span class="btn btn-primary fileinput-button">
+	                <i class="icon-plus icon-white"></i>
+	                <span>上传swf资源...</span>
+	                <input class="input-file" type="file" id="flash_file" name="flash_file" accept="*.*" onchange="check_swf(this)">
+	            </span>
+	            <img id="loading2" src="{% static 'images/loading.gif' %}" style="display:none;">
+				<a class="fancybox btn btn-success" id="a_ajax_img2" style="{% if not library or not library.swf_path %}display: none{% endif %}" href="{% if library and library.swf_path %}{{MEDIA_URL}}{{ library.swf_path }}{% endif %}" target="_blank" >点击查看</a>
+			</div>
+		</div>
+		<div class="form-group" id="form_lib_name">
+			<label class="col-md-2 control-label">图书馆名</label>
+			<div class="col-md-7">
+				<input type="text" class="form-control" id="lib_name" name="lib_name" {% if library %}value="{{ library.lib_name }}"{% else %} placeholder="请输入图书馆名"{% endif %} onblur="check_lib_name(this)">
+			</div>
+			<p class="help-block"></p>
+		</div>
+		<div class="form-group" id="address_id" >
+			<label class="col-md-2 control-label">地址</label>
+			<div class="col-md-7">
+				<input type="text" class="form-control" id="lib_address" onblur="check_address()"  name="lib_address" value="{% if library %}{{ library.lib_address }}{% endif %}" onblur="update_status()" placeholder="请输入地址">
+			</div>
+            <p class="help-block"></p>
+		</div>
+		<div class="form-group" id="brief_id">
+			<label class="col-md-2 control-label">简介</label>
+			<div class="col-md-10">
+				<textarea class="form-control" id="brief" name="brief" onblur="check_brief()" rows="5" placeholder="请输入简介">{% if library %}{{ library.brief }}{% endif %}</textarea>
+                <p class="help-block"></p>
+            </div>
+
+		</div>
+		<div class="form-group">
+			<div class="col-md-offset-2 col-md-6">
+                {% if  library %}
+                    <button type="submit" class="btn btn-primary"
+                           id="btn_submit">
+                        保存图书馆资料
+                    </button>
+				{% else %}
+                    <button type="submit" class="btn btn-primary"
+                      id="btn_submit" >
+                        保存图书馆资料
+                    </button>
+                {% endif %}
+			</div>
+			<p class="help-block"></p>
+		</div>
+	</form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% endblock %}
+
+{% block footer %}
+{% load staticfiles %}
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<!--link rel="stylesheet" src="{% static 'manager/css/default.css' %}"-->
+
+<!-- Add fancyBox main JS and CSS files -->
+<script src="{% static 'fancyBox/jquery.fancybox.js' %}?v=2.1.5"></script>
+<link rel="stylesheet" href="{% static 'fancyBox/jquery.fancybox.css' %}?v=2.1.5" media="screen">
+
+<style>
+.fileinput-button {
+  position: relative;
+  overflow: hidden;
+}
+.fileinput-button input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  opacity: 0;
+  filter: alpha(opacit
+  y=0);
+  transform: translate(-300px, 0) scale(4);
+  font-size: 23px;
+  direction: ltr;
+  cursor: pointer;
+}
+</style>
+
+<script>
+	var rdo_type_id = "0";
+	
+	$(document).ready(function(){
+		$('.fancybox').fancybox({
+			padding: 3,
+
+			openEffect : 'elastic',
+			openSpeed  : 150,
+
+			closeEffect : 'elastic',
+			closeSpeed  : 150,
+
+			closeClick : true
+		});
+	});
+	
+	function check_img(obj){
+		var filename = obj.value;
+		//检查文件类型
+		var exName = filename.substr(filename.lastIndexOf(".")+1).toUpperCase()    
+		if(exName=="JPG"||exName=="JPEG"||exName=="PNG"||exName=="BMP"||exName=="GIF"){
+			//ajax 上传图片
+			$("#loading").show();
+			$.ajaxFileUpload({
+				url:"/manager/ajax_upload_img/",
+				secureuri:false,
+				fileElementId:'asset_file',
+				dataType: 'text',
+				success: function (data, status){
+					var json_data = JSON.parse(data); 
+					if (json_data.code == 1){
+						$("#a_ajax_img").attr("href", "/media/" + json_data.data.path);
+						$("#loading").hide();
+						$("#a_ajax_img").show();
+						$("#hid_res_path").val(json_data.data.path);
+						update_status();
+					} else {
+						alert(json_data.data);
+					}
+					$("#loading").hide();
+				},
+				error: function (data, status, e)
+				{
+					alert(e);
+					$("#loading").hide();
+				}
+			});
+		} else {
+			alert("只能上传图片文件(*.jpg|*.jpeg|*.png|*.bmp|*.gif)");
+		}
+	}
+	
+	function check_json(obj){
+		var filename = obj.value;
+		//检查文件类型
+		var exName = filename.substr(filename.lastIndexOf(".")+1).toUpperCase()
+		if(exName=="JSON"||exName=="TXT"){
+			//ajax 上传json文件
+			$.ajaxFileUpload({
+				url:"/manager/ajax_upload_json/",
+				secureuri:false,
+				fileElementId:'json_file',
+				dataType: 'text',
+				success: function (data, status){
+					var json_data = JSON.parse(data); 
+					if (json_data.code == 1){
+						$("#json").val(json_data.data);
+						update_status();
+					} else {
+						alert(json_data.data);
+					}
+				},
+				error: function (data, status, e)
+				{
+					alert(e);
+				}
+			});
+		} else {
+			alert("只能上传json文件(*.json|*.txt)");
+		}
+	}
+	
+	function update_status(){
+		if ($("#hid_res_path").val().length > 0 && $("#json").val() !== "0"){
+			$("#btn_submit").removeClass("disabled");
+		}
+	}
+	
+	function update_type_id(){
+		$("input[name=rdo_type]").each(function(){
+			if (this.checked){
+				rdo_type_id = this.value;
+			}
+		});
+	}
+	
+	
+	function on_submit(){
+		//$.post("/manager/asset/", {"type_id"})
+	}
+</script>
+{% endblock %}
+
+{% block content %}
+
+{% if result == "ok" %}
+<div style="text-align: center">
+	<span class="inline"><img src="{% static 'images/success.gif' %}"><h3>信息提交成功</h3></span>
+		<hr />
+		<a href="/manager/template/?id={{ asset.id }}" class="btn btn-large btn-success offset2">返回模板页列表</a>
+		<a href="/manager/template_page/?id={{ asset.id }}" class="btn btn-large btn-primary offset1">新建第{{ asset.page_count|add:1 }}页模板>></a>
+</div>
+{% else %}
+<div class="row">
+	<a href="/manager/template/?id={{ asset.id }}">
+	<h4 class="col-md-4"><span>{{ asset.res_title }}<small>模板</span></small></h4>
+	</a>
+</div>
+	<form class="form-horizontal" role="form" method="post" enctype="multipart/form-data">
+		<input type="hidden" value="{% if template %}{{ template.res_path }}{% endif %}" id="hid_res_path" name="hid_res_path" />
+		
+		<div class="form-group">
+			<label class="col-md-2 control-label">页效果图</label>
+			<div class="col-md-10">
+				<span class="btn btn-primary fileinput-button">
+	                <i class="icon-arrow-up icon-white"></i>
+	                <span>上传页效果图...</span>
+	                <input class="input-file" type="file" id="asset_file" name="asset_file" accept="image/*" onchange="check_img(this)">
+	            </span>
+	            <img id="loading" src="{% static 'images/loading.gif' %}" style="display:none;">
+				<a class="fancybox btn btn-success" id="a_ajax_img" style="{% if not templaete %}display: none{% endif %}" href="{% if templaete %}{{MEDIA_URL}}{{ templaete.img_path}}{% endif %}" target="_blank" >点击查看</a>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-md-2 control-label">JSON<br/><br/>
+				<span class="btn btn-primary fileinput-button">
+	                <i class="icon-arrow-up icon-white"></i>
+	                <span>点击上传...</span>
+	                <input class="input-file" type="file" id="json_file" name="json_file" onchange="check_json(this)">
+	            </span>
+	        </label>
+			<div class="col-md-10">
+				<textarea class="form-control" id="json" name="json" onblur="update_status()" rows="22">{% if templaete %}{{ templaete.json }}{% endif %}</textarea>
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="col-md-offset-2 col-md-6">
+				{% ifequal flag "new" %}
+				<div class="btn-group">
+				<button type="submit" class="btn btn-primary disabled" id="btn_submit">
+					<span class="glyphicon glyphicon-plus"></span> 新增第{{ page_index }}页模板页</button>
+				</div>
+				{% else %}
+				<div class="btn-group">
+				    <button type="submit" class="btn btn-primary {% if not templaete %}disabled{% endif %}" id="btn_submit">
+				    <span class="glyphicon glyphicon-edit"></span> 修改第{{ page_index }}模板页</button>
+				</div>
+				{% endifequal %}
+			</div>
+		</div>
+	</form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,217 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<script type="text/javascript">
+$(function(){
+	//设置导航栏选中状态
+	$("#li_nav_person_creator").addClass("active");
+	$("#li_nav_person_creator_types").addClass("active");
+	
+	
+	//设置几个文本框的默认文字
+	set_input_default('txtParent', '输入门类名称');
+	set_input_default('txtChild', '输入子类名称');
+	set_input_default('txtOption', '输入字段名称');
+});
+
+//编辑分类名称
+//id为空则新增。否则为修改指定id的名称
+function edit_class(id, level){
+	var ele_name = "txtParent" + id;
+	if(level == 2){
+		ele_name = "txtChild" + id;
+	}else if(level == 3){
+		ele_name = "txtOption" + id;
+	}
+	
+	var parent_id = 0;
+	//取出父类id
+	if(level == 2){
+		parent_id = $("#hdParentId").val();
+	}else if(level == 3){
+		parent_id = $("#hdChildId").val();
+	}
+	
+	var name = $.trim($("#" + ele_name).val());
+	if(name == ""){
+		alert("分类名称不能为空！");
+		return;
+	}
+	var param = {};
+	param['id'] = id;
+	param['parent_id'] = parent_id;
+	param['name'] = name;
+	$.post("/widget/api_edit_opus_type/", param, function(data){
+		if(data == "ok"){
+			alert("操作成功！");
+			location.reload();
+		}else if(data == "-1"){
+			alert("分类名称已存在！");
+			return;
+		}else{
+			alert(data);
+		}
+	});
+}
+ 
+
+function del_class(id){
+	if(!confirm("您确定要删除这个类别么？"))
+		return;
+	$.post("/widget/api_delete_opus_type/", {'id': id}, function(data){
+		if(data == "ok"){
+			alert("操作成功！");
+			location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+ 
+
+//显示编辑栏
+function show_edit(id, li_name){
+	$("#li_" + li_name + "_" + id + "_e").show();
+	$("#li_" + li_name + "_" + id + "_v").hide();
+}
+
+//隐藏编辑栏
+function hide_edit(id, li_name){
+	$("#li_" + li_name + "_" + id + "_e").hide();
+	$("#li_" + li_name + "_" + id + "_v").show();
+}
+
+//显示子类列表
+function view_child(id){
+	$("#txtChild").val("");
+	$("#hdParentId").val(id);
+	
+	$.get("/widget/api_get_opus_type/", {"parent_id": id}, function(data){
+
+		var data_list = JSON.parse(data);
+		var html = "";
+		html += '<li class="n1"><span class="m1">子类</span>';
+		html += '<p class="m2">操作</p>';
+        html += '</li>';
+		for(var i=0; i<data_list.length; i++){
+			html += "";
+			
+			html += '<li id="li_child_' + data_list[i].id + '_v">';
+            html += '<span>' + data_list[i].name + '</span>'
+			html += '<p><a class="shan" href="javascript:view_option(' + data_list[i].id + ')">查看</a>/<a class="shan" onClick="show_edit(' + data_list[i].id + ', \'child\')">修改</a>/<a onClick="del_class(' + data_list[i].id + ')" class="shan">删除</a></p>';
+			html += '</li>';
+			html += '<li id="li_child_' + data_list[i].id + '_e" style="display:none;">';
+			html += '<span><input type="text" value="' + data_list[i].name + '" id="txtChild' + data_list[i].id + '" /></span>';
+			html += '<p><a class="shan" onClick="edit_class(' + data_list[i].id + ', 2)">修改</a>/<a class="shan" onClick="hide_edit(' + data_list[i].id + ', \'child\')">取消</a></p>';
+			html += '</li>'
+		}
+		html += '<div class="clear"></div>';
+		$("#ulChildList").html(html);
+	});
+}
+
+//显示字段列表
+function view_option(id){
+	$("#txtOption").val("");
+	$("#hdChildId").val(id);
+	
+	$.get("/widget/api_get_opus_type/", {"parent_id": id}, function(data){
+
+		var data_list = JSON.parse(data);
+		var html = "";
+		html += '<li class="n1"><span class="m1">字段</span>';
+		html += '<p class="m2">操作</p>';
+        html += '</li>';
+		for(var i=0; i<data_list.length; i++){
+			html += "";
+			
+			html += '<li id="li_option_' + data_list[i].id + '_v">';
+            html += '<span title=' + data_list[i].id + '>' + data_list[i].name + '</span>'
+			html += '<p><a class="shan" onClick="show_edit(' + data_list[i].id + ', \'option\')">修改</a>/<a onClick="del_class(' + data_list[i].id + ')" class="shan">删除</a></p>';
+			html += '</li>';
+			html += '<li id="li_option_' + data_list[i].id + '_e" style="display:none;">';
+			html += '<span><input type="text" value="' + data_list[i].name + '" id="txtOption' + data_list[i].id + '" /></span>';
+			html += '<p><a class="shan" onClick="edit_class(' + data_list[i].id + ',3)">修改</a>/<a class="shan" onClick="hide_edit(' + data_list[i].id + ', \'option\')">取消</a></p>';
+			html += '</li>'
+		}
+		html += '<div class="clear"></div>';
+		$("#ulOptionList").html(html);
+	});
+}
+
+//点击创建子类触发
+function add_child(){
+	var parent_id = $("#hdParentId").val();
+	if(parent_id == ""){
+		alert("请先选择门类！");
+		return;
+	}
+	
+    edit_class("", 2);	
+	
+}
+
+function add_option(){
+	var child_id = $("#hdChildId").val();
+	if(child_id == ""){
+		alert("请先选择子类!");
+		return;
+	}
+	
+	edit_class("", 3);
+}
+
+//点击创建门类触发
+function add_parent(){
+    edit_class("", 1);
+}
+
+</script> 
+{% endblock %}
+
+{% block content %}
+
+<div class="right_hua">
+    <div class="fenlei">
+        <div class="men">
+        	<h3>作品分类</h3>
+            <input type="text" value="输入门类名称" id="txtParent" style="width:180px;"/>
+            <button class="jg" type="button" onclick="add_parent()">新建</button>
+            <ul>
+                <li class="n1"><span class="m1">门类</span>
+                    <p class="m2">操作</p>
+                </li>
+                
+                {% for obj in parent_list %}
+             	<li id="li_parent_{{obj.id}}_v">
+                    <span title="{{ obj.id }}">{{ obj.name }}</span>
+                    <p><a class="shan" href="javascript:view_option({{ obj.id }})">查看</a>/<a class="shan" onClick="show_edit({{ obj.id }}, 'parent')">修改</a>/<a onClick="del_class({{ obj.id }})" class="shan">删除</a></p>
+                </li>
+                <li id="li_parent_{{obj.id}}_e" style="display:none;">
+                    <span><input type="text" value="{{ obj.name }}" id="txtParent{{obj.id}}" /></span>
+                    <p><a class="shan" onClick="edit_class({{ obj.id }}, 1)">修改</a>/<a class="shan" onClick="hide_edit({{ obj.id }}, 'parent')">取消</a></p>
+                </li>
+                {% endfor %}
+                 
+                <div class="clear"></div>
+            </ul>
+        </div>
+        <div class="men" style="display:none;">
+        	<h3>子类</h3>
+            <input type="text" value="输入子类名称" id="txtChild" style="width:180px;"/>
+            <input type="hidden" id="hdParentId" value="" />
+            <button class="jg" type="button" onclick="add_child()">新建</button>
+            <ul id="ulChildList"></ul>
+        </div>
+        <div class="men">
+            <h3>作品需填写字段</h3>
+            <input type="text" value="输入字段名称" id="txtOption" style="width:180px;"/>
+            <input type="hidden" id="hdChildId" value="" />
+            <button class="jg" type="button" onclick="add_option()">新建</button>
+            <ul id="ulOptionList"></ul>
+          </div>
+        <div class="clear"></div>
+    </div>
+</div>
+{% endblock %}
+

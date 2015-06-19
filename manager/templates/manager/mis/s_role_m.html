@@ -1,0 +1,167 @@
+{% extends 'manager/base.html' %}
+
+{% block header %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'zTree_v3/css/zTreeStyle/zTreeStyle.css' %}">
+<!-- JavaScript -->
+<script src="{% static 'zTree_v3/js/jquery.ztree.core-3.5.min.js' %}"></script>
+<script src="{% static 'zTree_v3/js/jquery.ztree.excheck-3.5.min.js' %}"></script>
+{% endblock %}
+
+{% block footer %}
+<script>
+var setting = {
+	check: {
+		enable: true,
+		nocheckInherit: false
+	},
+	data: {
+		simpleData: {
+			enable: true
+		}
+	},
+	callback: {
+		onCheck: onCheck
+	}
+};
+function onCheck(e, treeId, treeNode) {
+	update_status();
+}
+		
+var zNodes = {% autoescape off %}{{ znodes }}{% endautoescape %};
+
+function update_role_list(){
+	$.post("/manager/mis/get_role_list/", function(data){
+		var json_data = JSON.parse(data);
+		var role_html = "";
+		for (var i=0; i<json_data.length; i++){
+			role_html += '<a class="list-group-item" id="a_role' + json_data[i]["id"] + '" href="#" onclick="update_role_info(' + json_data[i]["id"];
+			role_html += ',\'' + json_data[i]["name"];
+			role_html += '\',\'' + json_data[i]["remark"];
+			role_html += '\',\'' + json_data[i]["perms"];
+			role_html += '\')" class="list-group-item">';
+			role_html += '<h4 class="list-group-item-heading">' + json_data[i]["name"] + '</h4>';
+			role_html += '<p class="list-group-item-text">' + json_data[i]["remark"] + '</p>';
+			role_html += '</a>';
+		}
+		$(role_html).insertBefore($("#list_role_footer"));
+	});
+}
+
+$(document).ready(function(){
+	$.fn.zTree.init($("#ztree"), setting, zNodes);
+	update_role_list();
+	$("#btn_save").click(function(event){
+		event.preventDefault();
+	});
+});
+
+function update_role_info(role_id, role_name, remark, role_list){
+	$("#list_group_role .list-group-item").removeClass("active");
+	$("#a_role"+role_id).addClass("active");
+	
+	$("#hid_role_id").val(role_id);
+	$("#role_name").val(role_name);
+	$("#remark").val(remark);
+	var r_list = role_list.split(',');
+	
+	var treeObj = $.fn.zTree.getZTreeObj("ztree");
+	treeObj.checkAllNodes(false);
+	for (var i=0; i<r_list.length; i++){
+		var node = treeObj.getNodeByParam("id", r_list[i], null);
+		treeObj.checkNode(node, true, true, null);
+	}
+	$("#btn_save").removeClass("disabled");
+}
+
+function new_role(){
+	$("#hid_role_id").val("0");
+	$("#role_name").val("");
+	$("#remark").val("");
+	$.fn.zTree.getZTreeObj("ztree").checkAllNodes(false);
+}
+
+function get_role_list(){
+	var treeObj = $.fn.zTree.getZTreeObj("ztree");
+	var nodes = treeObj.getCheckedNodes(true);
+	var code_list = "";	
+	for (var i=0; i< nodes.length; i++){
+		code_list += code_list.length>0 ? "," + nodes[i].id : nodes[i].id;
+	}
+	return code_list;
+}
+function update_status(){
+	var role_name = $("#role_name").val();
+	var remark = $("#remark").val();
+	var role_list = get_role_list();
+	if (role_name.length>0 && remark.length>0 && role_list.length>0){
+		$("#btn_save").removeClass("disabled");
+	} else {
+		$("#btn_save").addClass("disabled");
+	}
+}
+
+function save_role(e){
+	var hid_role_id = $("#hid_role_id").val();
+	var role_name = $("#role_name").val();
+	var remark = $("#remark").val();
+	var role_list = get_role_list();
+	if (role_name.length>0 && remark.length>0 && role_list.length>0){
+		$.post("/manager/mis/s_role_m/", {"hid_role_id":hid_role_id, "role_name":role_name, "role_list":role_list, "remark":remark}, function(data){
+			if (data == "ok"){
+				alert("角色信息提交成功");
+				window.location.reload();
+			} else {
+				alert(data);
+			}
+		});
+	}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="row well" style="margin-left: -10px">
+	<div class="col-md-4">
+		<div class="panel panel-success">
+			<div class="panel-heading">
+				<h4 class="panel-title">
+					<i class="glyphicon glyphicon-user"></i>
+					角色列表
+				</h4>
+			</div>
+			<div class="list-group" id="list_group_role">
+		      <div class="panel-footer" id="list_role_footer">
+				<button class="btn btn-success btn-block" onclick="new_role()">
+					<i class="glyphicon glyphicon-plus"></i>新增角色</button>
+		      	</div>
+		    </div>
+		</div>
+	</div>
+	<div class="col-lg-8">
+		<form class="form-horizontal" role="form">
+			<input type="hidden" value="0" name="hid_role_id" id="hid_role_id">
+			<div class="form-group" id="form_role_name">
+				<label class="col-md-2 control-label">角色名称</label>
+				<div class="col-md-8">
+					<input type="text" class="form-control" id="role_name" name="role_name" onkeyup="update_status()" placeholder="请输入角色名称">
+				</div>
+			</div>
+			<div class="form-group" id="form-role_name">
+				<label class="col-md-2 control-label">备注</label>
+				<div class="col-md-8">
+					<textarea class="form-control" id="remark" name="remark" onkeyup="update_status()" rows="2" placeholder="请输入角色备注信息"></textarea>
+				</div>
+			</div>
+			<div class="row">
+				<ul id="ztree" class="ztree"></ul>
+			</div>
+			<div class="row">
+				<button class="btn btn-success btn-block disabled" id="btn_save" onclick="save_role()">
+					<i class="glyphicon glyphicon-ok"></i>保存角色信息</button>
+			</div>
+		</form>
+	</div>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+Searching 1255 files for "avatar_mag "
+
+0 matches across 0 files
+
+
+Searching 1255 files for "rows_to_dict_list"
+
+/Users/wf/shiwei/WebZone/topic/handler.py:
+   28  
+   29  # 导入objects转dict的方法
+   30: from utils.db_handler import rows_to_dict_list
+   31  # 导入sql语句分页方法
+   32  from utils.db_handler import get_pager
+   ..
+   79      # 初始化数据列表为页面所需格式和数据总数一起返回。页码交给前端计算
+   80      data_count = get_topic_count(key, province, city, region, library_id)
+   81:     return rows_to_dict_list(
+   82          get_pager(
+   83              't.id,t.user_id,u.nickname, t.library_id,liby.lib_name,t.title,t.content,t.remark_count,t.is_top,t.update_time,t.create_time,t.status,t.praise_count,t.view_count',
+   ..
+  112      if data_count % pagesize != 0:
+  113          page_count += 1
+  114:     return rows_to_dict_list(
+  115          get_pager(
+  116              'c.id,u.username,u.nickname,c.create_time,c.content,u.avatar_img',
+
+/Users/wf/shiwei/WebZone/utils/db_handler.py:
+   69  
+   70  
+   71: def rows_to_dict_list(rows, keys):
+   72      '''
+   73      根据指定的key列表把查询出的objects转换为dict
+
+4 matches across 2 files

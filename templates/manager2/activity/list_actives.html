@@ -1,0 +1,578 @@
+﻿{% extends 'manager2/base.html' %}
+
+{% block header %} 
+{% load staticfiles %} 
+<!--导入ajax文件上传的资源-->
+<script src="{% static 'AjaxFileUploaderV2.1/ajaxfileupload.js' %}"></script>
+<script type="text/javascript">
+$(document).ready(function($){
+	//设置导航栏选中状态
+	$("#li_nav_activity").addClass("active");
+	$("#li_nav_activity_create").addClass("active");
+ 	
+	//设置文本框默认显示文字
+	set_input_default('txtSeriesTitle', '请输入系列活动名称');
+	
+	//系列活动封面图上传
+	$("#fileSeriesCoverImg").live("change", function(){
+        check_img(document.getElementById('fileSeriesCoverImg'), ['JPG', 'JPEG', 'PNG', 'BMP'], 'hdSeriesCover', 'ajax_img_series_cover', 'loadingSeriesCoverImg');
+	});
+	
+	//上传客户端资源
+	$("#fileAnnex").live("change", function(){
+		check_upload_file(document.getElementById('fileAnnex'), 'hdAnnex', 'ajax_img_annex', 'loadingAnnex');
+	});
+	
+	//封面图上传
+	$("#fileCover").live("change", function(){
+        check_img(document.getElementById('fileCover'), ['JPG', 'JPEG', 'PNG', 'BMP'], 'hdCover', 'ajax_img_cover', 'loadingCover');
+	});
+	
+	//显示系列活动列表
+    show_series_list();
+	
+	//控制系列活动的选择模块是否显示
+	$("input[name=series_type]").click(function(){
+        if($("#series_type_2").attr("checked")){
+			$("#tr_series").hide();
+			$("input[name=series_list]").attr("checked", false);
+		}else{
+			$("#tr_series").show();
+		}
+	});
+	
+	
+	
+	//修改活动信息的时候初始化页面数据
+	{% if activity %}
+	
+		//系列活动或专题活动
+		{% if activity.series_id == 0 %}
+		$("#series_type_2").attr("checked", "checked");
+		{% endif %}
+	
+		//如果是现场活动
+		{% if activity.place_type == 'place' %}
+		
+		//选中现场活动radio
+		$("#place_type_2").attr("checked", "checked");
+		//显示现场活动专有控件
+		$("tr[class=xc]").show();
+		//隐藏网络活动专有控件
+		$("tr[class=net]").hide();
+		{% else %}
+		//选中网络活动radio
+		$("#place_type_1").attr("checked", "checked");
+		$("tr[class=xc]").hide();
+		$("tr[class=net]").show();
+		{% endif %}
+		
+		//设置活动作品类型
+		$("input[name=fruit_type][value='{{ activity.fruit_type }}']").attr("checked", "checked");
+
+		//投稿作品限数
+		{% if activity.submit_fruit_count > 1 %}
+		$("#fruit_count_2").attr("checked", "checked");
+		{% endif %}
+		
+		//网络活动限定
+		{% if activity.place_type == 'net' %}
+		     //活动范围
+			{% if activity.scope_list == '0' %}
+			$("#scope_list_0").attr("checked", "checked");
+			{% endif %}
+			
+			//评选方式
+			{% if activity.vote_type == 1 %}
+			$("#vote_type_1").attr("checked", "checked");
+			{% endif %}
+			{% if activity.vote_type == 2 %}
+			$("#vote_type_2").attr("checked", "checked");
+			$("#trVoteStartTime").hide();
+			$("#trVoteEndTime").hide();
+			$("#trVoteStep").hide();
+			{% endif %}
+			
+			//投票频率
+			$("input[name=vote_step]").each(function(index, element) {
+                if(this.value == "{{ activity.vote_step }}"){
+					$(this).attr("checked", "checked");
+				}
+            });
+			
+		{% endif %}
+		
+		{% if activity.annex %}
+		$("#ajax_img_annex").attr("href", "/media/{{ activity.annex }}");
+		$("#ajax_img_annex").show();
+		{% endif %}
+		{% if activity.cover %}
+		$("#ajax_img_cover").attr("href", "/media/{{ activity.cover }}");
+		$("#ajax_img_cover").show();
+		{% endif %}
+	{% else %}
+	
+	$("tr[class=xc]").hide();
+	
+	{% endif %}
+	
+	
+	//设置显示现场活动空间或网络活动控件
+	$("input[name=place_type]").click(function(){
+		if($("#place_type_1").attr("checked")){
+			$("tr[class=xc]").hide();
+			$("tr[class=net]").show();
+			if($("#vote_type_2").attr("checked")){
+			    $("#trVoteStartTime").hide();
+				$("#trVoteEndTime").hide();
+				$("#trVoteStep").hide();	
+			}
+		}else{
+			$("tr[class=xc]").show();
+			$("tr[class=net]").hide();
+		}
+	});
+	 
+	
+	//评选方式影响投票时间
+	$("input[name=vote_type]").click(function(){
+		if($("input[name=vote_type]:checked").val() != "1"){
+			$("#trVoteStartTime").hide();
+			$("#trVoteEndTime").hide();
+			$("#trVoteStep").hide();
+		}else{
+			$("#trVoteStartTime").show();
+			$("#trVoteEndTime").show();
+			$("#trVoteStep").show();
+		}
+	});
+});
+
+
+//显示系列活动编辑窗口
+function show_edit_series(){
+	$('.theme-popover-mask').show();
+	$('.theme-popover-mask').height($(document).height());
+	$('.theme-popover13').slideDown(200);
+}
+
+//关闭活动系列编辑窗口
+function close_edit_series(){
+	$('.theme-popover-mask').hide();
+	$('.theme-popover13').slideUp(200);
+	$("#txtSeriesTitle").val("");
+	$("#ajax_img_series_cover").hide();
+	$("#ajax_img_series_cover").attr("href", "");
+}
+
+//编辑系列活动
+function edit_series(){
+	var title = $.trim($("#txtSeriesTitle").val()).replace('请输入系列活动名称', '');
+	if(title == ""){
+		alert("标题不能为空！");
+		return;
+	}
+	var origin_path = $("#hdSeriesCover").val();
+	if(origin_path == ""){
+		alert("海报图不能为空！");
+		return;
+	}
+    $.post("/activity/activity_series_edit/", {"title": title, "origin_path": origin_path}, function(data){
+		if(data == "ok"){
+			alert("操作成功！");
+			show_series_list();
+			close_edit_series();
+			
+		}else{
+			alert(data);
+		}
+	});
+}
+
+
+//刷新活动系列的列表
+function show_series_list(){
+	$.get("/activity/activity_series_list/", function(data){
+		var data_list = JSON.parse(data);
+		var html = "";
+		for(var i=0; i<data_list.length; i++){
+			var checked = "";
+			if(data_list[i]['id'] == '{{ activity.series_id }}'){
+				checked = "checked";
+			}
+			html += '<input type="radio" ' + checked + ' value="' + data_list[i]['id'] + '" name="series_list" id="series_list_' + data_list[i]['id'] + '" class="fx" />';
+			html += '<label for="series_list_' + data_list[i]['id'] +'">' + data_list[i]['title'] + '</label>';
+		}
+		$("#series_content").empty().html(html);
+	});
+}
+
+
+//保存本页活动数据
+function save_step1(){
+	var param = {};
+	//获取活动id.据此判断是否是修改。
+	var id = $("#hdActivityId").val();
+	if(id != ""){
+		param['id'] = id;
+	}
+	
+	var title = $.trim($("#txtTitle").val());
+	if(title == ""){
+		alert("活动名称不能为空！");
+		return ;
+	}
+	param['title'] = title;
+	
+	//是现场活动还是网络活动
+	var place_type = $("input[name=place_type]:checked").val();
+	param['place_type'] = place_type;
+	
+	//系列活动或专题活动
+	var series_id = 0;
+	if($("#series_type_1").attr("checked")){
+		if($("input[name=series_list]:checked").length == 0){
+			alert("请选择系列活动名称！");
+			return;
+		}
+		series_id = $("input[name=series_list]:checked").val();
+	}
+	param['series_id'] = series_id;
+	
+	//开始报名时间
+	var signUpBeginTime = $("#txtSignUpBeginTime").val();
+	if(signUpBeginTime == ""){
+		alert("开始报名时间不能为空！");
+		return;
+	}
+	
+	var signUpEndTime = $("#txtSignUpEndTime").val();
+	if(signUpEndTime == ""){
+		alert("报名结束时间不能为空！");
+		return;
+	}
+	if(signUpBeginTime > signUpEndTime){
+		alert("报名开始时间不能晚于报名结束时间！");
+		return;
+	}
+	param['sign_up_start_time'] = signUpBeginTime;
+	param['sign_up_end_time'] = signUpEndTime;
+
+	var description = $.trim($("#txtDescription").val());
+	param['description'] = description;
+	if(description == ""){
+		alert("活动简介不能为空！");
+		return;
+	}
+
+	//附件地址
+	param['annex'] = $("#hdAnnex").val();
+	
+	//活动封面
+	param['cover'] = $("#hdCover").val();
+
+	//现场活动的数据处理
+	if(place_type == "place"){
+		var activity_begin_time = $("#txtActivityBeginTime").val();
+		if(activity_begin_time == ""){
+			alert("必须填写活动开始时间！");
+			return;
+		}
+		
+		var activity_end_time = $("#txtActivityEndTime").val();
+		if(activity_end_time == ""){
+			alert("必须填写活动结束时间！");
+			return;
+		}
+		if(activity_begin_time > activity_end_time){
+			alert("活动开始时间不能晚于活动结束时间！");
+			return;
+		}
+		param['activity_begin_time'] = activity_begin_time;
+		param['activity_end_time'] = activity_end_time;
+		var sign_up_count = $("#txtSignUpCount").val();
+		if(isNaN(sign_up_count)){
+			alert("请正确填写报名人数上限！");
+			return;
+		}
+		param['sign_up_count'] = sign_up_count;
+	}else{
+		//网络活动的数据处理
+		//活动范围。全国。本机构。
+		var scope_id = $("input[name=scope_list]:checked").val();
+		param['scope_list'] = scope_id;
+		
+		//评选方式
+		var vote_type = $("input[name=vote_type]:checked").val();
+		param['vote_type'] = vote_type;
+		
+		if(vote_type == '1'){
+			//投票开始时间
+			var voteStartTime = $("#txtVoteStartTime").val();
+			if(voteStartTime == ""){
+				alert("投票开始时间不能为空！");
+				return;
+			}
+
+			//投票结束时间
+			var voteEndTime = $("#txtVoteEndTime").val();
+			if(voteEndTime == ""){
+				alert("投票结束时间不能为空！");
+				return;
+			}
+			if(voteStartTime > voteEndTime){
+				alert("投票开始时间不能晚于投票结束时间！");
+				return;
+			}
+			param['vote_start_time'] = voteStartTime;
+			param['vote_end_time'] = voteEndTime;
+			
+			//投票频率
+			var vote_step = $("input[name=vote_step]:checked").val();
+			param['vote_step'] = vote_step;	
+		}
+	}
+	$.post("/activity/api_edit_step1/", param, function(data){
+		var data = data.split(":");
+		if(data[0] == "ok"){
+			location.href = "/manager2/activity/edit_step_2/?id=" + data[1];
+		}else if(data[0] == "-1"){
+			alert('参数错误');
+		}
+	});
+}
+
+
+</script> 
+{% endblock %}
+
+{% block content %} 
+
+<!--系列活动编辑开始-->
+<div class="theme-popover-mask13"></div>
+<div class="theme-popover13">
+  <div class="theme-poptit13"> <a href="javascript:close_edit_series();" title="关闭" class="close">×</a>
+    <h3></h3>
+  </div>
+  <div class="theme-popbod13 dform">
+    <form class="theme-signin13 xinxi2" name="loginform" action="" method="post">
+      <table cellpadding="0" cellspacing="10" class="xinxi1">
+        <tr>
+          <td style=" text-align:right;"> 系列活动名：</td>
+          <td style=" text-align:left;"><input type="text" class="icx"  id="txtSeriesTitle" value="请输入系列活动名称"  /></td>
+        </tr>
+        <tr>
+          <td  style=" text-align:right;">宣传海报：</td>
+          <td style=" text-align:left;">
+          	<input type="file" accept="image/*" id="fileSeriesCoverImg" name="origin" style="display: none;" />
+            <button class="jg" type="button" onclick="javascript:$('#fileSeriesCoverImg').click()">上传+</button><a id="ajax_img_series_cover" style="display:none;" class="shan" target="_blank">查看</a>
+            <img id="loadingSeriesCoverImg" src="{% static 'images/loading.gif' %}" style="display:none;">
+            <input id="hdSeriesCover" type="hidden" value="" />
+          </td>
+        </tr>
+      </table>
+      <input class="btn btn-primary que" type="button" onclick="edit_series()" value=" 确定 " />
+      <input class="btn btn-primary qux" type="button" onclick="close_edit_series()" value=" 取消 " />
+ 
+    </form>
+  </div>
+</div>
+<!--系列活动编辑结束-->
+
+<!--修改状态下存储要修改的活动id-->
+<input type="hidden" id="hdActivityId" value="{{ activity.id }}" />
+
+<div class="right_hua">
+  <div class="cont_right_lc">
+    <div class="tit">第一步：活动设置</div>
+    <div style="margin-left:100px;">
+      <table cellpadding="0" cellspacing="5" class="xinxi" >
+        <tr>
+          <td width="100"></td>
+          <td width="150" class="ziliao"><span style="color:#900;">*</span>活动名称：</td>
+          <td colspan="2"><input type="text" id="txtTitle" value="{{ activity.title }}" name="title" maxlength="15" style="width:300px;" /></td>
+        </tr>
+        <tr>
+          <td width="100"></td>
+          <td width="150" class="ziliao"><span style="color:#900;">*</span>活动分类：</td>
+          <td>
+          	<input type="radio" checked="checked" name="place_type" id="place_type_1" value="net" class="fx" />
+            <label for="place_type_1">网络</label>
+            <input type="radio" name="place_type" id="place_type_2" class="fx" value="place" />
+            <label for="place_type_2">现场</label>
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr>
+          <td width="100"></td>
+          <td width="150" class="ziliao"><span style="color:#900;">*</span>活动类型：</td>
+          <td>
+          	<input type="radio" checked="checked" name="series_type" id="series_type_1" class="fx" />
+            <label for="series_type_1">系列</label>
+            <input type="radio" name="series_type" id="series_type_2" class="fx" />
+            <label for="series_type_2">专题</label>
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr id="tr_series" {% if activity.series_id == 0 %} style="display:none;" {% endif %}>
+          <td width="100"></td>
+          <td width="200" class="ziliao"><span style="color:#900;">*</span>所属系列活动：</td>
+          <td colspan="2">
+          	<div class="xinjian" style="width:380px;"><a class="btn btn-primary jg theme-login13" href="javascript:show_edit_series();">新建</a>
+              </p>
+              <span id="series_content"></span>
+            </div></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr>
+          <td width="100"></td>
+          <td width="150" class="ziliao"><span style="color:#900;">*</span>活动消息发布范围：</td>
+          <td>
+          	<input type="radio" name="scope_list" id="scope_list_0" value="0" class="fx" />
+            <label for="scope_list_0">所有机构</label>
+            <input type="radio" checked="checked" name="scope_list" value="1" id="scope_list_1" class="fx" />
+            <label for="scope_list_1">本机构</label>
+          
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr>
+          <td width="100"></td>
+          <td width="200" class="ziliao"><span style="color:#900;">*</span>活动简介：</td>
+          <td><textarea rows="6" id="txtDescription" cols="50">{{ activity.description }}</textarea></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr id="trVoteType" class="net">
+          <td width="100"></td>
+          <td width="150" class="ziliao"><span style="color:#900;">*</span>评选方式：</td>
+          <td>
+          	<input type="radio" name="vote_type" value="1" checked="checked" id="vote_type_1" class="fx" />
+            <label for="vote_type_1">网络投票</label>
+            <input type="radio" name="vote_type" value="2" id="vote_type_2" class="fx" />
+            <label for="vote_type_2">线下评选</label>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr>
+        <tr id="trVoteStartTime" class="net">
+          <td width="100"></td>
+          <td width="150" class="ziliao"><span style="color:#900;">*</span>开始投票时间：</td>
+          <td><input type="datetime-local" id="txtVoteStartTime" value="{{ vote_start_time }}" class="Wdate" style="width:200px"/></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr>
+        <tr id="trVoteEndTime" class="net">
+          <td width="100"></td>
+          <td width="150" class="ziliao"><span style="color:#900;">*</span>结束投票时间：</td>
+          <td><input type="datetime-local" id="txtVoteEndTime" value="{{ vote_end_time }}" class="Wdate" style="width:200px"/></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr class="xc">
+            <td width="100"></td>
+            <td width="200" class="ziliao">活动开始时间：</td>
+            <td><input type="datetime-local" id="txtActivityBeginTime" value="{{ activity_start_time }}" class="Wdate" style="width:200px"/></td>
+            <td></td>
+        </tr>
+        <tr class="xc">
+            <td colspan="5" height="5"></td>
+        </tr>
+        <tr class="xc">
+            <td width="100" ></td>
+            <td width="200" class="ziliao">活动结束时间：</td>
+            <td><input type="datetime-local" id="txtActivityEndTime" value="{{ activity_end_time }}" class="Wdate" style="width:200px"/></td>
+            <td></td>
+        </tr>
+        <tr class="xc">
+            <td colspan="5" height="5"></td>
+        </tr>
+        <tr class="xc">
+            <td width="100"></td>
+            <td width="200" class="ziliao">限制报名人数：</td>
+            <td><input class="fx" maxlength="5" type="number" value="{{ activity.sign_up_count|default:0 }}" id="txtSignUpCount" /></td>
+            <td></td>
+        </tr>
+        <tr class="xc">
+            <td colspan="5" height="5"></td>
+        </tr>
+
+        <tr id="trVoteStep" class="net">
+          <td width="100"></td>
+          <td width="200" class="ziliao"><span style="color:#900;">*</span>投票规则：</td>
+          <td colspan="2">
+          	<input type="radio" name="vote_step" value="1" id="vote_step_1" class="fx" />
+            <label for="vote_step_1">每天每IP投票</label>
+            <input type="radio" name="vote_step" value="2" checked="checked" id="vote_step_2" class="fx" />
+            <label for="vote_step_2">每天每用户投票</label>
+            <input type="radio" name="vote_step" value="3" id="vote_step_3" class="fx" />
+            <label for="vote_step_3">每天每MAC投票</label>
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td width="100"></td>
+          <td width="200" class="ziliao">活动相关附件：</td>
+          <td>
+          	<input type="file"   id="fileAnnex" name="origin" style="display: none;" />
+            <button class="jg" type="button" onclick="javascript:$('#fileAnnex').click()">上传+</button>
+            <a id="ajax_img_annex" style="display:none;" class="shan" target="_blank">查看</a>
+            <img id="loadingAnnex" src="{% static 'images/loading.gif' %}" style="display:none;">
+            <input id="hdAnnex" type="hidden" value="" />
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td width="100"></td>
+          <td width="200" class="ziliao">活动宣传海报图：</td>
+          <td>
+          	<input type="file" accept="image/*" id="fileCover" name="origin" style="display: none;" />
+            <button class="jg" type="button" onclick="javascript:$('#fileCover').click()">上传+</button><a id="ajax_img_cover" style="display:none;" class="shan" target="_blank">查看</a>
+            <img id="loadingCover" src="{% static 'images/loading.gif' %}" style="display:none;">
+            <input id="hdCover" type="hidden" value="" />
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr>
+          <td colspan="5" height="5"></td>
+        </tr>
+        <tr>
+          <td width="100"></td>
+          <td></td>
+          <td><a class="tj" href="javascript:save_step1();">下一步</a>
+            <button class=" qx" onClick="javascript:location.href='/manager2/activity/list/'" type="button">取消</button></td>
+          <td colspan="2"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

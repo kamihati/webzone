@@ -1,0 +1,351 @@
+{% extends 'manager2/base.html' %}
+
+{% block header %} 
+<!--增加管理员01--> 
+<script type="text/javascript">
+$(document).ready(function($){
+	//设置导航栏选中状态
+	$("#li_nav_admin").addClass("active");
+	$("#li_nav_admin_library").addClass("active");
+	 
+	
+	//生成分页代码
+	$(".yema").html(get_yema_html({{ data_count }}, {{ page_index }}, {{ page_size }}));
+
+});
+
+//打开编辑普通管理员的窗口
+function open_edit(id){
+	$("input[name=reset]").click();
+	$("#hdUserId").val(id);
+	if(id != 0){
+		 $("#txtUsername").attr("disabled", "disabled");
+		 $.get("/account/api_get_user_info/", {'id': id}, function(data){
+			var data = JSON.parse(data);
+			$("#slcLibrary").val(data['library_id']);
+			$("#txtUsername").val(data['username']);
+			$("#txtNickname").val(data['nickname']);
+			$("#txtEmail").val(data['email']);
+			$("#txtPhone").val(data['phone']);
+			$("#txtQq").val(data['qq']);
+			$("#txtRealname").val(data['realname']);
+			for(var i=0; i<data['urls'].length; i++){
+				$("input[value='" + data['urls'][i] + "']").attr("checked", "checked");
+			}
+		});
+	}
+	
+	$('.theme-popover-mask6').show();
+	$('.theme-popover-mask6').height($(document).height());
+	$('.theme-popover6').slideDown(200);
+}
+
+function hide_edit(){
+	$("input[name=reset]").click();
+	$('.theme-popover-mask6').hide();
+	$('.theme-popover6').slideUp(200);
+}
+
+function search(page_index){
+	$("#hdPageIndex").val(page_index);
+	$("#submit").click();
+}
+
+//删除管理员
+function del_user(id){
+	if(!confirm("您确定要删除这个管理员么！"))
+		return;
+	$.post("/account/api_del_user/", {"id": id}, function(data){
+		if(data == "ok"){
+			alert("删除成功！");
+			location.reload();
+		}else{
+			alert(data);
+		}
+	});
+}
+
+
+//编辑二级管理员信息
+function edit_user(){
+	var param = {};
+	var user_id = $("#hdUserId").val();
+	var password = $("#txtPassword1").val();
+	var password2 = $("#txtPassword2").val();
+	if(password != password2){
+		alert("两次输入的密码不同！");
+		return;
+	}
+	if(user_id != '' && user_id != '0'){
+		param['user_id'] = user_id;
+		
+		
+	}else{
+		if(password == ""){
+			alert("密码不能为空！");
+			return;
+		}
+	}
+	param['password'] = password;
+	
+	param['library'] = "{{ library_id }}";
+	
+	var username = $("#txtUsername").val();
+	if(username == ""){
+		alert("用户名不能为空！");
+		return;
+	}
+	param['username'] = username;
+	//机构普通管理员
+	param['auth_type'] = 2;
+	
+	var realname = $("#txtRealname").val();
+	if(realname == ''){
+		alert("姓名不能为空！");
+		return;
+	}
+	param['realname'] = realname;
+	
+	var nickname = $("#txtNickname").val();
+	if(nickname == ''){
+		alert("笔名不能为空！");
+		return;
+	}
+	param['nickname'] = nickname;
+	
+	var phone = $("#txtPhone").val();
+	if(phone == ''){
+		alert("电话不能为空！");
+		return;
+	}
+	param['phone'] = phone;
+	
+	var qq = $("#txtQq").val();
+	if(qq != ''){
+		param['qq'] = qq;
+	}
+	
+	var email = $("#txtEmail").val();
+	if(email != ""){
+		param['email'] = email;
+	}
+	
+	param['target_urls'] = get_checkbox_val("user_manage") + "," + get_checkbox_val("person_manage") + "," + get_checkbox_val("activity_manage") + "," + get_checkbox_val("topic_manage") + "," + get_checkbox_val("study_manage") + "," + get_checkbox_val("sys_manage") + "," + get_checkbox_val("expert_manage") + "," + get_checkbox_val("resource_manage");
+	
+	$.post("/account/api_edit_user/", param, function(data){
+		if(data == "ok"){
+			alert("操作成功！");
+			location.reload();
+		}else if(data == "-1"){
+			alert("此用户名已被注册！");
+			return;
+		}else{
+			alert(data);
+		}
+	});
+}
+
+</script> 
+<!--增加管理员01--> 
+
+{% endblock %}
+
+{% block content %}
+<div class="right_hua">
+  <div class="cont_right_lczc">
+    <div class="cont_right_lczct">
+      <form method="get" action="#">
+        <button class="btn btn-primary theme-login6 jg" type="button" onclick="open_edit(0)">新增普通管理员</button>
+        <input type="text" value="{{ search_text }}" id="txtSearchText" name="search_text" class="sr" />
+        <button class="cx" type="button" onclick="search(1)">查询</button>
+        <input type="hidden" name="id" value="{{ library_id }}" />
+        <input type="submit" id="submit" style="display:none;" />
+        <input type="hidden" id="hdPageIndex" name="page_index" value="1" />
+      </form>
+    </div>
+    <div class="cont_right_lczcc">
+      <table cellpadding="0" cellspacing="0" style=" border:solid #eee; border-width:1px 0px 0px 1px;" class="liuyan" >
+        <tr style="height:40px; font-size:14px; line-height:40px; color:#333333; background:#d6ebff;">
+          <td width="100">用户名</td>
+          <td width="150">笔名</td>
+          <td width="150">姓名</td>
+          <td width="300"> 所属机构</td>
+          <td width="100">总登陆次数</td>
+          <td width="200">上次登录</td>
+          <td width="200">操作</td>
+        </tr>
+        {% for obj in data_list %}
+        <tr>
+          <td>{{ obj.username }}</td>
+          <td>{{ obj.nickname }}</td>
+          <td>{{ obj.realname }}</td>
+          <td>{{ obj.lib_name }}</td>
+          <td>{{ obj.login_times }}</td>
+          <td>{{ obj.date_login }}</td>
+          <td><a class="shan theme-login3" href="javascript:open_edit({{ obj.id }});"> 修改</a>/<a href="javascript:del_user({{ obj.id }})" class="shan">删除</a></td>
+        </tr>
+        {% endfor %}
+      </table>
+      <div class="yema"></div>
+    </div>
+  </div>
+</div>
+
+<!--新增普通管理员开始-->
+<div class="theme-popover-mask6"></div>
+<div class="theme-popover6">
+  <div class="theme-poptit6"> <a href="javascript:hide_edit();" title="关闭" class="close">×</a>
+    <h3></h3>
+  </div>
+  <div class="theme-popbod6 dform" >
+    <form class="theme-signin" name="loginform" id="frmMain" action="" method="post">
+      <table cellpadding="0" cellspacing="8" class="xinxi">
+        <tr>
+          <td width="140" class="ziliao">机构名称：</td>
+          <td width="200">{{ library.lib_name }}</td>
+          <td width="20"></td>
+          <td width="60" class="ziliao">姓名：</td>
+          <td width="150"><input type="text" id="txtRealname" name="realname" /></td>
+          <td width="10"></td>
+        </tr>
+        <tr>
+          <td class="ziliao">用户名：</td>
+          <td ><input type="text" id="txtUsername" name="username" /></td>
+          <td></td>
+          <td class="ziliao"> 手机号：</td>
+          <td><input type="text" id="txtPhone" name="phone" /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="ziliao">笔名：</td>
+          <td ><input type="text" id="txtNickname" name="nickname" /></td>
+          <td></td>
+          <td class="ziliao">QQ：</td>
+          <td><input type="text" id="txtQq" name="qq" /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="ziliao">密码：</td>
+          <td ><input type="password" name="password" id="txtPassword1" /></td>
+          <td></td>
+          <td class="ziliao">邮箱：</td>
+          <td><input type="email" id="txtEmail" name="email" /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="ziliao">确认密码：</td>
+          <td ><input type="password" name="password" id="txtPassword2" /></td>
+          <td></td>
+          <td class="ziliao"></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="ziliao">用户管理：</td>
+          <td colspan="4"><input type="checkbox" value="" name="user_manage" onclick="check_item('user_manage')" />
+            全选
+            <input type="checkbox" value="/admin/library/" name="user_manage" />
+            机构二级管理员
+            <input type="checkbox" value="/admin/user/" name="user_manage" />
+            会员 </td>
+          <td></td>
+        </tr>
+        <tr>
+            <td class="ziliao">原创管理：</td>
+            <td colspan="4">
+                <input type="checkbox" name="person_manage" value="/person_creator/" />作品
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="ziliao">活动管理：</td>
+            <td colspan="4">
+                <!--
+                <input type="checkbox" name="activity_manage" value="" onclick="check_item('activity_manage')" />全选
+                -->
+                <input type="checkbox" name="activity_manage" value="/activity/list/" />活动管理
+                <!--
+                <input type="checkbox" name="activity_manage" value="/activity/create/" /> 创建活动
+                <input type="checkbox" name="activity_manage" value="/activity/fruit_list/" />活动作品管理
+                -->
+            </td>
+            <td></td>
+        </tr>
+        <tr style="display:none;">
+          <td class="ziliao"></td>
+          <td colspan="4"><input type="checkbox" name="activity_manage" value="/activity/background/" />
+            背景模板管理
+            <input type="checkbox" name="activity_manage" value="/activity/news/" />
+            结果与新闻管理 </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="ziliao">话题管理：</td>
+          <td colspan="4"> 
+            <input type="checkbox" name="topic_manage" value="/topic_list/" />
+            话题列表
+            <!--
+            <input type="checkbox" name="topic_manage" value="/topic_emotion/" />
+            话题表情管理 --></td>
+          <td></td>
+        </tr>
+        <tr>
+            <td class="ziliao">素材管理</td>
+            <td colspan="4">
+            	<!--
+                <input type="checkbox" name="resource_manage" value="" onclick="check_item('resource_manage')" />全选
+                <input type="checkbox" name="resource_manage" value="/resource/" />公共素材管理
+                -->
+                <input type="checkbox" name="resource_manage" value="/resource/person_manage/" />个人素材管理
+                <!--
+                <input type="checkbox" name="resource_manage" value="/resource/type_manage/" />素材分类管理
+                -->
+            </td>
+            <td></td>
+        </tr>
+          
+        <tr style="display:none;">
+          <td class="ziliao">系统管理：</td>
+          <td colspan="4"><input type="checkbox" name="sys_manage" value="" onclick="check_item('sys_manage')" />
+            全选
+            <input type="checkbox" name="sys_manage" value="/list_person_czrz/" />
+            个人用户操作日志管理
+            <input type="checkbox" name="sys_manage" value="/list_admin_czrz/" />
+            管理员用户操作日志 </td>
+          <td></td>
+        </tr>
+        
+        <tr style="display:none">
+          <td class="ziliao"></td>
+          <td colspan="4"><input type="checkbox" name="sys_manage" value="/list_xxgl/" />
+            消息管理
+            <input type="checkbox" name="sys_manage" value="/list_lygl/" />
+            留言管理</td>
+          <td></td>
+        </tr>
+        
+        
+        <tr style="display:none;">
+          <td class="ziliao">专家评分管理：</td>
+          <td colspan="4"><input type="checkbox" name="expert_manage" value="" onclick="check_item('expert_manage')" />
+            全选
+            <input type="checkbox" name="expert_manage" value="/expert_score_manage/" />
+            专家评分管理
+            <input type="checkbox" name="expert_manage" value="/expert_score_manage/score_record/" />
+            专家评分结果 </td>
+          <td></td>
+        </tr>
+        
+        <tr>
+          <td></td>
+          <td colspan="3"><input class="btn btn-primary qd" type="button" onclick="edit_user()" value=" 确定 " />
+            <input type="hidden" id="hdUserId" />
+            <input type="reset" id="reset" name="reset" style="display:none;" />
+            <input class="btn btn-primary qux" type="button" onclick="hide_edit()" value=" 取消 " /></td>
+        </tr>
+      </table>
+    </form>
+  </div>
+</div>
+<!--新增普通管理员结束--> 
+{% endblock %} 
